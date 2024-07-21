@@ -95,19 +95,15 @@ public class Main extends JavaPlugin {
 		}
 		UIFramework.registerReloadRunnable(this, () -> reload(true, true, true));
 		
-		boolean firstSetup = false;
-		if (!(new File(getDataFolder().getAbsolutePath(), "config.yml").exists()))
-			firstSetup = true;
 		getConfig().options().copyDefaults(true);
 		saveDefaultConfig();
-		if (firstSetup)
-			try {
-				ConfigUpdater.update(this, getResource("config.yml"), new File(getDataFolder().getAbsolutePath(), "config.yml"), Arrays.asList(""));
-				this.reloadConfig();
-			} catch (IOException e) {
-				e.printStackTrace();
-				consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cUnable to initialize config! Please report the full error above to the discord."));
-			}
+		try {
+			ConfigUpdater.update(this, "config.yml", new File(getDataFolder().getAbsolutePath(), "config.yml"), null);
+			this.reloadConfig();
+		} catch (IOException e) {
+			e.printStackTrace();
+			consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cUnable to initialize config! Please report the full error above to the discord."));
+		}
 		DependencyUtils.init(this);
 		
 		registerAbilities();
