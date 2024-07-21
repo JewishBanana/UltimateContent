@@ -1,0 +1,8 @@
+name: UltimateContent
+version: 1.0.0
+author: JewishBanana
+main: com.github.jewishbanana.ultimatecontent.Main
+description: Adds tons of new custom weapons, armor and other items to the game.
+api-version: 1.17
+depend: [UIFramework]
+softdepend: [WorldGuard, Towny, GriefPrevention, Lands, Kingdoms]

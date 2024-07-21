@@ -1,0 +1,551 @@
+###############################################################################################################################################################################
+# 
+# Welcome to UltimateContent!
+#
+# This config allows extensive configurations ranging from changing custom item attributes to modifying individual abilities and beyond. If you are uncertain on any of the
+# settings or have any questions feel free to join the discord below and ask! Be sure to also read the plugins page as lots of information on usage of the plugin and useful
+# information on individual custom items is provided. I hope you enjoy UltimateContent and would love to hear any feedback and suggestions in the discord! It is also
+# incredibly easy to contribute to UltimateContent and add-on your own custom items to UIFramework or UltimateContent itself, if this interests you be sure to check out the
+# source on github.
+#
+# Spigot Page: (Can't be displayed on first release)
+# Discord: https://discord.gg/MhXFj72VeN
+# GitHub: https://github.com/JewishBanana/UltimateContent
+#
+###############################################################################################################################################################################
+#
+# Below this is the general configurations for global settings.
+#
+###############################################################################################################################################################################
+
+general:
+    # This section controls the affects of UltimateContent within protected regions. The applicable region protection plugins are listed on the plugins page!
+    protected_regions:
+        # This setting controls if abilities can activate and take affect on entities within protected regions
+        effect_entities: true
+        # This setting controls if abilities can damage the environment within protected regions
+        damage_blocks: false
+
+###############################################################################################################################################################################
+#
+# ITEMS:
+#
+#   "name" : [STRING] - The visible name displayed for the custom item in game. This supports color codes (e.g. '&c' or '&5') and also hex codes formatted as '(hex:#ffffff)'
+#                       if using spigot or a fork of spigot (e.g. paper, purpur, etc.). If you are on vanilla or bukkit then hex codes will auto convert to the closest
+#                       vanilla chat color.
+#
+#   "lore" : [STRING_LIST] - The visible lore of the item displayed in game, this also supports chat colors and hex codes. The formatting can be seen on the example items
+#                            below, it is in list format where you can have as many lines as you want. For example:
+#
+#                                               lore:
+#                                               - "&eThis is the first line of lore in YELLOW!"
+#                                               - "(hex:#bf0d00)This is the second line in DEEP RED!"
+#
+#   "damage" : [DECIMAL] - This controls the damage value that the item deals when hitting an entity with a melee attack, pretty self explanatory.
+#
+#   "attackSpeed" : [DECIMAL] - This controls the attack speed attribute of the item (The attack cooldown bar).
+#
+#   "projectileDamage" : [DECIMAL] - This controls the items damage it deals if it hits an entity as a projectile, this setting only works on items that can actually be fired
+#                                    as projectiles e.g. snowballs, arrows, tridents, etc.
+#
+#   "projectileDamageMultiplier" : [DOUBLE] - This setting multiplies the damage dealt by projectiles fired from this item, this setting has a default value set to 1.0 and
+#                                             only has an effect on items that can actually shoot projectiles e.g. bows, crossbows, etc.
+#
+#   "durability" : [DECIMAL] - This controls the items durability, if set it will override the vanilla durability of the item. If you want to ignore item durability and make
+#                              an item unbreakable set the value to -1.
+#
+#   "abilities" : [SECTION] - This is the list of abilities on the item, abilities can be put or removed on any item with no limits and full control. This also supports 
+#                             abilities that are external from UltimateContent. The different ability settings are listed in the section below this. To add abilities you need
+#                             to put them in the following format:
+#
+#                                               abilities:
+#                                                   [ability_name]:
+#                                                       [setting_1]: [value]
+#                                                       [setting_2]: [value]
+#                                                       [setting_3]: [value]
+#
+#   "allow_vanilla_crafts" : [BOOLEAN] - By default this is FALSE for every item. This setting enables if the custom item can be used in vanilla crafting recipes e.g. The
+#                                        custom item is an iron ingot and if it should be able to craft an block of iron or not.
+#   "enchants" : [SECTION] - This setting is a config section that lists the enchants on this item and their levels. This can also support enchants external of
+#                            UltimateContent and also vanilla minecraft enchants (Vanilla enchant levels can be set higher than their level cap). Example usage provided below:
+#
+#                                               enchants:
+#                                                   sharpness: 9
+#                                                   bunny_hop: 2
+#
+###############################################################################################################################################################################
+#
+# ABILITY SETTINGS:
+#
+# Within each item you can add a section "abilities" which is listed above this section for more information, and you can add as many abilities you want to the item within
+# this section. The following settings listed here are global settings that all abilities can use, keep in mind that there are two sub-sections to this section, one which has
+# global settings for all abilities even external of UltimateContent, and the other sub-section has global settings that are unique specifically to UltimateContent abilities.
+# If an external plugin which adds more abilities is a fork of UltimateContent, these settings may be applicable to those abilities to, if not will just have no affect.
+#
+# UNIVERSAL SETTINGS:
+#
+#   "cooldown" : [DECIMAL] - This is the cooldown in seconds for the ability given to the user upon successful usage.
+#
+#   "usage" : [STRING_LIST] - The bound actions for usage of this ability, this is almost always required with a few abilities being an exception. Here is a list of all usages:
+#
+#                             "left-click", "left-click-block", "shift-left-click", "shift-left-click-block", "right-click", "right-click-block", "shift-right-click",
+#                             "shift-right-click-block", "inventory-click", "consume", "splash-potion", "interact-entity", "drop-item", "pickup-item", "place-block",
+#                             "break-block", "hit-entity", "was-thrown", "projectile-hit", "hit-by-projectile", "shot-bow", "entity-death", "entity-respawn"
+#
+#                                               usages:
+#                                               - "right-click"
+#                                               - "hit-entity"
+#
+# ULTIMATECONTENT UNIQUE SETTINGS:
+#
+#   "cooldownMessages" : [BOOLEAN] - Controls if cooldown messages are sent to the player upon failed activation due to cooldown. By default this is TRUE for all abilities.
+#
+#   "chance" : [DECIMAL] - This setting is the probability between 0.0-100.0 of this ability activating when it is used. Cooldown will not be applied on failed activations
+#                          and by default this is set to 100.0 for all abilities to guarantee activation.
+#
+#   "volume" : [DECIMAL] - This setting controls the volume of all sound related effects of the ability. By default this is set to 1.0 for all abilities.
+#
+#   "target" : [STRING] - Controls the target location of this ability, by default this is set to the ACTIVATOR's location for all abilities. The activator will always recieve
+#                         the abilities cooldown upon activation this just modifies where the ability activates. This is a list of all the different target types you can use:
+#
+#                         "activator", "projectile", "hit-entity", "interacted-entity", "attacker", "shooter", "dropped-item", "block"
+#
+#   "abilityDisplay" : [STRING] - Will change the display name and description on the item to the alternatives from the given display. Ability displays are created in the
+#                                 displays section of this config and can be referenced here in this setting. An example is how I create a fake display called "bunny_hop" and
+#                                 reference it in the double jump ability for the bunny hop enchant, this relabels the abilities display name and description on the item's
+#                                 lore to my display "bunny_hop"'s name and description.
+#
+###############################################################################################################################################################################
+
+items:
+    weapons:
+        green_lightsaber:
+            name: "(hex:#1fe615)Green Lightsaber"
+            lore:
+            - "&eGlowing green blade that only true masters can wield."
+            damage: 9.0
+            attackSpeed: 2.0
+            durability: 1800.0
+            abilities:
+                saber_parry:
+                    chance: 60.0
+                    knockbackStrength: 1.0
+                    usage:
+                    - "was-hit"
+                    - "hit-by-projectile"
+                saber_throw:
+                    cooldown: 8.0
+                    damage: 9.0
+                    range: 11.0
+                    knockbackStrength: 1.0
+                    usage:
+                    - "right-click"
+        stasis_gun:
+            name: "(hex:#e1f016)Stasis Gun"
+            lore:
+            - "&eStrange futuristic gun with time altering properties."
+            damage: 4.0
+            attackSpeed: 0.6
+            durability: 600.0
+            # The range in blocks that the stasis bullets will travel before disappearing
+            range: 25.0
+            # The cooldown on the guns shooting
+            shot_cooldown: 2.0
+            abilities:
+                stasis_zone:
+                    cooldown: 2.0
+                    damage: 15.0
+                    range: 2.5
+                    target: "projectile"
+                    usage:
+                    - "projectile-hit"
+        ancient_blade:
+            name: "(hex:#ed6a28)Ancient Blade"
+            lore:
+            - "&eAn old relic imbued with ancient fire magic..."
+            damage: 10.0
+            attackSpeed: 1.3
+            enchants:
+                ancient_curse: 1
+        voids_edge:
+            name: "(hex:#8623b8)Voids Edge"
+            lore:
+            - "(hex:#ea4ef5)A sharp blade given to those who guard the void..."
+            damage: 11.0
+            attackSpeed: 1.4
+        call_of_the_void:
+            name: "(hex:#8623b8)Call Of The Void"
+            lore:
+            - "(hex:#ea4ef5)Forged in the void, arrows fired from this seem to alter space..."
+            projectileDamageMultiplier: 1.3
+            projectileParticles: true
+            abilities:
+                black_rift:
+                    cooldown: 10.0
+                    damage: 1.0
+                    range: 4.0
+                    portalTicks: 80
+                    destroyItems: true
+                    target: "projectile"
+                    usage:
+                    - "projectile-hit"
+        dark_mage_wand:
+            name: "(hex:#6e5f4f)Dark Mage Wand"
+            lore:
+            - "&eYou can feel powerful magic emitting from the wand. Careful while using this as it can be unstable."
+        tritons_fang:
+            name: "(hex:#365ad1)Triton's Fang"
+            lore:
+            - "(hex:#0061a6)The mighty trident of the seas which can call upon the powers of the leviathon..."
+            damage: 13.0
+            attackSpeed: 0.9
+            abilities:
+                tidal_wave:
+                    cooldown: 10.0
+                    damage: 4.0
+                    range: 15.0
+                    target: "shooter"
+                    usage:
+                    - "was-thrown"
+            enchants:
+                loyalty: 3
+                impaling: 5
+    tools:
+        abyssal_shield:
+            name: "(hex:#8623b8)Abyssal Shield"
+            lore:
+            - "(hex:#ea4ef5)A reliable shield given to the strongest warriors of the void..."
+            damage: 7.0
+            attackSpeed: 0.6
+    materials:
+        ancient_bone:
+            name: "(hex:#edc513)Ancient Bone"
+            lore:
+            - "&eA very old relic of a forgotten age, I wonder what creature this is from..."
+        ancient_cloth:
+            name: "(hex:#edc513)Ancient Cloth"
+            lore:
+            - "&eStrange torn wrappings covered in sand, I wonder what creature wore these..."
+        yeti_fur:
+            name: "(hex:#acc7fc)Yeti Fur"
+            lore:
+            - "&eThick fluffy fur that covers the deadly powerful beasts of the tundra..."
+    misc:
+        booster_pack:
+            name: "(hex:#5375fc)Booster Pack"
+            lore:
+            - "&eSmall feather filled with jet fuel? Single use."
+            abilities:
+                jump_boost:
+                    cooldown: 8.0
+                    jump_height: 20.0
+                    slow_fall: true
+                    no_fall_damage: true
+                    usage:
+                    - "right-click"
+        safety_net:
+            name: "(hex:#c0c0c2)Safety Net"
+            lore:
+            - "&eSmall portable platform, single use. You can always rely on this thing to have your back."
+            abilities:
+                spawn_platform:
+                    cooldown: 10.0
+                    range: 2.5
+                    usage:
+                    - "right-click"
+        heart_crystal:
+            name: "(hex:#ff6363)Heart Crystal"
+            lore:
+            - "&eCrystalized heart from a strange creature. &6Right-Click to permanently increase health."
+        med_kit:
+            name: "(hex:#f52222)Med Kit"
+            lore:
+            - "&ePortable first aid kit, might just save your life. Restores &a8 hearts&e, single use."
+            abilities:
+                restore_health:
+                    cooldown: 10.0
+                    heal_amount: 16.0
+                    usage:
+                    - "right-click"
+        energy_drink:
+            name: "(hex:#25f222)Energy Drink"
+            lore:
+            - "&eSuper energized drink that grants temporary &aspeed, jump, and health&e buffs."
+        propulsion_cannon:
+            name: "(hex:#6b96fa)Propulsion Cannon"
+            lore:
+            - "&eVery unstable ball, be careful while holding it. Throw this to create a propulsion blast where it lands."
+            abilities:
+                propulsion_blast:
+                    # The radius of the explosion
+                    radius: 10.0
+                    # If the projectile should be immediately removed when this ability activates
+                    destroyProjectile: true
+                    usage:
+                    - "projectile-hit"
+        matter_swap:
+            name: "(hex:#1fffc7)Matter Swap"
+            lore:
+            - "&eStrange clump of matter that displaces reality. Can be used to swap your position with another entity. Will be consumed on successful use."
+            abilities:
+                teleport_ray:
+                    cooldown: 4.0
+                    range: 30.0
+                    usage:
+                    - "right-click"
+        blinding_trap:
+            name: "(hex:#8a8a8a)Blinding Trap"
+            lore:
+            - "&eUse on an opponent or creature to temporarily disorient them for &a10 seconds&e. Will be consumed on successful use."
+            abilities:
+                blinding:
+                    cooldown: 12.0
+                    time: 10.0
+                    usage:
+                    - "interact-entity"
+        void_tear:
+            name: "(hex:#8623b8)Void Tear"
+            lore:
+            - "(hex:#ea4ef5)A tear from an End Totem which has the ability to open rifts..."
+            - "&b[Right-Click] &8- &7Opens a rift in front of you."
+    enchant_books:
+        ancient_curse_book:
+            # The chance for this item to spawn in a wild chest
+            loot_spawn_chance: 0.05
+            # The max height the chest can be for this item to spawn in it
+            max_height: 40
+            # The chance of a librarian acquiring this item as a trade offer
+            librarian_trade_chance: 0.0
+            enchants:
+                ancient_curse: 1
+    easter_items:
+        golden_egg:
+            name: "(hex:#ffe600)Golden Egg"
+            lore:
+            - "&eShiny golden easter egg dropped by the Easter Bunny boss from the Easter event. Combine with boots to imbue special powers of the Easter Bunny."
+            
+###############################################################################################################################################################################
+#
+# ABILITIES:
+#
+# * "name" : [STRING] - The name of the ability in game within items lore. This supports color codes (e.g. '&c' or '&5') and also hex codes formatted as '(hex:#ffffff)'
+#                       if using spigot or a fork of spigot (e.g. paper, purpur, etc.). If you are on vanilla or bukkit then hex codes will auto convert to the closest
+#                       vanilla chat color.
+#
+# * "description" : [STRING] - The description of the ability in game within items lore. This also supports chat color and hex codes.
+#
+###############################################################################################################################################################################
+
+abilities:
+    saber_parry:
+        name: "(hex:#d5dbf7)[Saber Parry]"
+        description: "&8- &7Chance to parry enemy attacks and projectiles."
+    saber_throw:
+        name: "(hex:#ecf00e)[Saber Throw]"
+        description: "&8- &7The wielder throws the saber dealing lots of damage. The saber will return."
+    stasis_zone:
+        name: "(hex:#ecf00e)[Stasis Zone]"
+        description: "&8- &7Creates a zone where time does not pass."
+    jump_boost:
+        name: "(hex:#e3ffff)[Jump Boost]"
+        description: "&8- &7Launches you high into the air and temporarily prevents you from taking fall damage."
+    spawn_platform:
+        name: "&f[Platform]"
+        description: "&8- &7Spawns a temporary platform below your feet. Fall damage will be reset."
+    restore_health:
+        name: "(hex:#f52222)[Restore Health]"
+        description: "&8- &7Immediatly restores a certain amount of health."
+    propulsion_blast:
+        name: "(hex:#6b96fa)[Propulsion Blast]"
+        description: "&8- &7Creates a blast that repels all nearby entities."
+    teleport_ray:
+        name: "(hex:#43fa77)[Teleport Ray]"
+        description: "&8- &7Shoots a beam that swaps your place with the closest living entity in the beam."
+    blinding:
+        name: "(hex:#3b3b3b)[Blinding]"
+        description: "&8- &7Temporarily blinds and disorients any living creature."
+    cursed_winds:
+        name: "(hex:#d60000)[Cursed Winds]"
+        description: "&8- &7Unleashes a raging gust of fire and dust burning all in its path."
+    black_rift:
+        name: "(hex:#82249e)[Black Rift]"
+        description: "&8- &7Tears a hole into the void that pulls in everything around it."
+    tidal_wave:
+        name: "(hex:#2e77ff)[Tidal Wave]"
+        description: "&8- &7Calls upon a strong current of water to wash away all in its path."
+    yeti_roar:
+        name: "(hex:#67c0f0)[Yeti Roar]"
+        description: "&8- &7Unleashes a raging roar of the wild tundra beast knocking away everything around you."
+    double_jump:
+        name: "(hex:#e3e9ff)[Double Jump]"
+        description: "&8- &7Allows the wearer to double jump."
+        
+###############################################################################################################################################################################
+#
+# DISPLAYS:
+#
+# Displays are alternate ability displays that can be referenced within ability settings on items. They just simply replace the name and description of the ability in the
+# item's lore with the name and description of the display. An example usage of why displays are useful is I create one called "bunny_hop" and reference it in the bunny hop
+# enchant on the double jump ability, this means that instead of listing the ability as a double jump it will list it as my custom display bunny hop renaming the ability.
+#
+# * "name" : [STRING] - The name that will replace the abilities name. Supports chat color and hex codes.
+#
+# * "description" : [STRING] - The description that will replace the abilities description. Supports chat color and hex codes.
+#
+###############################################################################################################################################################################
+
+displays:
+    bunny_hop:
+        name: "(hex:#79ff5e)[Bunny Hop]"
+        description: "&8- &7Allows the wearer to hop like a bunny."
+        
+###############################################################################################################################################################################
+#
+# ENCHANTS:
+#
+# These are the custom enchants of UltimateContent which can be referenced in the enchant section in custom items.
+#
+#   "name" : [STRING] - The display name of the enchant on items in game. The default color is vanilla gray but can be changed, chat color and hex codes are supported. There
+#                       is also some place holders available in the name which are listed below:
+#
+#                                             %l% - Represents the level present as an integer
+#                                             %nl% - Represents the level present as a roman numerical (Vanilla symbol)
+#
+#   "levels" : [SECTION] - Set different settings for individual levels within this section. Levels must be listed as their own sections within this section and as integers.
+#                          Within each levels section you can create an abilities section and create as many abilities as you want within this section, the different ability
+#                          settings are listed at the top of this config in the ability settings section. Levels do not stack on each other meaning if an item with this
+#                          enchant is upgraded from level 1 to level 2 it will lose the abilities from level 1 and gain the abilities from the level 2 section. There are
+#                          already a few enchants included in UltimateContent below to see as examples.
+#
+###############################################################################################################################################################################
+
+enchants:
+    ancient_curse:
+        name: "Ancient Curse %nl%"
+        levels:
+            1:
+                abilities:
+                    cursed_winds:
+                        cooldown: 8.0
+                        damage: 4.0
+                        range: 10.0
+                        sizeMultiplier: 1.0
+                        particleMultiplier: 1.0
+                        # How many ticks the players caught in the spell will be set on fire for
+                        fireTicks: 80
+                        usage:
+                        - "right-click"
+    yetis_blessing:
+        name: "Yetis Blessing %nl%"
+        levels:
+            1:
+                abilities:
+                    yeti_roar:
+                        cooldown: 8.0
+                        damage: 4.0
+                        range: 4.0
+                        chance: 8.0
+                        particleMultiplier: 0.3
+                        # Controls for how many ticks hit entities will receive the freeze effect
+                        freezeTicks: 100
+                        cooldownMessages: false
+                        usage:
+                        - "was-hit"
+            2:
+                abilities:
+                    yeti_roar:
+                        cooldown: 6.0
+                        damage: 7.0
+                        range: 6.0
+                        chance: 12.0
+                        particleMultiplier: 0.6
+                        # Controls for how many ticks hit entities will receive the freeze effect
+                        freezeTicks: 200
+                        cooldownMessages: false
+                        usage:
+                        - "was-hit"
+            3:
+                abilities:
+                    yeti_roar:
+                        cooldown: 4.5
+                        damage: 10.0
+                        range: 8.0
+                        chance: 16.0
+                        particleMultiplier: 1.0
+                        # Controls for how many ticks hit entities will receive the freeze effect
+                        freezeTicks: 300
+                        cooldownMessages: false
+                        usage:
+                        - "was-hit"
+    bunny_hop:
+        name: "Bunny Hop %nl%"
+        levels:
+            1:
+                abilities:
+                    double_jump:
+                        cooldown: 0.0
+                        # Controls how high the double jump is
+                        jumpHeightMultiplier: 1.2
+                        # Controls the forward thrust of the double jump
+                        forwardVelocity: 0.2
+                        # Controls how much fall damage is negated from the wearer with 1.0 meaning the full damage is negated and 0.0 meaning no damage is negated
+                        fallDamageNegation: 0.15
+                        # This is the amount of ticks the player has to activate the double jump from the time they did their first jump
+                        activationPeriod: 2
+                        particleMultiplier: 1.0
+                        abilityDisplay: "bunny_hop"
+            2:
+                abilities:
+                    double_jump:
+                        cooldown: 0.0
+                        # Controls how high the double jump is
+                        jumpHeightMultiplier: 1.5
+                        # Controls the forward thrust of the double jump
+                        forwardVelocity: 0.35
+                        # Controls how much fall damage is negated from the wearer with 1.0 meaning the full damage is negated and 0.0 meaning no damage is negated
+                        fallDamageNegation: 0.2
+                        # This is the amount of ticks the player has to activate the double jump from the time they did their first jump
+                        activationPeriod: 2
+                        particleMultiplier: 1.0
+                        abilityDisplay: "bunny_hop"
+            3:
+                abilities:
+                    double_jump:
+                        cooldown: 0.0
+                        # Controls how high the double jump is
+                        jumpHeightMultiplier: 1.8
+                        # Controls the forward thrust of the double jump
+                        forwardVelocity: 0.5
+                        # Controls how much fall damage is negated from the wearer with 1.0 meaning the full damage is negated and 0.0 meaning no damage is negated
+                        fallDamageNegation: 0.3
+                        # This is the amount of ticks the player has to activate the double jump from the time they did their first jump
+                        activationPeriod: 2
+                        particleMultiplier: 1.0
+                        abilityDisplay: "bunny_hop"
+                        
+###############################################################################################################################################################################
+#
+# LANGUAGE:
+#
+# This section is just for translation or customization purposes.
+#
+###############################################################################################################################################################################
+
+language:
+    deaths:
+        saberThrow: "&f%victim% was sliced by %killer%'s &flightsaber"
+        cursedWinds: "&f%victim% was cursed by %killer%"
+        unstableRift: "&f%victim% was torn apart in the void"
+        unstableRiftSource: "&f%victim% was torn apart by %killer%'s void"
+        tidalWave: "&f%victim% was washed away in a tidal wave"
+        tidalWaveSource: "&f%victim% was washed away by %killer%'s tidal wave"
+        yetiRoar: "&f%victim% was frozen to death by a yeti's roar"
+    items:
+        particleToggle: " &7- Right-Click to toggle visibility of your own particles."
+        particleToggleError: "&cParticle settings can only be changed in survival!"
+    misc:
+        enabled: "&a[ENABLED]"
+        disabled: "&c[DISABLED]"
+        all: "&a[ALL]"
+        others: "&9[OTHERS]"
+        none: "&c[NONE]"
