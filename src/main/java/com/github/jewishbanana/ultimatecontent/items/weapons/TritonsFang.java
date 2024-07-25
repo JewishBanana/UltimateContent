@@ -5,6 +5,8 @@ import org.bukkit.inventory.ItemStack;
 
 import com.github.jewishbanana.uiframework.items.ItemBuilder;
 import com.github.jewishbanana.uiframework.items.ItemType;
+import com.github.jewishbanana.ultimatecontent.items.CustomItemBuilder;
+import com.github.jewishbanana.ultimatecontent.items.Rarity;
 import com.github.jewishbanana.ultimatecontent.items.Weapon;
 
 public class TritonsFang extends Weapon {
@@ -16,9 +18,12 @@ public class TritonsFang extends Weapon {
 	}
 	@Override
 	public ItemBuilder createItem() {
-		return ItemBuilder.create(getType(), Material.TRIDENT).assembleLore().setCustomModelData(100014).build();
+		return CustomItemBuilder.create(getType(), Material.TRIDENT).assembleLore().setCustomModelData(100014).build();
 	}
 	public static void register() {
 		ItemType.registerItem(REGISTERED_KEY, TritonsFang.class);
+	}
+	public Rarity getRarity() {
+		return Rarity.EPIC;
 	}
 }

@@ -98,4 +98,7 @@ public class BaseItem extends GenericItem {
 	public String getConfigItemSection() {
 		return "misc";
 	}
+	public Rarity getRarity() {
+		return Rarity.COMMON;
+	}
 }

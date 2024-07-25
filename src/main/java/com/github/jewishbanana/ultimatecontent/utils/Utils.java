@@ -370,6 +370,13 @@ public class Utils {
 //		if (usingDeprecatedDamageEvent)
 //			return new EntityDamageByEntityEvent(source, damagee, cause, DamageSource.builder(DamageType.), damage);
 //	}
+	@SuppressWarnings("deprecation")
+	public static void playDamageEffect(LivingEntity entity) {
+		if (VersionUtils.usingNewDamageEvent)
+			entity.playHurtAnimation(0);
+		else
+			entity.playEffect(EntityEffect.HURT);
+	}
 	public static Block rayCastForBlock(Location location, int minRange, int maxRange, int maxAttempts, Set<Material> materialWhitelist) {
 		for (int i=0; i < maxAttempts; i++) {
 			Location tempLoc = location.clone();
@@ -448,13 +455,6 @@ public class Utils {
 	}
 	public static void markFallingBlock(FallingBlock block) {
 		block.setMetadata("ui-fb", fallingBlockData);
-	}
-	@SuppressWarnings("deprecation")
-	public static void playDamageEffect(LivingEntity entity) {
-		if (VersionUtils.usingNewDamageEvent)
-			entity.playHurtAnimation(0);
-		else
-			entity.playEffect(EntityEffect.HURT);
 	}
 	public static Vector getRandomizedVector(double xWeight, double yWeight, double zWeight) {
 		return new Vector(rand.nextDouble()*xWeight-(xWeight/2.0), rand.nextDouble()*yWeight-(yWeight/2.0), rand.nextDouble()*zWeight-(zWeight/2.0)).normalize();

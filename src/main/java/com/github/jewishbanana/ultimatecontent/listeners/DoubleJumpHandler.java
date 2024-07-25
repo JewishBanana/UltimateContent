@@ -26,11 +26,11 @@ import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.scheduler.BukkitTask;
 
+import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorChangeEvent;
 import com.github.jewishbanana.uiframework.items.Ability;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.ItemField;
 import com.github.jewishbanana.ultimatecontent.Main;
-import com.github.jewishbanana.ultimatecontent.events.PlayerArmorChangeEvent;
 import com.github.jewishbanana.ultimatecontent.items.AbilityAttributes;
 import com.github.jewishbanana.ultimatecontent.items.abilities.DoubleJump;
 import com.github.jewishbanana.ultimatecontent.items.enchants.BunnyHop;

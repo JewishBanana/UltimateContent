@@ -11,7 +11,6 @@ import org.bukkit.Particle.DustOptions;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Transformation;
@@ -19,6 +18,7 @@ import org.bukkit.util.Transformation;
 import com.github.jewishbanana.uiframework.items.AbilityType;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.ultimatecontent.items.AbilityAttributes;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.RepeatingTask;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
@@ -76,7 +76,7 @@ public class StasisZone extends AbilityAttributes {
 						}
 						return;
 					}
-					for (Entity e : world.getNearbyEntities(loc, 4.0, 4.0, 4.0, entity -> !(entity instanceof Player && Utils.isPlayerImmune((Player) entity)) && !entity.isDead())) {
+					for (Entity e : world.getNearbyEntities(loc, 4.0, 4.0, 4.0, entity -> !Utils.isEntityImmunePlayer(entity) && !entity.isDead() && !DependencyUtils.isEntityProtected(entity))) {
 						Location eL = entities.get(e.getUniqueId());
 						if (eL != null)
 							e.teleport(eL);
@@ -111,7 +111,7 @@ public class StasisZone extends AbilityAttributes {
 					if (tick[0] < 10)
 						tick[1]++;
 					world.spawnParticle(VersionUtils.getRedstoneDust(), loc, (int) (particleMultiplier * 10.0), tick[1] * particleOff, tick[1] * particleOff, tick[1] * particleOff, 0.01, options);
-					for (Entity e : world.getNearbyEntities(loc, 4.0, 4.0, 4.0, entity -> !(entity instanceof Player && Utils.isPlayerImmune((Player) entity)) && !entity.isDead())) {
+					for (Entity e : world.getNearbyEntities(loc, 4.0, 4.0, 4.0, entity -> !Utils.isEntityImmunePlayer(entity) && !entity.isDead() && !DependencyUtils.isEntityProtected(entity))) {
 						Location eL = entities.get(e.getUniqueId());
 						if (eL != null)
 							e.teleport(eL);

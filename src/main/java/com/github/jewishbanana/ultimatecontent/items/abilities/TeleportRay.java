@@ -17,6 +17,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.uiframework.items.AbilityType;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.ultimatecontent.items.AbilityAttributes;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
@@ -37,7 +38,7 @@ public class TeleportRay extends AbilityAttributes {
 		for (int i=0; i < range; i++) {
 			loc.add(vec);
 			pLocs.add(loc.clone());
-			for (Entity e : world.getNearbyEntities(loc, 1.5, 1.5, 1.5, e -> e instanceof LivingEntity && !e.equals(entity) && !Utils.isEntityImmunePlayer(e))) {
+			for (Entity e : world.getNearbyEntities(loc, 1.5, 1.5, 1.5, e -> e instanceof LivingEntity && !e.equals(entity) && !Utils.isEntityImmunePlayer(e) && !DependencyUtils.isEntityProtected(entity))) {
 				Location to = entity.getLocation();
 				entity.teleport(e);
 				e.teleport(to);

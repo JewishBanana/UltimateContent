@@ -21,6 +21,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.uiframework.items.AbilityType;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.ultimatecontent.items.AbilityAttributes;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class SpawnPlatform extends AbilityAttributes {
@@ -48,7 +49,7 @@ public class SpawnPlatform extends AbilityAttributes {
 				if (block.distance(position) > range)
 					continue;
 				Block b = world.getBlockAt(position.toLocation(world));
-				if (b.isPassable()) {
+				if (b.isPassable() && !DependencyUtils.isBlockProtected(b)) {
 					instance.blocks.put(b, b.getState());
 					b.setType(Material.BLACK_STAINED_GLASS);
 					world.spawnParticle(VersionUtils.getBlockCrack(), b.getLocation().add(.5,0,.5), (int) (particleMultiplier * 3.0), .5, .1, .5, 1, blackData);

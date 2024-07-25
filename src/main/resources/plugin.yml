@@ -1,7 +1,7 @@
 name: UltimateContent
-version: 1.0.0
+version: ${project.version}
 author: JewishBanana
-main: com.github.jewishbanana.ultimatecontent.Main
+main: ${mainClass}
 description: Adds tons of new custom weapons, armor and other items to the game.
 api-version: 1.17
 depend: [UIFramework]

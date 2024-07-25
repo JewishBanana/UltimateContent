@@ -7,11 +7,13 @@ import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Projectile;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.items.AbilityType;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.ultimatecontent.items.AbilityAttributes;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.RepeatingTask;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
@@ -27,6 +29,8 @@ public class PropulsionBlast extends AbilityAttributes {
 
 	public void activate(Entity entity, GenericItem base) {
 		activate(entity.getLocation().add(0,entity.getHeight()/2,0), base);
+		if (destroyProjectile && entity instanceof Projectile)
+			entity.remove();
 	}
 	public void activate(Location loc, GenericItem base) {
 		Vector rotation = new Vector(1, 0, 0);
@@ -49,7 +53,7 @@ public class PropulsionBlast extends AbilityAttributes {
 				distance[0] += radius / 20.0;
 				for (Entity e : world.getNearbyEntities(loc, distance[0], distance[0], distance[0])) {
 					double dist = e.getLocation().distance(loc);
-					if (dist > distance[0])
+					if (dist > distance[0] || DependencyUtils.isEntityProtected(e))
 						continue;
 					if (e instanceof LivingEntity) {
 						if (!Utils.rayTraceEntityConeForSolid(e, loc))
@@ -65,7 +69,7 @@ public class PropulsionBlast extends AbilityAttributes {
 	public void initFields() {
 		this.radius = getDoubleField("radius", 10.0);
 		this.particleMultiplier = getDoubleField("particleMultiplier", 1.0);
-		this.destroyProjectile = getBooleanField("destroyProjectile", false);
+		this.destroyProjectile = getBooleanField("destroyProjectile", true);
 	}
 	public static void register() {
 		AbilityType.registerAbility(REGISTERED_KEY, PropulsionBlast.class);

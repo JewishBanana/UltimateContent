@@ -36,6 +36,7 @@ public class BlackRift extends AbilityAttributes {
 	private double particleMultiplier;
 	private int portalTicks;
 	private boolean destroyItems;
+	private boolean destroyProjectile;
 	
 	private ProjectileSource shooter;
 	
@@ -43,6 +44,8 @@ public class BlackRift extends AbilityAttributes {
 		if (entity instanceof Projectile && ((Projectile) entity).getShooter() instanceof LivingEntity)
 			shooter = ((Projectile) entity).getShooter();
 		activate(entity.getLocation().add(0,entity.getHeight()/2.0,0), base);
+		if (destroyProjectile && entity instanceof Projectile)
+			entity.remove();
 	}
 	public void activate(Location loc, GenericItem base) {
 		double[] var = {this.portalTicks, 1};
@@ -75,7 +78,7 @@ public class BlackRift extends AbilityAttributes {
 							e.remove();
 					}
 				Block b = world.getBlockAt(loc.getBlockX()+(random.nextInt(8)-4), (int) (loc.getBlockY()-var[1]), loc.getBlockZ()+(random.nextInt(8)-4));
-				if (b.getType().isBlock() && !DependencyUtils.isBlockProtected(b.getLocation())) {
+				if (b.getType().isBlock() && !DependencyUtils.isBlockProtected(b)) {
 					FallingBlock fb = world.spawnFallingBlock(b.getLocation(), b.getBlockData());
 					fb.setHurtEntities(true);
 					fb.setDropItem(false);
@@ -92,6 +95,7 @@ public class BlackRift extends AbilityAttributes {
 		this.particleMultiplier = getDoubleField("particleMultiplier", 1.0);
 		this.portalTicks = getIntegerField("portalTicks", 80);
 		this.destroyItems = getBooleanField("destroyItems", true);
+		this.destroyProjectile = getBooleanField("destroyProjectile", true);
 	}
 	public static void register() {
 		AbilityType.registerAbility(REGISTERED_KEY, BlackRift.class);
@@ -103,6 +107,7 @@ public class BlackRift extends AbilityAttributes {
 		map.put("particleMultiplier", particleMultiplier);
 		map.put("portalTicks", portalTicks);
 		map.put("destroyItems", destroyItems);
+		map.put("destroyProjectile", destroyProjectile);
 		return map;
 	}
 	public void deserialize(Map<String, Object> map) {
@@ -112,5 +117,6 @@ public class BlackRift extends AbilityAttributes {
 		particleMultiplier = (double) map.get("particleMultiplier");
 		portalTicks = (int) map.get("portalTicks");
 		destroyItems = (boolean) map.get("destroyItems");
+		destroyProjectile = (boolean) map.get("destroyProjectile");
 	}
 }

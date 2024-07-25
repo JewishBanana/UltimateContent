@@ -21,6 +21,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.uiframework.items.AbilityType;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.ultimatecontent.items.AbilityAttributes;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.RepeatingTask;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
@@ -58,7 +59,7 @@ public class CursedWinds extends AbilityAttributes {
 				tempW.spawnParticle(Particle.FLAME, spell, particleCount, 1, 1, 1, .05);
 				tempW.spawnParticle(VersionUtils.getBlockDust(), spell, particleCount, 1, 1, 1, .1, bd);
 				for (Entity e : spell.getWorld().getNearbyEntities(spell, 1.5, 1.5, 1.5))
-					if (!hitEntities.contains(e.getUniqueId()) && e instanceof LivingEntity && !e.equals(entity) && !Utils.isEntityImmunePlayer(e)) {
+					if (!hitEntities.contains(e.getUniqueId()) && e instanceof LivingEntity && !e.equals(entity) && !Utils.isEntityImmunePlayer(e) && !DependencyUtils.isEntityProtected(e)) {
 						if (Utils.damageEntity((LivingEntity) e, damage, "deaths.cursedWinds", false, entity, new EntityDamageByEntityEvent(entity, e, DamageCause.MAGIC, damage))) {
 							e.setFireTicks(fireTicks);
 							e.setVelocity(motion.clone().multiply(0.5));

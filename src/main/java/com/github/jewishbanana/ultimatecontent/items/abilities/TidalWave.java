@@ -100,14 +100,14 @@ public class TidalWave extends AbilityAttributes {
 					Location line = spot.clone().add(direction.clone().multiply(cycle)).add(0,cycle,0);
 					for (int i=0; i < 5; i++) {
 						Block b = line.clone().add(angle.clone().multiply(i)).getBlock();
-						if (b.getType() != Material.AIR || DependencyUtils.isBlockProtected(b.getLocation()))
+						if (b.getType() != Material.AIR || DependencyUtils.isLocationProtected(b.getLocation()))
 							continue;
 						allWaters.add(b);
 						world.spawnParticle(Particle.BUBBLE_POP, b.getLocation().add(.5,.5,.5), bubbleParticles, .5, .5, .5, 0.0001);
 						b.setType(Material.WATER);
 						water[i+(cycle*5)] = b;
 						for (Entity e : world.getNearbyEntities(b.getLocation(), 0.5, 0.5, 0.5)) {
-							if (e.equals(shooter))
+							if (e.equals(shooter) || DependencyUtils.isEntityProtected(e))
 								continue;
 							e.setVelocity(direction);
 							if (e instanceof LivingEntity && !(e instanceof Player && Utils.isPlayerImmune((Player) e)))

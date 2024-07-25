@@ -17,6 +17,7 @@ import org.bukkit.potion.PotionEffectType;
 import com.github.jewishbanana.uiframework.items.AbilityType;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.ultimatecontent.items.AbilityAttributes;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.RepeatingTask;
 
 public class Blinding extends AbilityAttributes implements Listener {
@@ -31,6 +32,8 @@ public class Blinding extends AbilityAttributes implements Listener {
 	private Target target = Target.ATTACKER;
 	
 	public void activate(Entity entity, GenericItem base) {
+		if (DependencyUtils.isEntityProtected(entity))
+			return;
 		entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, volume * 1, 0.5f);
 		entity.getWorld().spawnParticle(Particle.SQUID_INK, entity.getLocation().add(0,entity.getHeight()/2.0,0), (int) (particleMultiplier * 8.0), .25, .5, .25, 0.0001);
 		final int length = (int) (time * 20.0);

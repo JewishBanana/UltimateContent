@@ -8,7 +8,7 @@
 # incredibly easy to contribute to UltimateContent and add-on your own custom items to UIFramework or UltimateContent itself, if this interests you be sure to check out the
 # source on github.
 #
-# Spigot Page: (Can't be displayed on first release)
+# Spigot Page: https://www.spigotmc.org/resources/ultimatecontent.118256/
 # Discord: https://discord.gg/MhXFj72VeN
 # GitHub: https://github.com/JewishBanana/UltimateContent
 #
@@ -22,7 +22,7 @@ general:
     # This section controls the affects of UltimateContent within protected regions. The applicable region protection plugins are listed on the plugins page!
     protected_regions:
         # This setting controls if abilities can activate and take affect on entities within protected regions
-        effect_entities: true
+        affect_entities: true
         # This setting controls if abilities can damage the environment within protected regions
         damage_blocks: false
 
@@ -66,6 +66,10 @@ general:
 #
 #   "allow_vanilla_crafts" : [BOOLEAN] - By default this is FALSE for every item. This setting enables if the custom item can be used in vanilla crafting recipes e.g. The
 #                                        custom item is an iron ingot and if it should be able to craft an block of iron or not.
+#
+#   "allow_vanilla_enchanting" : [BOOLEAN] - By default this is TRUE for every item. This setting enables if the custom item can be enchanted with vanilla enchants e.g. Anvil
+#                                            enchant book recipes, enchanting tables.
+#
 #   "enchants" : [SECTION] - This setting is a config section that lists the enchants on this item and their levels. This can also support enchants external of
 #                            UltimateContent and also vanilla minecraft enchants (Vanilla enchant levels can be set higher than their level cap). Example usage provided below:
 #
@@ -96,6 +100,11 @@ general:
 #                                               - "right-click"
 #                                               - "hit-entity"
 #
+#   "abilityDisplay" : [STRING] - Will change the display name and description on the item to the alternatives from the given display. Ability displays are created in the
+#                                 displays section of this config and can be referenced here in this setting. An example is how I create a fake display called "bunny_hop" and
+#                                 reference it in the double jump ability for the bunny hop enchant, this relabels the abilities display name and description on the item's
+#                                 lore to my display "bunny_hop"'s name and description.
+#
 # ULTIMATECONTENT UNIQUE SETTINGS:
 #
 #   "cooldownMessages" : [BOOLEAN] - Controls if cooldown messages are sent to the player upon failed activation due to cooldown. By default this is TRUE for all abilities.
@@ -109,11 +118,6 @@ general:
 #                         the abilities cooldown upon activation this just modifies where the ability activates. This is a list of all the different target types you can use:
 #
 #                         "activator", "projectile", "hit-entity", "interacted-entity", "attacker", "shooter", "dropped-item", "block"
-#
-#   "abilityDisplay" : [STRING] - Will change the display name and description on the item to the alternatives from the given display. Ability displays are created in the
-#                                 displays section of this config and can be referenced here in this setting. An example is how I create a fake display called "bunny_hop" and
-#                                 reference it in the double jump ability for the bunny hop enchant, this relabels the abilities display name and description on the item's
-#                                 lore to my display "bunny_hop"'s name and description.
 #
 ###############################################################################################################################################################################
 
@@ -185,7 +189,10 @@ items:
                     damage: 1.0
                     range: 4.0
                     portalTicks: 80
+                    # If item entities that get dragged in the rift should be destroyed or not
                     destroyItems: true
+                    # If the projectile should be immediately removed when this ability activates
+                    destroyProjectile: true
                     target: "projectile"
                     usage:
                     - "projectile-hit"
@@ -543,6 +550,13 @@ language:
     items:
         particleToggle: " &7- Right-Click to toggle visibility of your own particles."
         particleToggleError: "&cParticle settings can only be changed in survival!"
+    rarity:
+        common: "&a[COMMON]"
+        uncommon: "&2[UNCOMMON]"
+        rare: "&9[RARE]"
+        epic: "&d[EPIC]"
+        legendary: "&6[LEGENDARY]"
+        mythic: "&c[MYTHIC]"
     misc:
         enabled: "&a[ENABLED]"
         disabled: "&c[DISABLED]"

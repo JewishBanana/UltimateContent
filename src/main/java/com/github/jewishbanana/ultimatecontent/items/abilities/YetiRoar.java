@@ -21,6 +21,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.uiframework.items.AbilityType;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.ultimatecontent.items.AbilityAttributes;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.RepeatingTask;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
@@ -86,7 +87,7 @@ public class YetiRoar extends AbilityAttributes {
 							}
 							world.playSound(b.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, SoundCategory.HOSTILE, 0.5f * volume, 0.5f);
 							for (Entity e : world.getNearbyEntities(b.getLocation().clone().add(0.5, 0.5, 0.5), 0.5, 1, 0.5)) {
-								if (e.equals(activator))
+								if (e.equals(activator) || DependencyUtils.isEntityProtected(e))
 									continue;
 								e.setVelocity(Utils.getVectorTowards(loc, e.getLocation()).multiply(0.5).setY(0.8));
 								if (e instanceof LivingEntity && !(e instanceof Player && Utils.isPlayerImmune((Player) e))) {
