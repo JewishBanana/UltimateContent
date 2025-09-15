@@ -17,44 +17,40 @@ import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class DeathHandler implements Listener {
 
-	private Main plugin;
 	private Map<String, String> deathMessages = new HashMap<>();
 	
 	public DeathHandler(Main plugin) {
-		this.plugin = plugin;
 		for (String s : plugin.getConfig().getConfigurationSection("language.deaths").getKeys(false))
 			deathMessages.put("deaths."+s, Utils.convertString(DataUtils.getConfigString("language.deaths."+s)));
 		
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 	@EventHandler
-	public void onDeath(PlayerDeathEvent e) {
-		deathMessages.forEach((k, v) -> {
-			if (e.getEntity().hasMetadata(k)) {
-				e.getEntity().removeMetadata(k, plugin);
-				String killer = "Unknown";
-				if (e.getEntity().getLastDamageCause() != null && e.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent) {
-					EntityDamageByEntityEvent event = (EntityDamageByEntityEvent) e.getEntity().getLastDamageCause();
-					if (event.getDamager() != null) {
-						if (event.getDamager() instanceof Player)
-							killer = Utils.convertString(((Player) event.getDamager()).getDisplayName());
-						else if (event.getDamager() instanceof Projectile) {
-							Projectile projectile = (Projectile) event.getDamager();
-							if (projectile.getShooter() != null && projectile.getShooter() instanceof LivingEntity) {
-								if (projectile.getShooter() instanceof Player)
-									killer = Utils.convertString(((Player) projectile.getShooter()).getDisplayName());
-								else
-									killer = ((LivingEntity) projectile.getShooter()).getCustomName() != null ? Utils.convertString(((LivingEntity) projectile.getShooter()).getCustomName()) : ((LivingEntity) projectile.getShooter()).getType().getEntityClass().getName();
-							} else
-								killer = event.getDamager().getType().getEntityClass().getName();
+	public void onDeath(PlayerDeathEvent event) {
+		Player player = event.getEntity();
+		for (Map.Entry<String, String> entry : deathMessages.entrySet()) {
+			if (!player.hasMetadata(entry.getKey()))
+				continue;
+			String killer = "Unknown";
+			if (player.getLastDamageCause() != null && player.getLastDamageCause() instanceof EntityDamageByEntityEvent damageEvent) {
+				if (damageEvent.getDamager() != null) {
+					if (damageEvent.getDamager() instanceof Player damager)
+						killer = Utils.convertString(damager.getDisplayName());
+					else if (damageEvent.getDamager() instanceof Projectile projectile) {
+						if (projectile.getShooter() != null && projectile.getShooter() instanceof LivingEntity shooter) {
+							if (projectile.getShooter() instanceof Player shootingPlayer)
+								killer = Utils.convertString(shootingPlayer.getDisplayName());
+							else
+								killer = shooter.getCustomName() != null ? Utils.convertString(shooter.getCustomName()) : shooter.getType().getEntityClass().getName();
 						} else
-							killer = event.getDamager().getCustomName() != null ? Utils.convertString(event.getDamager().getCustomName()) : event.getDamager().getType().getEntityClass().getName();
-					}
+							killer = damageEvent.getDamager().getType().getEntityClass().getName();
+					} else
+						killer = damageEvent.getDamager().getCustomName() != null ? Utils.convertString(damageEvent.getDamager().getCustomName()) : damageEvent.getDamager().getType().getEntityClass().getName();
 				}
-				e.setDeathMessage(Utils.convertString(v.replace("%victim%", e.getEntity().getDisplayName())
-						.replace("%killer%", e.getEntity().getKiller() == null ? killer : e.getEntity().getKiller().getDisplayName())));
-				return;
 			}
-		});
+			event.setDeathMessage(Utils.convertString(entry.getValue().replace("%player%", player.getDisplayName())
+					.replace("%killer%", player.getKiller() == null ? killer : player.getKiller().getDisplayName())));
+			return;
+		}
 	}
 }

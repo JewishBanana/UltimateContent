@@ -4,6 +4,7 @@ import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 
 public enum Rarity {
 	
+	NONE,
 	COMMON,
 	UNCOMMON,
 	RARE,
@@ -18,5 +19,9 @@ public enum Rarity {
 	}
 	public String getLabel() {
 		return label;
+	}
+	public static void reload() {
+		for (Rarity rarity : values())
+			rarity.label = DataUtils.getConfigString("language.rarity."+rarity.toString().toLowerCase());
 	}
 }

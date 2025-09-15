@@ -1,5 +1,8 @@
 package com.github.jewishbanana.ultimatecontent.utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,11 +11,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.CookingRecipe;
 import org.bukkit.inventory.ItemStack;
@@ -20,18 +25,41 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import com.github.jewishbanana.ultimatecontent.Main;
 
 public class DataUtils {
 	
-	private static Main plugin;
-	private static DecimalFormat decimalFormat;
+	private static final JavaPlugin plugin;
+	private static final DecimalFormat decimalFormat;
+	private static FileConfiguration config;
+	private static final FileConfiguration defaultConfig;
+	private static final File dataFile;
+	private static final FileConfiguration dataYaml;
 	static {
 		plugin = Main.getInstance();
+		config = plugin.getConfig();
+		defaultConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(plugin.getResource("config.yml")));
 		decimalFormat = new DecimalFormat("0.#");
+		
+		dataFile = new File(plugin.getDataFolder().getAbsolutePath(), "data.yml");
+		if (!dataFile.exists()) {
+			plugin.getLogger().info("Could not find data file in plugin directory! Creating new data file...");
+			dataFile.getParentFile().mkdirs();
+			try {
+				dataFile.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+				Utils.sendErrorMessage();
+			}
+		}
+		dataYaml = YamlConfiguration.loadConfiguration(dataFile);
 	}
 	
+	public static void reload() {
+		config = plugin.getConfig();
+	}
 	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         List<Entry<K, V>> list = new ArrayList<>(map.entrySet());
         list.sort(Entry.comparingByValue());
@@ -50,42 +78,90 @@ public class DataUtils {
 	}
 	public static int getConfigInt(String path) {
 		try {
-			return plugin.getConfig().getInt(path);
-		} catch (NumberFormatException e) {
+			return config.getInt(path);
+		} catch (Exception e) {
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+path+"' please fix this value!"));
-			return 0;
+			return defaultConfig.getInt(path);
+		}
+	}
+	public static int getConfigInt(String path, int defaultValue) {
+		try {
+			if (!config.contains(path, true))
+				return defaultValue;
+			return config.getInt(path);
+		} catch (Exception e) {
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+path+"' please fix this value!"));
+			return defaultValue;
 		}
 	}
 	public static double getConfigDouble(String path) {
 		try {
-			return plugin.getConfig().getDouble(path);
-		} catch (NumberFormatException e) {
+			return config.getDouble(path);
+		} catch (Exception e) {
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+path+"' please fix this value!"));
-			return 0.0;
+			return defaultConfig.getDouble(path);
+		}
+	}
+	public static double getConfigDouble(String path, double defaultValue) {
+		try {
+			if (!config.contains(path, true))
+				return defaultValue;
+			return config.getDouble(path);
+		} catch (Exception e) {
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+path+"' please fix this value!"));
+			return defaultValue;
 		}
 	}
 	public static boolean getConfigBoolean(String path) {
 		try {
-			return plugin.getConfig().getBoolean(path);
+			return config.getBoolean(path);
 		} catch (Exception e) {
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+path+"' please fix this value!"));
-			return false;
+			return defaultConfig.getBoolean(path);
+		}
+	}
+	public static boolean getConfigBoolean(String path, boolean defaultValue) {
+		try {
+			if (!config.contains(path, true))
+				return defaultValue;
+			return config.getBoolean(path);
+		} catch (Exception e) {
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+path+"' please fix this value!"));
+			return defaultConfig.getBoolean(path);
 		}
 	}
 	public static String getConfigString(String path) {
 		try {
-			return plugin.getConfig().getString(path);
+			return config.getString(path);
 		} catch (Exception e) {
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring &evalue from config path '"+path+"' please fix this value!"));
-			return null;
+			return defaultConfig.getString(path);
+		}
+	}
+	public static String getConfigString(String path, String defaultValue) {
+		try {
+			if (!config.contains(path, true))
+				return defaultValue;
+			return config.getString(path);
+		} catch (Exception e) {
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring &evalue from config path '"+path+"' please fix this value!"));
+			return defaultValue;
 		}
 	}
 	public static List<String> getConfigStringList(String path) {
 		try {
-			return plugin.getConfig().getStringList(path);
+			return config.getStringList(path);
 		} catch (Exception e) {
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring list &evalue from config path '"+path+"' please fix this value!"));
-			return null;
+			return defaultConfig.getStringList(path);
+		}
+	}
+	public static List<Map<?, ?>> getConfigMapList(String path) {
+		try {
+			return config.getMapList(path);
+		} catch (Exception e) {
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dmap list &evalue from config path '"+path+"' please fix this value!"));
+			return defaultConfig.getMapList(path);
 		}
 	}
 	public static String capitalizeFormat(String string) {
@@ -169,6 +245,76 @@ public class DataUtils {
 			e.printStackTrace();
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR could not read recipe data from &e'"+section+"' &cplease fix this!"));
 			return null;
+		}
+	}
+	public static int getDataFileInt(String path) {
+		try {
+			return dataYaml.getInt(path);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dinteger &cvalue from data file path '"+path+"'!"));
+			Utils.sendErrorMessage();
+			return 0;
+		}
+	}
+	public static double getDataFileDouble(String path) {
+		try {
+			return dataYaml.getDouble(path);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &ddouble &cvalue from data file path '"+path+"'!"));
+			Utils.sendErrorMessage();
+			return 0.0;
+		}
+	}
+	public static boolean getDataFileBoolean(String path) {
+		try {
+			return dataYaml.getBoolean(path);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dboolean &cvalue from data file path '"+path+"'!"));
+			Utils.sendErrorMessage();
+			return false;
+		}
+	}
+	public static String getDataFileString(String path) {
+		try {
+			return dataYaml.getString(path);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dstring &cvalue from data file path '"+path+"'!"));
+			Utils.sendErrorMessage();
+			return null;
+		}
+	}
+	public static List<String> getDataFileStringList(String path) {
+		try {
+			return dataYaml.getStringList(path);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dstring list &cvalue from data file path '"+path+"'!"));
+			Utils.sendErrorMessage();
+			return null;
+		}
+	}
+	public static void writeToDataFile(Consumer<FileConfiguration> writeable) {
+		try {
+			writeable.accept(dataYaml);
+			dataYaml.save(dataFile);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Utils.sendErrorMessage();
+		}
+	}
+	public static FileConfiguration getDataFile() {
+		return dataYaml;
+	}
+	public static void saveDataFile() {
+		try {
+			dataYaml.save(dataFile);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Utils.sendErrorMessage();
 		}
 	}
 }

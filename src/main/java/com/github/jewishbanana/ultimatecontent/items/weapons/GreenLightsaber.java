@@ -17,21 +17,23 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.items.ItemBuilder;
 import com.github.jewishbanana.uiframework.items.ItemField;
-import com.github.jewishbanana.uiframework.items.ItemType;
+import com.github.jewishbanana.uiframework.items.UIItemType;
+import com.github.jewishbanana.ultimatecontent.abilities.SaberParry;
+import com.github.jewishbanana.ultimatecontent.items.CustomItemBuilder;
 import com.github.jewishbanana.ultimatecontent.items.Weapon;
-import com.github.jewishbanana.ultimatecontent.items.abilities.SaberParry;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
-import com.github.jewishbanana.ultimatecontent.utils.RepeatingTask;
+import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class GreenLightsaber extends Weapon {
 	
-	public static String REGISTERED_KEY = "ui:green_lightsaber";
+	public static final String REGISTERED_KEY = "uc:green_lightsaber";
 	
 	private ItemField<Byte> particleField;
 	
@@ -53,9 +55,10 @@ public class GreenLightsaber extends Weapon {
 				Vector angle = vec.clone().rotateAroundAxis(axis, Math.toRadians(firstAngle+180+(Utils.random().nextDouble()*50-25)));
 				vec.rotateAroundAxis(axis, Math.toRadians(firstAngle));
 				Vector finalAngle = Utils.getVectorTowards(front.clone().add(vec), front.clone().add(angle)).multiply(0.15);
-				int[] tick = {0};
 				DustOptions options = new DustOptions(Color.fromARGB(10, 126, 242, 132), 0.6f);
-				new RepeatingTask(0, 1) {
+				new BukkitRunnable() {
+					private int tick;
+					
 					@Override
 					public void run() {
 						for (int i=0; i < 3; i++) {
@@ -73,10 +76,10 @@ public class GreenLightsaber extends Weapon {
 							}
 							vec.add(finalAngle);
 						}
-						if (tick[0]++ >= 4)
-							cancel();
+						if (tick++ >= 4)
+							this.cancel();
 					}
-				};
+				}.runTaskTimer(plugin, 0, 1);
 			}
 			UUID uuid = event.getPlayer().getUniqueId();
 			if (SaberParry.projectileParry.add(uuid))
@@ -93,7 +96,7 @@ public class GreenLightsaber extends Weapon {
 		return true;
 	}
 	public boolean inventoryClick(InventoryClickEvent event) {
-		if (Utils.isPlayerImmune((Player) event.getWhoClicked()))
+		if (EntityUtils.isPlayerImmune((Player) event.getWhoClicked()))
 			event.getWhoClicked().sendMessage(Utils.convertString(DataUtils.getConfigString("language.items.particleToggleError")));
 		if (event.getClick() == ClickType.RIGHT) {
 			if (particleField.getSetting() == 2)
@@ -108,9 +111,9 @@ public class GreenLightsaber extends Weapon {
 	}
 	@Override
 	public ItemBuilder createItem() {
-		return ItemBuilder.create(getType(), Material.GOLDEN_SWORD).assembleLore().setCustomModelData(7001).build();
+		return CustomItemBuilder.create(getType(), Material.GOLDEN_SWORD).assembleLore().setCustomModelData(7001).build();
 	}
 	public static void register() {
-		ItemType.registerItem(REGISTERED_KEY, GreenLightsaber.class);
+		UIItemType.registerItem(REGISTERED_KEY, GreenLightsaber.class);
 	}
 }

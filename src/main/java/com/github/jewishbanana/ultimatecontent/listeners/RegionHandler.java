@@ -19,13 +19,12 @@ public class RegionHandler implements Listener {
 	public RegionHandler(Main plugin) {
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onBlockForm(EntityChangeBlockEvent event) {
-		if (event.isCancelled() || !(event.getEntity() instanceof FallingBlock) || !event.getEntity().hasMetadata("ui-fb"))
-			return;
-		event.setCancelled(true);
+		if (event.getEntity() instanceof FallingBlock && event.getEntity().hasMetadata("uc-fb"))
+				event.setCancelled(true);
 	}
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onFlow(FluidLevelChangeEvent e) {
 		if (fluidChangeBlocks.contains(e.getBlock()))
 			e.setCancelled(true);

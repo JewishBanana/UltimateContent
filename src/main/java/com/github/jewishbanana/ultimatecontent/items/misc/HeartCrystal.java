@@ -10,14 +10,16 @@ import org.bukkit.inventory.ItemStack;
 
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.ItemBuilder;
-import com.github.jewishbanana.uiframework.items.ItemType;
+import com.github.jewishbanana.uiframework.items.UIItemType;
 import com.github.jewishbanana.ultimatecontent.items.BaseItem;
-import com.github.jewishbanana.ultimatecontent.utils.Utils;
+import com.github.jewishbanana.ultimatecontent.items.CustomItemBuilder;
+import com.github.jewishbanana.ultimatecontent.items.Rarity;
+import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class HeartCrystal extends BaseItem {
 	
-	public static String REGISTERED_KEY = "ui:heart_crystal";
+	public static final String REGISTERED_KEY = "uc:heart_crystal";
 	
 	public HeartCrystal(ItemStack item) {
 		super(item);
@@ -30,7 +32,7 @@ public class HeartCrystal extends BaseItem {
 			double amount = Math.min(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue()+2.0, 40.0);
 			p.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(amount);
 			p.setHealth(Math.min(p.getHealth()+2.0, p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue()));
-			Utils.playDamageEffect(p);
+			EntityUtils.playDamageEffect(p);
 			p.playSound(p, Sound.BLOCK_CHORUS_FLOWER_GROW, 1, 0.5f);
 			if (item.getAmount() == 1)
 				GenericItem.removeBaseItem(item);
@@ -40,9 +42,12 @@ public class HeartCrystal extends BaseItem {
 	}
 	@Override
 	public ItemBuilder createItem() {
-		return ItemBuilder.create(getType(), Material.REDSTONE).setHiddenEnchanted(VersionUtils.getUnbreaking()).assembleLore().build();
+		return CustomItemBuilder.create(getType(), Material.REDSTONE).setHiddenEnchanted(VersionUtils.getUnbreaking()).assembleLore().build();
 	}
 	public static void register() {
-		ItemType.registerItem(REGISTERED_KEY, HeartCrystal.class);
+		UIItemType.registerItem(REGISTERED_KEY, HeartCrystal.class);
+	}
+	public Rarity getRarity() {
+		return Rarity.RARE;
 	}
 }

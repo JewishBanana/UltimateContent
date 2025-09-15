@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.random.RandomGenerator;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -24,23 +24,24 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorChangeEvent;
 import com.github.jewishbanana.uiframework.items.Ability;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.ItemField;
+import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
 import com.github.jewishbanana.ultimatecontent.Main;
-import com.github.jewishbanana.ultimatecontent.items.AbilityAttributes;
-import com.github.jewishbanana.ultimatecontent.items.abilities.DoubleJump;
-import com.github.jewishbanana.ultimatecontent.items.enchants.BunnyHop;
-import com.github.jewishbanana.ultimatecontent.utils.RepeatingTask;
-import com.github.jewishbanana.ultimatecontent.utils.Utils;
+import com.github.jewishbanana.ultimatecontent.abilities.DoubleJump;
+import com.github.jewishbanana.ultimatecontent.enchants.BunnyHop;
+import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.mojang.datafixers.util.Pair;
 
 public class DoubleJumpHandler implements Listener {
 	
-	private Random random = new Random();
+	private Main plugin;
+	private RandomGenerator random = RandomGenerator.of("SplittableRandom");
 	private Set<UUID> doubleJumpEnabledPlayers = new HashSet<>();
 	private Set<UUID> doubleJumpingPlayers = new HashSet<>();
 	private Map<UUID, Float> doubleJumpFall = new HashMap<>();
@@ -48,10 +49,11 @@ public class DoubleJumpHandler implements Listener {
 	private Map<UUID, Pair<Integer, BukkitTask>> doubleJumpTimer = new HashMap<>();
 
 	public DoubleJumpHandler(Main plugin) {
+		this.plugin = plugin;
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 		
 		plugin.getServer().getOnlinePlayers().forEach(p -> enableDoubleJumpIfPresent(p, GenericItem.getItemBase(p.getEquipment().getBoots())));
-		new RepeatingTask(0, 20) {
+		new BukkitRunnable() {
 			@SuppressWarnings("deprecation")
 			@Override
 			public void run() {
@@ -64,14 +66,14 @@ public class DoubleJumpHandler implements Listener {
 					}
 					GenericItem base = GenericItem.getItemBase(p.getEquipment().getBoots());
 		            if (base == null) {
-		            	if (!Utils.isPlayerImmune(p))
+		            	if (!EntityUtils.isPlayerImmune(p))
 							p.setAllowFlight(false);
 		            	it.remove();
 		            	continue;
 		            }
 		            Ability ability = base.getAbility(DoubleJump.REGISTERED_KEY);
 		            if (ability == null) {
-		            	if (!Utils.isPlayerImmune(p))
+		            	if (!EntityUtils.isPlayerImmune(p))
 							p.setAllowFlight(false);
 		            	it.remove();
 		            	continue;
@@ -80,8 +82,8 @@ public class DoubleJumpHandler implements Listener {
 						p.setAllowFlight(true);
 				}
 			}
-		};
-		new RepeatingTask(0, 1) {
+		}.runTaskTimer(plugin, 0, 20);
+		new BukkitRunnable() {
 			@Override
 			public void run() {
 				Iterator<UUID> it = doubleJumpEnabledPlayers.iterator();
@@ -90,7 +92,7 @@ public class DoubleJumpHandler implements Listener {
 					if (e == null || e.isDead())
 						continue;
 					UUID uuid = e.getUniqueId();
-					if (!doubleJumpingPlayers.contains(uuid) && !doubleJumpDamaging.contains(uuid) && !Utils.isEntityImmunePlayer(e)) {
+					if (!doubleJumpingPlayers.contains(uuid) && !doubleJumpDamaging.contains(uuid) && !EntityUtils.isEntityImmunePlayer(e)) {
 						if (e.isOnGround()) {
 							if (doubleJumpFall.getOrDefault(uuid, 0f) > 1) {
 								if (e instanceof Player)
@@ -112,7 +114,7 @@ public class DoubleJumpHandler implements Listener {
 								Pair<Integer, BukkitTask> pair = doubleJumpTimer.get(uuid);
 								if (pair != null && pair.getFirst() > 0 && pair.getSecond() == null)
 									doubleJumpTimer.replace(uuid, Pair.of(pair.getFirst(), plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-										if (!Utils.isEntityImmunePlayer(e))
+										if (!EntityUtils.isEntityImmunePlayer(e))
 											((Player) e).setAllowFlight(false);
 									}, pair.getFirst())));
 							}
@@ -153,7 +155,7 @@ public class DoubleJumpHandler implements Listener {
 					});
 				}
 			}
-		};
+		}.runTaskTimer(plugin, 0, 1);
 	}
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
@@ -164,13 +166,11 @@ public class DoubleJumpHandler implements Listener {
 		doubleJumpEnabledPlayers.remove(event.getPlayer().getUniqueId());
 		doubleJumpingPlayers.remove(event.getPlayer().getUniqueId());
 		doubleJumpTimer.remove(event.getPlayer().getUniqueId());
-		if (!Utils.isPlayerImmune(event.getPlayer()))
+		if (!EntityUtils.isPlayerImmune(event.getPlayer()))
 			event.getPlayer().setAllowFlight(false);
 	}
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onArmorChange(PlayerArmorChangeEvent event) {
-		if (event.isCancelled())
-			return;
 		if (event.getNewItem().getType() != Material.AIR) {
 			if (event.getNewItem().getType().getEquipmentSlot() == EquipmentSlot.FEET)
 				enableDoubleJumpIfPresent(event.getPlayer(), GenericItem.getItemBase(event.getNewItem()));
@@ -183,16 +183,14 @@ public class DoubleJumpHandler implements Listener {
 					doubleJumpEnabledPlayers.remove(event.getPlayer().getUniqueId());
 					doubleJumpingPlayers.remove(event.getPlayer().getUniqueId());
 					doubleJumpTimer.remove(event.getPlayer().getUniqueId());
-					if (!Utils.isPlayerImmune(event.getPlayer()))
+					if (!EntityUtils.isPlayerImmune(event.getPlayer()))
 						event.getPlayer().setAllowFlight(false);
 				}
 			}
 		}
 	}
-	@EventHandler
+	@EventHandler(ignoreCancelled = true)
 	public void onDamage(EntityDamageEvent e) {
-		if (e.isCancelled())
-			return;
 		if (e.getCause() == DamageCause.FALL && doubleJumpEnabledPlayers.contains(e.getEntity().getUniqueId())) {
 			GenericItem base = GenericItem.getItemBase(((LivingEntity) e.getEntity()).getEquipment().getBoots());
             if (base == null) {
@@ -216,7 +214,7 @@ public class DoubleJumpHandler implements Listener {
 	}
 	@EventHandler
 	public void onToggleFlight(PlayerToggleFlightEvent e) {
-		if (doubleJumpEnabledPlayers.contains(e.getPlayer().getUniqueId()) && !doubleJumpingPlayers.contains(e.getPlayer().getUniqueId()) && !Utils.isPlayerImmune(e.getPlayer())) {
+		if (doubleJumpEnabledPlayers.contains(e.getPlayer().getUniqueId()) && !doubleJumpingPlayers.contains(e.getPlayer().getUniqueId()) && !EntityUtils.isPlayerImmune(e.getPlayer())) {
 			Player p = e.getPlayer();
 			e.setCancelled(true);
             p.setAllowFlight(false);
@@ -237,18 +235,18 @@ public class DoubleJumpHandler implements Listener {
             attributes.internalActivation(p, e, base, p);
             doubleJumpFall.replace(p.getUniqueId(), p.getFallDistance());
             doubleJumpingPlayers.add(p.getUniqueId());
-            new RepeatingTask(5, 1) {
+            new BukkitRunnable() {
 				@SuppressWarnings("deprecation")
 				@Override
             	public void run() {
-            		if (p == null || !p.isOnline() || p.isDead() || Utils.isPlayerImmune(p) || !doubleJumpingPlayers.contains(p.getUniqueId()) || p.isOnGround()) {
-            			cancel();
+            		if (p == null || !p.isOnline() || p.isDead() || EntityUtils.isPlayerImmune(p) || !doubleJumpingPlayers.contains(p.getUniqueId()) || p.isOnGround()) {
+            			this.cancel();
             			doubleJumpingPlayers.remove(p.getUniqueId());
             			p.setAllowFlight(true);
             			return;
             		}
 				}
-            };
+            }.runTaskTimer(plugin, 5, 1);
             return;
 		}
 	}

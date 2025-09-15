@@ -2,7 +2,7 @@ package com.github.jewishbanana.ultimatecontent.items;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
+import java.util.random.RandomGenerator;
 
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -10,21 +10,24 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import com.github.jewishbanana.uiframework.items.Ability;
 import com.github.jewishbanana.uiframework.items.GenericItem;
+import com.github.jewishbanana.uiframework.items.ItemCategory;
+import com.github.jewishbanana.uiframework.items.ItemCategory.DefaultCategory;
 import com.github.jewishbanana.ultimatecontent.Main;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class BaseItem extends GenericItem {
 
-	protected static Main plugin;
-	protected static Random random;
+	protected static JavaPlugin plugin;
+	protected static RandomGenerator random;
 	protected static Enchantment powerEnchant;
 	protected static Enchantment protectionEnchant;
 	static {
 		plugin = Main.getInstance();
-		random = new Random();
+		random = RandomGenerator.of("SplittableRandom");
 		powerEnchant = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("power"));
 		protectionEnchant = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("protection"));
 	}
@@ -99,6 +102,27 @@ public class BaseItem extends GenericItem {
 		return "misc";
 	}
 	public Rarity getRarity() {
-		return Rarity.COMMON;
+		return Rarity.NONE;
+	}
+	public boolean isDeprecated() {
+		return false;
+	}
+	protected enum CustomItemCategories {
+		
+		EASTER_ITEMS("uc:easter_items", "&aEaster Items"),
+		CHRISTMAS_ITEMS("uc:christmas_items", "&cChristmas Items");
+		
+		private ItemCategory category;
+		
+		private CustomItemCategories(String identifier, String displayName) {
+			this.category = new ItemCategory(identifier, Utils.convertString(displayName));
+		}
+		public ItemCategory getItemCategory() {
+			return category;
+		}
+	}
+	public static void createCustomCategories() {
+		ItemCategory.addItemCategoryAfter(CustomItemCategories.EASTER_ITEMS.getItemCategory(), DefaultCategory.MISCELLANEOUS);
+		ItemCategory.addItemCategoryAfter(CustomItemCategories.CHRISTMAS_ITEMS.getItemCategory(), CustomItemCategories.EASTER_ITEMS.getItemCategory());
 	}
 }

@@ -8,9 +8,11 @@
 # incredibly easy to contribute to UltimateContent and add-on your own custom items to UIFramework or UltimateContent itself, if this interests you be sure to check out the
 # source on github.
 #
-# Spigot Page: https://www.spigotmc.org/resources/ultimatecontent.118256/
 # Discord: https://discord.gg/MhXFj72VeN
-# GitHub: https://github.com/JewishBanana/UltimateContent
+# Spigot Page: https://www.spigotmc.org/resources/ultimatecontent.118256/
+# Source Code: https://github.com/JewishBanana/UltimateContent
+#
+# Remember to use CTRL + F to find what you are looking for. Just search for the item/ability/entity command name!
 #
 ###############################################################################################################################################################################
 #
@@ -25,10 +27,37 @@ general:
         affect_entities: true
         # This setting controls if abilities can damage the environment within protected regions
         damage_blocks: false
+    # This section is for modifying settings related to the special limited seasonal events within the plugin
+    special_events:
+        # Toggles if special events are enabled or not on the server
+        enabled: true
+        # This controls if players are sent messages indicating if an event is currently on-going or when they make progress on an event
+        send_event_messages: true
+    # This section controls what entities and blocks are blacklisted entirely from being harmed/broken from abilities. Each ability can have its own personal blacklist, 
+    # however, this blacklist section is a global list meaning that these entries will automatically be added to every single abilities blacklist making configuration easier.
+    blacklist:
+        blocks:
+        - bedrock
+        - end_portal_frame
+        - end_portal
+        - nether_portal
+        entities:
+        - ender_dragon
+        - wither
+        - elder_guardian
+        - warden
+        - armor_stand
+        - item_frame
+        - uc:void_worm
 
 ###############################################################################################################################################################################
 #
 # ITEMS:
+#
+# This section is designated for all the custom items in UltimateContent. The items are sorted by their category such as weapons, armor, crafting, seasonal, etc. All of the
+# information below explains what each config setting does for each item. Most items do not have all of these settings within their configuration but they are all supported
+# so you can just manually add a setting that is not present if you desire. Keep in mind that you cannot change the actual command name of the item that is used for the give
+# command. Any user input errors in the configuration will be explained in the server console with details such as unexpected values or non existent items so be sure to check.
 #
 #   "name" : [STRING] - The visible name displayed for the custom item in game. This supports color codes (e.g. '&c' or '&5') and also hex codes formatted as '(hex:#ffffff)'
 #                       if using spigot or a fork of spigot (e.g. paper, purpur, etc.). If you are on vanilla or bukkit then hex codes will auto convert to the closest
@@ -48,8 +77,8 @@ general:
 #   "projectileDamage" : [DECIMAL] - This controls the items damage it deals if it hits an entity as a projectile, this setting only works on items that can actually be fired
 #                                    as projectiles e.g. snowballs, arrows, tridents, etc.
 #
-#   "projectileDamageMultiplier" : [DOUBLE] - This setting multiplies the damage dealt by projectiles fired from this item, this setting has a default value set to 1.0 and
-#                                             only has an effect on items that can actually shoot projectiles e.g. bows, crossbows, etc.
+#   "projectileDamageMultiplier" : [DECIMAL] - This setting multiplies the damage dealt by projectiles fired from this item, this setting has a default value set to 1.0 and
+#                                              only has an effect on items that can actually shoot projectiles e.g. bows, crossbows, etc.
 #
 #   "durability" : [DECIMAL] - This controls the items durability, if set it will override the vanilla durability of the item. If you want to ignore item durability and make
 #                              an item unbreakable set the value to -1.
@@ -206,6 +235,7 @@ items:
             - "(hex:#0061a6)The mighty trident of the seas which can call upon the powers of the leviathon..."
             damage: 13.0
             attackSpeed: 0.9
+            projectileDamage: 20.0
             abilities:
                 tidal_wave:
                     cooldown: 10.0
@@ -217,6 +247,13 @@ items:
             enchants:
                 loyalty: 3
                 impaling: 5
+        # This item is deprecated meaning that in future updates it may be changed/removed in ways where it could break existing items of this type! Use of this item is not recommended.
+        blood_pact:
+            name: "(hex:#e32727)Blood Pact"
+            lore:
+            - "(hex:#ff4a4a)You can feel the presence of something within the axe..."
+            damage: 13.5
+            attackSpeed: 0.6
     tools:
         abyssal_shield:
             name: "(hex:#8623b8)Abyssal Shield"
@@ -245,9 +282,9 @@ items:
             abilities:
                 jump_boost:
                     cooldown: 8.0
-                    jump_height: 20.0
-                    slow_fall: true
-                    no_fall_damage: true
+                    jumpHeight: 20.0
+                    slowFall: true
+                    noFall: true
                     usage:
                     - "right-click"
         safety_net:
@@ -326,11 +363,70 @@ items:
             enchants:
                 ancient_curse: 1
     easter_items:
+        green_egg:
+            name: "(hex:#42ff4f)Green Easter Egg"
+            lore:
+            - "&eA strange green egg laid by a chicken that does not hatch into a chicken?"
+        blue_egg:
+            name: "(hex:#63c3ff)Blue Easter Egg"
+            lore:
+            - "&eA deep blue egg that was sitting on the floor of the ocean?"
+        red_egg:
+            name: "(hex:#ff6363)Red Easter Egg"
+            lore:
+            - "&eBlood red egg that an angry goat was guarding?"
+        orange_egg:
+            name: "(hex:#ffa263)Orange Easter Egg"
+            lore:
+            - "&eCold but bright orange egg that was left in a deep cave?"
+        purple_egg:
+            name: "(hex:#d663ff)Purple Easter Egg"
+            lore:
+            - "&eA mysterious purple egg that was sold to you for a high price?"
         golden_egg:
             name: "(hex:#ffe600)Golden Egg"
             lore:
             - "&eShiny golden easter egg dropped by the Easter Bunny boss from the Easter event. Combine with boots to imbue special powers of the Easter Bunny."
-            
+        easter_basket:
+            name: "(hex:#66ff8c)Easter Egg Basket"
+            lore:
+            - "&eA basket filled with colorful Easter eggs."
+            - "&7Place on a large meadows surface to summon the &aEaster Bunny"
+    christmas_items:
+        candy_cane:
+            name: "&cC&fa&cn&fd&cy &fC&ca&fn&ce"
+            lore:
+            - "&eThe savory treat of Christmas tradition, although it can also be very sharp."
+            damage: 9.0
+            attackSpeed: 1.4
+        cursed_candy_cane:
+            name: "&5C&fu&5r&fs&5e&fd &5C&fa&5n&fd&5y &fC&5a&fn&5e"
+            lore:
+            - "&eThis candy cane seems to have grown a taste for blood..."
+            damage: 11.0
+            attackSpeed: 1.4
+        ornament:
+            name: "(hex:#ff8286)Ornament"
+            lore:
+            - "&eSparkly tree ornament which can be used to craft a snow globe."
+        broken_snow_globe:
+            name: "(hex:#9e9e9e)Broken Snow Globe"
+            lore:
+            - "&eA broken empty snow globe. You should try repairing this..."
+        snow_globe:
+            name: "(hex:#e8e8e8)Snow Globe"
+            lore:
+            - "&eA snow globe filled with holiday cheer!"
+            - "&7Place on a cold biomes surfaces to summon &cSanta"
+        santa_hat:
+            name: "(hex:#ff3838)Santa's Hat"
+            lore:
+            - "&eSanta's hat imbued with the Christmas spirit. Obtained from defeating Santa in the seasonal Christmas event."
+            # The max amount of elves that can spawn to protect the wearer
+            elf_summon_count: 3
+            # The time in seconds it takes for an elf to respawn after death
+            elf_respawn_timer: 180.0
+
 ###############################################################################################################################################################################
 #
 # ABILITIES:
@@ -350,6 +446,9 @@ abilities:
     saber_throw:
         name: "(hex:#ecf00e)[Saber Throw]"
         description: "&8- &7The wielder throws the saber dealing lots of damage. The saber will return."
+        blacklist:
+            entities:
+            - dropped_item
     stasis_zone:
         name: "(hex:#ecf00e)[Stasis Zone]"
         description: "&8- &7Creates a zone where time does not pass."
@@ -377,6 +476,9 @@ abilities:
     black_rift:
         name: "(hex:#82249e)[Black Rift]"
         description: "&8- &7Tears a hole into the void that pulls in everything around it."
+        blacklist:
+            entities:
+            - uc:void_stalker
     tidal_wave:
         name: "(hex:#2e77ff)[Tidal Wave]"
         description: "&8- &7Calls upon a strong current of water to wash away all in its path."
@@ -386,7 +488,7 @@ abilities:
     double_jump:
         name: "(hex:#e3e9ff)[Double Jump]"
         description: "&8- &7Allows the wearer to double jump."
-        
+
 ###############################################################################################################################################################################
 #
 # DISPLAYS:
@@ -405,7 +507,7 @@ displays:
     bunny_hop:
         name: "(hex:#79ff5e)[Bunny Hop]"
         description: "&8- &7Allows the wearer to hop like a bunny."
-        
+
 ###############################################################################################################################################################################
 #
 # ENCHANTS:
@@ -529,7 +631,521 @@ enchants:
                         activationPeriod: 2
                         particleMultiplier: 1.0
                         abilityDisplay: "bunny_hop"
-                        
+
+###############################################################################################################################################################################
+#
+# ENTITIES:
+#
+# This section is for configuring the custom entities within UltimateContent.
+#
+#   "spawnRate" : [DECIMAL] - The chance of an entity spawning within its desired conditions. This number is from 0-100 and the entity conditions are unique for each category
+#                             of entities which are explained above each category header. This defaults to 0 if not set.
+#
+#   "health" : [DECIMAL] - The health of the entity (1 minecraft heart = 2.0 health points).
+#
+#   "damage" : [DECIMAL] - The damage the entity deals with bare hand melee attacks. Keep in mind that some entities spawn with weapons in hand which can alter the damage.
+#
+#   "knockback" : [DECIMAL] - The knock back attribute of the entity type meaning that this is how far entities are knocked back by the entities melee attacks.
+#
+#   "movementSpeed" : [DECIMAL] - Sets the movement speed attribute of the entity. Lots of entities have hidden set default movement speeds and this setting can override them.
+#
+#   "name" : [STRING] - The name of the entity which is displayed above the entities head and also used for death messages in chat.
+#
+#   "nameVisible" : [BOOLEAN] - Sets the custom name visible tag of the entity to be visible or not. The vanilla behavior of name tags means that even if they are hidden the
+#                               name tag is still visible when players are close to and directly looking at the entity. By default this is set to FALSE for all entity types.
+#
+#   "volume" : [DECIMAL] - The volume multiplier of the entity which controls the volume of the entities ambient sounds and ability sounds.
+#
+#   "equipment" : [SECTION] - The equipment override on the entity. This section is pretty self explanatory, you can set the equipment for the armor, main hand, and off hand
+#                             on the entity type. Most entities have default equipment set, you can use this section to override the default equipment by setting the slot to
+#                             "air" or another item. Below is an example of setting the equipment to remove the default helmet on the entity type and also set its hand items:
+#
+#                                                    equipment:
+#                                                        head: "air"
+#                                                        main_hand: "diamond_sword"
+#                                                        off_hand: "uc:dark_mage_wand"
+#
+#   "drops" : [STRING_LIST] - This list is the drops table of the entity type. You can control what items are dropped, how much is dropped, the odds of the drop. If this is
+#                             not set then the entity type will not drop anything upon death. You can also use items that are available via UltimateItemsFramework. You can
+#                             also only partially set drops as a shortcut, for example if you just list the item then it will always drop 1 single item of that drop, if you
+#                             do not set an amount to drop then it will only have a chance of dropping the item one time. Below this is an example and breakdown of a drop:
+#
+#                                                    drops:
+#                                                    - "diamond" | 50.0 | 0-3
+#
+#                                                        "diamond" - The name of the item to drop, can also use custom items here (e.g. "uc:blood_ingot").
+#                                                        50.0 - The second parameter is the chance of the drop from 0.0-100.0 so 50.0 means a 50% chance of dropping a diamond.
+#                                                        0-3 - The third parameter is the amount of diamonds that are dropped. So this means that there is a 3 chances of
+#                                                              dropping diamonds, each try will be the set chance of dropping a diamond so here that would be a 50% chance.
+#                                                              You can also make this set to a minimum amount of drops (e.g. 2-6) meaning that the entity will always drop 2
+#                                                              diamonds, but will have 4 more chances of dropping extra diamonds each at 50% so it can drop 6 diamonds as max.
+#
+#   "drop_rates" : [SECTION] - This section controls the drop rates for just the entities equipment. The reason why you wouldn't set the entities equipment as drops in the
+#                              drops list is because sometimes variants of entities can spawn with different equipment so you would want to drop that specific equipment instead
+#                              which is why there is a separate section for this. By default all entities equipment drop rates are set to 0 so this section can override that.
+#                              The drop rates for equipment are handled as decimals between 0.0-100.0 and here is an example of a drop rate section on an entity:
+#
+#                                                    drop_rates:
+#                                                        main_hand: 50.0      # 50% chance for the entity to drop the item in its main hand if applicable.
+#                                                        off_hand: 15.0
+#                                                        chest: 100.0
+#
+###############################################################################################################################################################################
+
+entities:
+    dark_entities:
+        primed_creeper:
+            spawnRate: 3.0
+            health: 22.0
+            # The damage multiplier on the explosion damage with 1.0 being vanilla creeper explosion damage
+            damageMultiplier: 1.2
+            name: "&8Primed Creeper"
+            volume: 1.0
+            drops:
+            - gunpowder | 20.0 | 0-8
+        dark_mage:
+            spawnRate: 0.5
+            health: 30.0
+            damage: 5.0
+            name: "&8Dark Mage"
+            volume: 1.0
+            equipment:
+                main_hand:
+                    - item: "uc:dark_mage_wand"
+                      drop_rate: 3.0
+            drops:
+            - bone | 30.0 | 0-2
+            - rotten_flesh | 50.0 | 0-3
+        shadow_leech:
+            spawnRate: 0.5
+            health: 8.0
+            # Shadow leech's pierce armor and do pure damage to the entity
+            damage: 1.0
+            name: "&8Shadow Leech"
+            volume: 1.0
+            variants:
+                bloody_shadow_leech:
+                    health: 16.0
+                    damage: 2.0
+                    movementSpeed: 0.3
+                    name: "&8Bloody Shadow Leech"
+                    # The chance that a normal shadow leech will convert into a bloody shadow leech
+                    conversionChance: 12.5
+        skeleton_knight:
+            spawnRate: 0.75
+            health: 25.0
+            damage: 3.0
+            name: "&8Skeleton Knight"
+            volume: 1.0
+            equipment:
+                main_hand:
+                    - item: "iron_sword"
+                      drop_rate: 5.0
+                off_hand:
+                    - item: "shield"
+                      drop_rate: 2.0
+            drops:
+            - bone | 40.0 | 1-3
+        zombie_knight:
+            spawnRate: 0.25
+            health: 30.0
+            damage: 5.0
+            name: "&8Zombie Knight"
+            volume: 1.0
+            equipment:
+                main_hand:
+                    - item: "stone_sword"
+                      drop_rate: 10.0
+                off_hand:
+                    - item: "shield"
+                      drop_rate: 2.0
+            drops:
+            - rotten_flesh | 40.0 | 1-3
+        swamp_beast:
+            spawnRate: 0.75
+            health: 40.0
+            damage: 10.0
+            name: "&8Swamp Beast"
+            volume: 1.0
+            # The distance the mud ability reaches from the swamp beast
+            mudRange: 8.0
+            drops:
+            - rotten_flesh | 40.0 | 1-3
+            - dirt | 10.0 | 0-4
+        undead_miner:
+            spawnRate: 1.0
+            health: 30.0
+            damage: 6.0
+            name: "&8Undead Miner"
+            volume: 1.0
+            # If the placed blocks by undead miners should be removed after they die or despawn
+            removePlacedBlocks: true
+            # Undead miners by default will equip the block from their related environment into their offhand, if you want undead miners to build with a specific block then you can do so by setting the item in their off hand to the desired block
+            equipment:
+                main_hand:
+                    - item: "diamond_pickaxe"
+                      chance: 15.0
+                      drop_rate: 0.25
+                    - item: "iron_pickaxe"
+                      chance: 65.0
+                      drop_rate: 2.5
+                    - item: "stone_pickaxe"
+                      drop_rate: 20.0
+                head:
+                    - item: "diamond_helmet"
+                      chance: 15.0
+                      drop_rate: 0.5
+                    - item: "iron_helmet"
+                      chance: 65.0
+                      drop_rate: 3.0
+                    - item: "chainmail_helmet"
+                      drop_rate: 10.0
+            drops:
+            - rotten_flesh | 40.0 | 1-3
+            - iron_ore | 10.0 | 0-2
+            - gold_ore | 5.0 | 0-2
+    desert_entities:
+        ancient_mummy:
+            spawnRate: 1.5
+            health: 40.0
+            damage: 10.0
+            name: "&6Ancient Mummy"
+            volume: 1.0
+            drops:
+            - uc:ancient_cloth | 15.0
+            - bone | 25.0 | 0-2
+            - rotten_flesh | 60.0 | 0-3
+        ancient_skeleton:
+            spawnRate: 1.0
+            health: 30.0
+            damage: 7.0
+            name: "&6Ancient Skeleton"
+            volume: 1.0
+            drops:
+            - uc:ancient_bone | 10.0
+            - gold_nugget | 20.0 | 0-3
+    water_entities:
+        cursed_diver:
+            spawnRate: 2.0
+            health: 30.0
+            damage: 8.0
+            name: "&1Cursed Diver"
+            volume: 1.0
+            equipment:
+                main_hand:
+                    - item: "uc:tritons_fang"
+                      drop_rate: 2.5
+            drops:
+            - rotten_flesh | 60.0 | 0-3
+    snow_entities:
+        yeti:
+            spawnRate: 1.0
+            health: 60.0
+            damage: 12.0
+            name: "&9Yeti"
+            volume: 1.0
+            deathRagdoll: true
+            drops:
+            - uc:yeti_fur | 10.0
+            - beef | 40.0 | 1-6
+    infested_entities:
+        infested_zombie:
+            spawnRate: 10.0
+            health: 25.0
+            damage: 8.0
+            name: "&3Infested Zombie"
+            volume: 1.0
+            drops:
+            - rotten_flesh | 40.0 | 0-3
+            - sculk | 33.3 | 0-2
+        infested_skeleton:
+            spawnRate: 7.0
+            health: 30.0
+            damage: 12.0
+            name: "&3Infested Skeleton"
+            volume: 1.0
+            drops:
+            - bone | 40.0 | 0-3
+            - sculk | 33.3 | 0-2
+        infested_creeper:
+            spawnRate: 7.0
+            health: 25.0
+            # The damage multiplier on the explosion damage with 1.0 being vanilla creeper explosion damage
+            damageMultiplier: 1.5
+            name: "&3Infested Creeper"
+            volume: 1.0
+            drops:
+            - gunpowder | 20.0 | 0-4
+            - sculk | 33.3 | 0-2
+        infested_enderman:
+            spawnRate: 6.0
+            health: 30.0
+            damage: 10.0
+            name: "&3Infested Enderman"
+            volume: 1.0
+            drops:
+            - sculk | 33.3 | 0-2
+        infested_spirit:
+            spawnRate: 2.0
+            health: 10.0
+            damage: 7.0
+            name: "&3Infested Spirit"
+            volume: 1.0
+            drops:
+            - sculk | 33.3 | 0-2
+        infested_tribesman:
+            spawnRate: 8.0
+            health: 12.0
+            damage: 6.0
+            name: "&3Infested Tribesman"
+            volume: 1.0
+            equipment:
+                main_hand:
+                    - item: "stone_sword"
+                      chance: 20.0
+                      drop_rate: 5.0
+                    - item: "wooden_sword"
+                      chance: 40.0
+                      drop_rate: 7.5
+            drops:
+            - sculk | 33.3 | 0-2
+            - bone | 25.0 | 0-2
+            - rotten_flesh | 40.0 | 0-2
+            variants:
+                infested_archer_tribesman:
+                    name: "&3Infested Archer Tribesman"
+                    # The chance that a normal infested tribesman will convert into an archer infested tribesman
+                    conversionChance: 20.0
+                    equipment:
+                        main_hand:
+                          - item: "bow"
+                            drop_rate: 5.0
+        infested_devourer:
+            spawnRate: 5.0
+            health: 8.0
+            damage: 4.0
+            name: "&3Infested Devourer"
+            volume: 1.0
+            drops:
+            - bone | 30.0 | 0-2
+            - sculk | 33.3 | 0-2
+            variants:
+                alpha_infested_devourer:
+                    health: 16.0
+                    damage: 8.0
+                    movementSpeed: 0.35
+                    name: "&3Alpha Infested Devourer"
+                    # The chance that a normal infested devourer will convert into an alpha
+                    conversionChance: 20.0
+                    drops:
+                    - stick | 50.0 | 2-6
+        infested_howler:
+            spawnRate: 5.0
+            health: 15.0
+            damage: 5.0
+            name: "&3Infested Howler"
+            volume: 1.0
+            # The chance of the howler spawning a nearby warden when it shrieks
+            spawnWardenChance: 25.0
+            drops:
+            - sculk | 33.3 | 0-2
+        infested_worm:
+            spawnRate: 3.0
+            damage: 9.0
+            name: "&3Infested Worm"
+            volume: 1.0
+    nether_entities:
+        lost_soul:
+            # Lost souls can only spawn in soul sand valley biomes
+            spawnRate: 3.0
+            health: 14.0
+            damage: 5.0
+            name: "&3Lost Soul"
+            volume: 1.0
+        soul_reaper:
+            # Soul reapers can only spawn in soul sand valley biomes
+            spawnRate: 0.5
+            health: 40.0
+            damage: 25.0
+            name: "&3Soul Reaper"
+            volume: 1.0
+            equipment:
+                main_hand:
+                    - item: "uc:soul_ripper"
+                      drop_rate: 10.0
+        fire_phantom:
+            spawnRate: 1.0
+            health: 20.0
+            damage: 8.0
+            name: "&cFire Phantom"
+            volume: 1.0
+            # Controls if the blaze items explode out from fire phantoms upon death
+            spawnFireItems: true
+            drops:
+            - fire_charge | 80.0
+    # End entities can only spawn naturally in end type worlds
+    end_entities:
+        end_totem:
+            spawnRate: 1.0
+            health: 40.0
+            damage: 8.0
+            knockback: 3.0
+            name: "&dEnd Totem"
+            volume: 1.0
+            deathRagdoll: true
+            drops:
+            - chorus_fruit | 80.0 | 0-2
+            - obsidian | 50.0
+            - uc:void_tear | 12.5
+        void_worm:
+            spawnRate: 0.75
+            health: 30.0
+            damage: 20.0
+            knockback: 0.0
+            name: "&dVoid Worm"
+            deathRagdoll: true
+            drops:
+            - chorus_fruit | 70.0 | 0-2
+            - crying_obsidian | 40.0 | 0-2
+            - bone | 50.0 | 0-3
+        void_guardian:
+            spawnRate: 2.0
+            health: 40.0
+            damage: 11.0
+            name: "&dVoid Guardian"
+            volume: 1.0
+            equipment:
+                main_hand:
+                    - item: "uc:voids_edge"
+                      drop_rate: 5.0
+                off_hand:
+                    - item: "uc:abyssal_shield"
+                      drop_rate: 7.5
+            drops:
+            - chorus_fruit | 60.0 | 0-4
+        void_archer:
+            spawnRate: 1.25
+            health: 20.0
+            damage: 4.0
+            name: "&dVoid Archer"
+            volume: 1.0
+            equipment:
+                main_hand:
+                    - item: "uc:call_of_the_void"
+                      drop_rate: 5.0
+            drops:
+            - bone | 50.0 | 1-2
+            - arrow | 25.0 | 0-2
+        void_stalker:
+            health: 20.0
+            damage: 8.0
+            name: "&dVoid Stalker"
+            volume: 1.0
+            spawnRate: 2.5
+            drops:
+            - ender_eye | 20.0
+    # Christmas entities can only spawn naturally in cold biomes and only during the seasonal Christmas event during December
+    christmas_entities:
+        elf:
+            spawnRate: 3.0
+            health: 12.0
+            damage: 4.0
+            name: "&cElf"
+            volume: 1.0
+            equipment:
+                main_hand:
+                    - item: "stone_sword"
+                      chance: 20.0
+                      drop_rate: 5.0
+                    - item: "wooden_sword"
+                      chance: 40.0
+                      drop_rate: 7.5
+            drops:
+            - uc:ornament | 5.0
+            - bone | 30.0 | 0-2
+            - rotten_flesh | 40.0 | 0-2
+            variants:
+                archer_elf:
+                    name: "&cArcher Elf"
+                    # The chance that a normal elf will convert into an archer elf
+                    conversionChance: 33.3
+                    equipment:
+                        main_hand:
+                          - item: "bow"
+                            drop_rate: 5.0
+        frosty:
+            spawnRate: 2.0
+            health: 30.0
+            damage: 8.0
+            name: "&cFrosty"
+            volume: 1.0
+            drops:
+            - uc:broken_snow_globe | 7.5
+            - snowball | 40.0 | 2-6
+            - stick | 30.0 | 0-2
+        grinch:
+            spawnRate: 2.5
+            health: 40.0
+            damage: 12.0
+            name: "&cGrinch"
+            volume: 1.0
+            equipment:
+                main_hand:
+                    - item: "uc:cursed_candy_cane"
+                      chance: 10.0
+                      drop_rate: 5.0
+                    - item: "uc:candy_cane"
+                      drop_rate: 7.5
+            drops:
+            - bone | 30.0 | 0-3
+            - rotten_flesh | 40.0 | 0-4
+        santa:
+            health: 400.0
+            damage: 20.0
+            name: "&cSanta"
+            volume: 1.0
+            playBossMusic: true
+            bossMusicVolume: 1.0
+            drops:
+            - uc:santa_hat | 100.0
+    easter_entities:
+        killer_chicken:
+            # Will only spawn in place of wild chickens
+            spawnRate: 5.0
+            health: 20.0
+            damage: 8.0
+            name: "&aKiller Chicken"
+            volume: 1.0
+            drops:
+            - feather | 40.0 | 0-3
+            - bone | 30.0 | 0-2
+        rampaging_goat:
+            # Will only spawn on high cliffs at Y > 150
+            spawnRate: 5.0
+            health: 60.0
+            damage: 20.0
+            name: "&aRampaging Goat"
+            volume: 1.0
+            drops:
+            - uc:red_egg | 20.0
+        easter_bunny:
+            health: 200.0
+            damage: 20.0
+            name: "(hex:#54ff71)Easter Bunny"
+            playBossMusic: true
+            bossMusicVolume: 1.0
+            drops:
+            - uc:golden_egg | 100.0
+    halloween_entities:
+        scarecrow:
+            spawnRate: 2.0
+            health: 30.0
+            damage: 8.0
+            name: "&6Scarecrow"
+            volume: 1.0
+            drops:
+            - uc:spooky_pumpkin | 100.0
+
 ###############################################################################################################################################################################
 #
 # LANGUAGE:
@@ -539,27 +1155,57 @@ enchants:
 ###############################################################################################################################################################################
 
 language:
+    commands:
+        permissionError: "&cYou do not have permission to use this command!"
+        help:
+            event: "Opens the event GUI to the player if there is an ongoing seasonal event."
+            eventDescription: "During different times of the year there are seasonal events which can be toggled off (enabled by default). These seasonal events can spawn special mobs, items, bosses, etc. Into the server! This command allows the player to access the information GUI about any ongoing events. Default permissions allow all players to use this command."
+            help: "Displays information about commands."
+            helpDescription: "Pretty self explanatory command, allows you to see more information about a specific command!"
+            reload: "Reloads the plugins config file. It is recommended to reload the config through UIF instead (/ui reload)!"
+            reloadDescription: "Reloads the config file for UltimateContent only! The reason why it is recommended to reload the config through UIF (/ui reload) is because UC hooks into UIF reload command so that it is reloaded with UIF automatically. Other plugins may also hook into UIF reload so this becomes a master reload command for all related plugins."
+            info: "For more information about a specific command use &b/uc help [command]"
     deaths:
-        saberThrow: "&f%victim% was sliced by %killer%'s &flightsaber"
-        cursedWinds: "&f%victim% was cursed by %killer%"
-        unstableRift: "&f%victim% was torn apart in the void"
-        unstableRiftSource: "&f%victim% was torn apart by %killer%'s void"
-        tidalWave: "&f%victim% was washed away in a tidal wave"
-        tidalWaveSource: "&f%victim% was washed away by %killer%'s tidal wave"
-        yetiRoar: "&f%victim% was frozen to death by a yeti's roar"
+        saberThrow: "&f%player% was sliced by %killer%'s &flightsaber"
+        cursedWinds: "&f%player% was cursed by %killer%"
+        unstableRift: "&f%player% was torn apart in the void"
+        unstableRiftSource: "&f%player% was torn apart by %killer%'s void"
+        tidalWave: "&f%player% was washed away in a tidal wave"
+        tidalWaveSource: "&f%player% was washed away by %killer%'s tidal wave"
+        yetiRoar: "&f%player% was frozen to death by a yeti's roar"
+        candyCane: "&f%player% was pierced by a candy cane"
+        shadowLeech: "&f%player%'s blood was drained by a %killer%"
+        infestedDevourer: "&f%player%'s was devoured by an %killer%"
     items:
         particleToggle: " &7- Right-Click to toggle visibility of your own particles."
         particleToggleError: "&cParticle settings can only be changed in survival!"
+        placeBossItemError: "&cYou can only place this on solid ground!"
+        snowGlobePlaceError: "&cYou can only place this on the surface in cold biomes!"
+        easterBasketPlaceError: "&cYou can only place this on the surface in large meadows!"
     rarity:
-        common: "&a[COMMON]"
-        uncommon: "&2[UNCOMMON]"
-        rare: "&9[RARE]"
-        epic: "&d[EPIC]"
-        legendary: "&6[LEGENDARY]"
-        mythic: "&c[MYTHIC]"
+        common: "&a&l[COMMON]"
+        uncommon: "&2&l[UNCOMMON]"
+        rare: "&9&l[RARE]"
+        epic: "&d&l[EPIC]"
+        legendary: "&6&l[LEGENDARY]"
+        mythic: "&c&l[MYTHIC]"
     misc:
         enabled: "&a[ENABLED]"
         disabled: "&c[DISABLED]"
         all: "&a[ALL]"
         others: "&9[OTHERS]"
         none: "&c[NONE]"
+        deprecatedItem: "(hex:#e0bd5c)(This item is subject to changes/removal and should typically not be given to others!)"
+    events:
+        noEvent: "&cThere is currently no ongoing event at this time!"
+        easter:
+            menuHeader: "&9&lUltimateContent (hex:#70ff92)Easter Event"
+            joinMessage: "&aThere is an on-going Easter event right now! For more info type &d/uc event"
+            eventInfo: "&eObtain colored Easter eggs within the world and combine them together in a crafting table to create the Easter egg basket. Place the basket down in an open meadow to summon the Easter Bunny. Good luck searching!"
+            greenEggInfo: "&fThis egg can be rarely laid by chickens. Try making a chicken farm to find this egg faster."
+            blueEggInfo: "&fThis egg can be rarely found while fishing. Fishing rod enchantments can help find this egg quicker."
+            redEggInfo: "&fThis egg is a rare drop from Rampaging Goats. These goats can be found on high peaks, they attack on sight and are very dangerous."
+            orangeEggInfo: "&fThis egg can be found in deep underground chests. Try finding large structures such as mine shafts or ancient cities where there are lots of chests."
+            purpleEggInfo: "&fThis egg is sometimes traded by wandering traders. Try exploring far to find them, make sure you don't forget to bring emeralds!"
+            collectedEgg: "&aYou have collected the %egg%!"
+            restrictAction: "&cYou have already obtained this egg during the event!"

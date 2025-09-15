@@ -9,20 +9,22 @@ import org.bukkit.potion.PotionEffectType;
 
 import com.github.jewishbanana.uiframework.items.ItemBuilder;
 import com.github.jewishbanana.uiframework.items.ItemCategory;
-import com.github.jewishbanana.uiframework.items.ItemType;
+import com.github.jewishbanana.uiframework.items.UIItemType;
 import com.github.jewishbanana.ultimatecontent.items.BaseItem;
+import com.github.jewishbanana.ultimatecontent.items.CustomItemBuilder;
+import com.github.jewishbanana.ultimatecontent.items.Rarity;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class EnergyDrink extends BaseItem {
 	
-	public static String REGISTERED_KEY = "ui:energy_drink";
+	public static final String REGISTERED_KEY = "uc:energy_drink";
 	
 	public EnergyDrink(ItemStack item) {
 		super(item);
 	}
 	@Override
 	public ItemBuilder createItem() {
-		return ItemBuilder.create(getType(), Material.POTION).accessMeta(e -> {
+		return CustomItemBuilder.create(getType(), Material.POTION).accessMeta(e -> {
 			PotionMeta meta = (PotionMeta) e;
 			meta.setColor(Color.fromARGB(150, 37, 242, 34));
 			meta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 600, 1, true, false), true);
@@ -31,9 +33,12 @@ public class EnergyDrink extends BaseItem {
 		}).addItemFlags(VersionUtils.getHideEffects()).assembleLore().build();
 	}
 	public static void register() {
-		ItemType.registerItem(REGISTERED_KEY, EnergyDrink.class);
+		UIItemType.registerItem(REGISTERED_KEY, EnergyDrink.class);
 	}
 	public ItemCategory getItemCategory() {
 		return ItemCategory.DefaultCategory.CONSUMABLES.getItemCategory();
+	}
+	public Rarity getRarity() {
+		return Rarity.COMMON;
 	}
 }

@@ -1,6 +1,22 @@
 package com.github.jewishbanana.ultimatecontent.utils;
 
-import com.google.common.base.Preconditions;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
 import org.bukkit.configuration.ConfigurationSection;
@@ -12,11 +28,7 @@ import org.bukkit.plugin.Plugin;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
+import com.google.common.base.Preconditions;
 
 public class ConfigUpdater {
 
@@ -30,6 +42,11 @@ public class ConfigUpdater {
         FileConfiguration currentConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(FileUtils.openInputStream(toUpdate), StandardCharsets.UTF_8));
         Map<String, String> comments = parseComments(plugin, resourceName, defaultConfig);
         Map<String, String> ignoredSectionsValues = parseIgnoredSections(toUpdate, comments, ignoredSections == null ? Collections.emptyList() : ignoredSections);
+        Map<String, Object> preservedKeyValues = new LinkedHashMap<>();
+        for (String s : currentConfig.getKeys(true))
+        	if (!defaultConfig.contains(s))
+        		preservedKeyValues.put(s, currentConfig.get(s));
+        
         // will write updated config file "contents" to a string
         StringWriter writer = new StringWriter();
         write(defaultConfig, currentConfig, new BufferedWriter(writer), comments, ignoredSectionsValues);
@@ -39,6 +56,11 @@ public class ConfigUpdater {
         if (!value.equals(new String(Files.readAllBytes(toUpdatePath), StandardCharsets.UTF_8))) { // if updated contents are not the same as current file contents, update
             Files.write(toUpdatePath, value.getBytes(StandardCharsets.UTF_8));
         }
+        FileConfiguration yaml = YamlConfiguration.loadConfiguration(toUpdate);
+//        FileConfiguration yaml = plugin.getConfig();
+        for (Entry<String, Object> entry : preservedKeyValues.entrySet())
+        	yaml.set(entry.getKey(), entry.getValue());
+        yaml.save(toUpdate);
     }
 
     private static void write(FileConfiguration defaultConfig, FileConfiguration currentConfig, BufferedWriter writer, Map<String, String> comments, Map<String, String> ignoredSectionsValues) throws IOException {
@@ -73,7 +95,7 @@ public class ConfigUpdater {
 
         if (danglingComments != null)
             writer.write(danglingComments);
-
+        
         writer.close();
     }
 

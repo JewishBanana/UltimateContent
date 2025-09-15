@@ -1,65 +1,60 @@
 package com.github.jewishbanana.ultimatecontent.utils;
 
 import java.awt.Color;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.Queue;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.random.RandomGenerator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
-import org.bukkit.EntityEffect;
-import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityCategory;
-import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.CommandMinecart;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.inventory.EntityEquipment;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.ultimatecontent.Main;
 
 public class Utils {
 	
-	private static Main plugin;
-	private static Random rand;
+	private static final JavaPlugin plugin;
+	private static final RandomGenerator random;
 	public static int descriptionLine;
-	public static String prefix;
-	private static Pattern hexPattern;
+	public static final String prefix;
+	private static final Pattern hexPattern;
 	private static boolean usingSpigot;
-	private static Map<DyeColor, ChatColor> dyeChatMap;
-	private static FixedMetadataValue fallingBlockData;
+	private static final Map<DyeColor, ChatColor> dyeChatMap;
 	static
 	{
 		hexPattern = Pattern.compile("\\(hex:#[a-fA-F0-9]{6}\\)");
 		plugin = Main.getInstance();
-		rand = new Random();
+		random = RandomGenerator.of("SplittableRandom");
 		prefix = convertString("&a[UltimateContent]: ");
 		
 		dyeChatMap = new HashMap<>();
@@ -79,8 +74,6 @@ public class Utils {
 		dyeChatMap.put(DyeColor.RED, ChatColor.DARK_RED);
 		dyeChatMap.put(DyeColor.WHITE, ChatColor.WHITE);
 		dyeChatMap.put(DyeColor.YELLOW, ChatColor.YELLOW);
-		
-		fallingBlockData = new FixedMetadataValue(plugin, "protected");
 		
 		try {
 	        Class.forName("org.bukkit.entity.Player$Spigot");
@@ -111,38 +104,6 @@ public class Utils {
 	    }
 	    return ChatColor.translateAlternateColorCodes('&', s);
 	}
-	public static List<String> chopLore(List<String> lore) {
-		List<String> tempLore = new ArrayList<>();
-		if (lore != null)
-			for (String line : lore) {
-				line = Utils.convertString(line);
-				int offset = 0;
-				for (int i=0; i < line.length(); i++)
-					if (line.charAt(i) == ChatColor.COLOR_CHAR)
-						offset += 2;
-				int max_length = descriptionLine + offset;
-				if (line.length()-1 > max_length) {
-					int c = 0;
-					for (int i=max_length; i > 0; i--) {
-						if (i == 0) {
-							tempLore.add(Utils.convertString(ChatColor.getLastColors(line.substring(0, c))+line.substring(c)));
-							break;
-						}
-						if (line.charAt(i) == ' ') {
-							tempLore.add(Utils.convertString(ChatColor.getLastColors(line.substring(0, c+1))+line.substring(c, i)));
-							c += i-c+1;
-							if (i+max_length >= line.length()) {
-								tempLore.add(Utils.convertString(ChatColor.getLastColors(line.substring(0, c))+line.substring(c, line.length())));
-								break;
-							}
-							i = c+max_length;
-						}
-					}
-				} else
-					tempLore.add(line);
-			}
-		return tempLore;
-	}
 	public static String getNumerical(int num) {
 		switch (num) {
 		default:
@@ -172,59 +133,6 @@ public class Utils {
 			damage += 2.5 * meta.getEnchantLevel(Enchantment.IMPALING);
 		return damage;
 	}
-	public static ArmorStand lockArmorStand(ArmorStand stand, boolean setInvisible, boolean setGravity, boolean setMarker) {
-		if (VersionUtils.getMCVersion() >= 1.17) {
-			stand.setInvisible(setInvisible);
-			stand.addEquipmentLock(EquipmentSlot.CHEST, org.bukkit.entity.ArmorStand.LockType.ADDING_OR_CHANGING);
-			stand.addEquipmentLock(EquipmentSlot.FEET, org.bukkit.entity.ArmorStand.LockType.ADDING_OR_CHANGING);
-			stand.addEquipmentLock(EquipmentSlot.HAND, org.bukkit.entity.ArmorStand.LockType.ADDING_OR_CHANGING);
-			stand.addEquipmentLock(EquipmentSlot.HEAD, org.bukkit.entity.ArmorStand.LockType.ADDING_OR_CHANGING);
-			stand.addEquipmentLock(EquipmentSlot.LEGS, org.bukkit.entity.ArmorStand.LockType.ADDING_OR_CHANGING);
-			stand.addEquipmentLock(EquipmentSlot.OFF_HAND, org.bukkit.entity.ArmorStand.LockType.ADDING_OR_CHANGING);
-		} else
-			stand.setVisible(!setInvisible);
-		stand.setGravity(setGravity);
-		stand.setArms(true);
-		stand.setMarker(setMarker);
-		return stand;
-	}
-	public static Location findSmartYSpawn(Location pivot, Location spawn, int height, int maxDistance) {
-		Block b = spawn.getBlock();
-		Location loc1 = null, loc2 = null;
-		down:
-			for (int i = spawn.getBlockY(); i > spawn.getBlockY()-maxDistance; i--) {
-				b = b.getRelative(BlockFace.DOWN);
-				if (!b.isPassable() && b.getRelative(BlockFace.UP).isPassable() && !b.getRelative(BlockFace.UP).isLiquid()) {
-					for (int c = 2; c <= height-1; c++)
-						if (!b.getRelative(BlockFace.UP, c).isPassable())
-							continue down;
-					loc1 = b.getRelative(BlockFace.UP).getLocation().add(0.5,0.01,0.5);
-					break down;
-				}
-			}
-		b = spawn.getBlock();
-		up:
-			for (int i = spawn.getBlockY(); i < spawn.getBlockY()+maxDistance; i++) {
-				b = b.getRelative(BlockFace.UP);
-				if (b.isPassable() && !b.getRelative(BlockFace.DOWN).isPassable() && !b.isLiquid()) {
-					for (int c = 1; c < height; c++)
-						if (!b.getRelative(BlockFace.UP, c).isPassable())
-							continue up;
-					loc2 = b.getLocation().add(0.5,0.01,0.5);
-					break up;
-				}
-			}
-		if (loc1 != null && loc2 == null)
-			return loc1;
-		else if (loc1 == null && loc2 != null)
-			return loc2;
-		else if (loc1 == null && loc2 == null)
-			return null;
-		if (Math.abs(pivot.getY()-loc2.getY()) < Math.abs(pivot.getY()-loc1.getY()))
-			return loc1;
-		else
-			return loc2;
-	}
 	public static boolean rayTraceForSolid(Location initial, Location target) {
 		Vector vec = getVectorTowards(initial, target);
 		try {
@@ -241,37 +149,12 @@ public class Utils {
 				return true;
 		return false;
 	}
-	public static boolean rayTraceEntityConeForSolid(Entity entity, Location initial) {
-		double height = entity.getHeight(), width = entity.getWidth();
-		Location target = entity.getLocation().add(0,height/2.0,0);
-		if (rayTraceForSolid(initial, target))
-			return true;
-		if (rayTraceForSolid(initial, target.add(0,height/2.0,0)))
-			return true;
-		if (rayTraceForSolid(initial, target.clone().subtract(0,height/2.0,0)))
-			return true;
-		Vector angle = Utils.getVectorTowards(initial, target);
-		try {
-			angle.checkFinite();
-		} catch (IllegalArgumentException err) {
-			return false;
-		}
-		if (rayTraceForSolid(initial, target.clone().add(new Vector(angle.getZ(), 0, -angle.getX()).normalize().multiply(width/2.0))))
-			return true;
-		if (rayTraceForSolid(initial, target.clone().add(new Vector(-angle.getZ(), 0, angle.getX()).normalize().multiply(width/2.0))))
-			return true;
-		return false;
-	}
 	public static Vector getVectorTowards(Location initial, Location towards) {
 		return new Vector(towards.getX() - initial.getX(), towards.getY() - initial.getY(), towards.getZ() - initial.getZ()).normalize();
 	}
 	public static Vector getUnormalizedVectorTowards(Location initial, Location towards) {
 		return new Vector(towards.getX() - initial.getX(), towards.getY() - initial.getY(), towards.getZ() - initial.getZ());
 	}
-	public static void makeEntityFaceLocation(Entity entity, Location to) {
-		Vector dirBetweenLocations = to.toVector().subtract(entity.getLocation().toVector());
-		entity.teleport(entity.getLocation().setDirection(dirBetweenLocations));
-    }
 	public static void runConsoleCommand(String command, World world) {
 		Entity entity = world.spawn(new Location(world, 0, 0, 0), CommandMinecart.class);
 		World tempWorld = Bukkit.getWorld("world");
@@ -293,94 +176,10 @@ public class Utils {
 	    Block adjacentBlock = lastTwoTargetBlocks.get(0);
 	    return targetBlock.getFace(adjacentBlock);
 	}
-	@SuppressWarnings("removal")
-	public static <T extends EntityDamageEvent> boolean pureDamageEntity(LivingEntity entity, double damage, String meta, boolean ignoreTotem, Entity source, T event, DamageCause cause) {
-		if (entity.isDead())
-			return false;
-		if (event != null) {
-			Bukkit.getPluginManager().callEvent(event);
-			if (event.isCancelled())
-				return false;
-			entity.setLastDamageCause(event);
-		} else
-			entity.setLastDamageCause(new EntityDamageEvent(entity, cause, damage));
-		if (entity.getHealth()-damage <= 0) {
-			if (!ignoreTotem) {
-				entity.setHealth(0.00001);
-				if (meta != null && entity.getEquipment().getItemInMainHand().getType() != Material.TOTEM_OF_UNDYING && entity.getEquipment().getItemInOffHand().getType() != Material.TOTEM_OF_UNDYING)
-					entity.setMetadata(meta, plugin.fixedData);
-				entity.damage(1);
-				return true;
-			}
-			if (meta != null)
-				entity.setMetadata(meta, plugin.fixedData);
-			entity.setHealth(0);
-			playDamageEffect(entity);
-			return true;
-		}
-		entity.setHealth(Math.max(entity.getHealth()-damage, 0));
-		playDamageEffect(entity);
-		return true;
-	}
-	@SuppressWarnings("removal")
-	public static boolean pureDamageEntity(LivingEntity entity, double damage, String meta, boolean ignoreTotem, Entity source, DamageCause cause) {
-		if (source == null)
-			return pureDamageEntity(entity, damage, meta, ignoreTotem, source, new EntityDamageEvent(entity, cause, damage), null);
-		return pureDamageEntity(entity, damage, meta, ignoreTotem, source, new EntityDamageByEntityEvent(source, entity, cause, damage), null);
-	}
-	@SuppressWarnings("removal")
-	public static boolean pureDamageEntity(LivingEntity entity, double damage, String meta, boolean ignoreTotem, DamageCause cause) {
-		return pureDamageEntity(entity, damage, meta, ignoreTotem, null, new EntityDamageEvent(entity, cause, damage), null);
-	}
-	public static void damageArmor(LivingEntity entity, double damage) {
-		int dmg = Math.max((int) (damage + 4 / 4), 1);
-		for (ItemStack armor : entity.getEquipment().getArmorContents()) {
-			if (armor == null || armor.getItemMeta() == null)
-				continue;
-			ItemMeta meta = armor.getItemMeta();
-			if (((Damageable) meta).getDamage() >= armor.getType().getMaxDurability()) armor.setAmount(0);
-			else ((Damageable) meta).setDamage(((Damageable) meta).getDamage()+dmg);
-			armor.setItemMeta(meta);
-		}
-	}
-	public static <T extends EntityDamageEvent> boolean damageEntity(LivingEntity entity, double damage, String meta, boolean ignoreTotem, Entity source, T event) {
-		if (event != null) {
-			Bukkit.getPluginManager().callEvent(event);
-			if (event.isCancelled())
-				return false;
-		}
-		double armor = entity.getAttribute(Attribute.GENERIC_ARMOR).getValue();
-		double toughness = entity.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS).getValue();
-		double actualDamage = damage * (1 - Math.min(20, Math.max(armor / 5, armor - damage / (2 + toughness / 4))) / 25);
-		Utils.pureDamageEntity(entity, actualDamage, meta, ignoreTotem, source, null, event.getCause());
-		Utils.damageArmor(entity, actualDamage);
-		return true;
-	}
-	@SuppressWarnings("removal")
-	public static boolean damageEntity(LivingEntity entity, double damage, String meta, boolean ignoreTotem, Entity source, DamageCause cause) {
-		if (source != null)
-			return damageEntity(entity, damage, meta, ignoreTotem, source, new EntityDamageByEntityEvent(source, entity, cause, damage));
-		return damageEntity(entity, damage, meta, ignoreTotem, source, new EntityDamageEvent(entity, cause, damage));
-	}
-	@SuppressWarnings("removal")
-	public static boolean damageEntity(LivingEntity entity, double damage, String meta, boolean ignoreTotem, DamageCause cause) {
-		return damageEntity(entity, damage, meta, ignoreTotem, null, new EntityDamageEvent(entity, cause, damage));
-	}
-//	public static EntityDamageByEntityEvent versionSafeDamageEvent(Entity source, Entity damagee, DamageCause cause, double damage, Location damageLocation, String damageType) {
-//		if (usingDeprecatedDamageEvent)
-//			return new EntityDamageByEntityEvent(source, damagee, cause, DamageSource.builder(DamageType.), damage);
-//	}
-	@SuppressWarnings("deprecation")
-	public static void playDamageEffect(LivingEntity entity) {
-		if (VersionUtils.usingNewDamageEvent)
-			entity.playHurtAnimation(0);
-		else
-			entity.playEffect(EntityEffect.HURT);
-	}
 	public static Block rayCastForBlock(Location location, int minRange, int maxRange, int maxAttempts, Set<Material> materialWhitelist) {
 		for (int i=0; i < maxAttempts; i++) {
 			Location tempLoc = location.clone();
-			Vector tempVec = new Vector((rand.nextDouble()*2)-1, (rand.nextDouble()*2)-1, (rand.nextDouble()*2)-1).normalize();
+			Vector tempVec = new Vector(random.nextDouble(-1, 1), random.nextDouble(-1, 1), random.nextDouble(-1, 1)).normalize();
 			for (int c=0; c < maxRange; c++) {
 				tempLoc.add(tempVec);
 				Block b = tempLoc.getBlock();
@@ -396,7 +195,7 @@ public class Utils {
 	public static Block rayCastForBlock(Location location, int minRange, int maxRange, int maxAttempts, Set<Material> materialWhitelist, Set<Block> blockWhitelist) {
 		for (int i=0; i < maxAttempts; i++) {
 			Location tempLoc = location.clone();
-			Vector tempVec = new Vector((rand.nextDouble()*2)-1, (rand.nextDouble()*2)-1, (rand.nextDouble()*2)-1).normalize();
+			Vector tempVec = new Vector(random.nextDouble(-1, 1), random.nextDouble(-1, 1), random.nextDouble(-1, 1)).normalize();
 			for (int c=0; c < maxRange; c++) {
 				tempLoc.add(tempVec);
 				Block b = tempLoc.getBlock();
@@ -411,41 +210,39 @@ public class Utils {
 	}
 	public static void damageItem(ItemStack toDamage, int damage) {
 		ItemMeta meta = toDamage.getItemMeta();
-		((Damageable) meta).setDamage(((Damageable) meta).getDamage()+damage);
-		if (((Damageable) meta).getDamage() >= toDamage.getType().getMaxDurability())
+		if (!(meta instanceof Damageable damageable))
+			return;
+		damageable.setDamage(damageable.getDamage() + damage);
+		if (damageable.getDamage() >= toDamage.getType().getMaxDurability()) {
 			toDamage.setAmount(0);
-		else
-			toDamage.setItemMeta(meta);
+			return;
+		}
+		toDamage.setItemMeta(meta);
 	}
 	public static void repairItem(ItemStack toRepair, int health) {
 		ItemMeta meta = toRepair.getItemMeta();
-		((Damageable) meta).setDamage(Math.max(((Damageable) meta).getDamage()-health, 0));
+		if (!(meta instanceof Damageable damageable))
+			return;
+		damageable.setDamage(Math.max(damageable.getDamage() - health, 0));
 		toRepair.setItemMeta(meta);
 	}
 	public static boolean isEnvironment(World world, Environment environment) {
 		return world.getEnvironment() == environment || world.getEnvironment() == Environment.CUSTOM;
 	}
+	public static boolean isEnvironment(World world, Environment... environments) {
+		Environment environment = world.getEnvironment();
+		if (environment == Environment.CUSTOM)
+			return true;
+		for (Environment temp : environments)
+			if (temp == environment)
+				return true;
+		return false;
+	}
 	public static Vector randomVector() {
-		return new Vector(rand.nextDouble()*2-1.0, rand.nextDouble()*2-1.0, rand.nextDouble()*2-1.0);
+		return new Vector(random.nextDouble(-1, 1), random.nextDouble(-1, 1), random.nextDouble(-1, 1));
 	}
-	public static Random random() {
-		return rand;
-	}
-	public static EquipmentSlot getEquipmentSlot(EntityEquipment inventory, ItemStack item) {
-		for (EquipmentSlot slot : EquipmentSlot.values())
-			if (inventory.getItem(slot).equals(item))
-				return slot;
-		return null;
-	}
-	public static boolean isPlayerImmune(Player player) {
-		GameMode mode = player.getGameMode();
-		return mode == GameMode.CREATIVE || mode == GameMode.SPECTATOR;
-	}
-	public static boolean isEntityImmunePlayer(Entity entity) {
-		if (!(entity instanceof Player))
-			return false;
-		GameMode mode = ((Player) entity).getGameMode();
-		return mode == GameMode.CREATIVE || mode == GameMode.SPECTATOR;
+	public static RandomGenerator random() {
+		return random;
 	}
 	public static List<ItemStack> createIngredients(Collection<Material> materials) {
 		List<ItemStack> list = new ArrayList<>();
@@ -453,13 +250,317 @@ public class Utils {
 			list.add(new ItemStack(material));
 		return list;
 	}
-	public static void markFallingBlock(FallingBlock block) {
-		block.setMetadata("ui-fb", fallingBlockData);
-	}
 	public static Vector getRandomizedVector(double xWeight, double yWeight, double zWeight) {
-		return new Vector(rand.nextDouble()*xWeight-(xWeight/2.0), rand.nextDouble()*yWeight-(yWeight/2.0), rand.nextDouble()*zWeight-(zWeight/2.0)).normalize();
+		return new Vector(xWeight == 0 ? 0.0 : random.nextDouble(-xWeight, xWeight), yWeight == 0 ? 0.0 : random.nextDouble(-yWeight, yWeight), zWeight == 0 ? 0.0 : random.nextDouble(-zWeight, zWeight)).normalize();
 	}
 	public static Vector getRandomizedVector() {
-		return new Vector(rand.nextDouble()*2.0-1.0, rand.nextDouble()*2.0-1.0, rand.nextDouble()*2.0-1.0).normalize();
+		return new Vector(random.nextDouble(-1, 1), random.nextDouble(-1, 1), random.nextDouble(-1, 1)).normalize();
+	}
+	public static void sendErrorMessage() {
+		Main.consoleSender.sendMessage(Utils.convertString("&c[UltimateContent]: An error has occurred above this message. Please report the full error to the discord https://discord.gg/MhXFj72VeN"));
+	}
+	public static double calculateAnimationValue(
+            int currentFrame, 
+            int totalFrames, 
+            double acceleration, 
+            double deceleration, 
+            double maxValue
+    ) {
+        if (totalFrames <= 0 || currentFrame < 0 || currentFrame >= totalFrames) {
+            throw new IllegalArgumentException("Invalid frame or totalFrames input.");
+        }
+
+        // Compute midpoint of animation (peak value)
+        int midpoint = totalFrames / 2;
+
+        double value;
+        if (currentFrame < midpoint) {
+            // Acceleration phase
+            value = acceleration * currentFrame * currentFrame;
+        } else {
+            // Deceleration phase
+            int frameFromEnd = totalFrames - currentFrame - 1;
+            value = deceleration * frameFromEnd * frameFromEnd;
+        }
+
+        // Ensure value does not exceed maxValue
+        return Math.min(value, maxValue);
+    }
+	public static Location findRandomSpotInRadius(Location initial, double minDist, double maxDist, int height, int attempts) {
+		double squaredMin = minDist * minDist;
+		double squaredMax = maxDist * maxDist;
+		for (int i=0; i < attempts; i++) {
+			double distance = random.nextDouble(minDist, maxDist);
+			Location temp = EntityUtils.findSmartYSpawn(initial, initial.clone().add(getRandomizedVector().multiply(distance)), height, (int) Math.floor(Math.sqrt(squaredMax - (distance * distance))));
+			if (temp != null && temp.distanceSquared(initial) >= squaredMin)
+				return temp;
+		}
+		return null;
+	}
+	public static Location findRandomSpotInRadius(Location initial, double minDist, double maxDist, int height, int attempts, Predicate<Location> conditions) {
+		double squaredMin = minDist * minDist;
+		double squaredMax = maxDist * maxDist;
+		for (int i=0; i < attempts; i++) {
+			double distance = random.nextDouble(minDist, maxDist);
+			Location temp = EntityUtils.findSmartYSpawn(initial, initial.clone().add(getRandomizedVector().multiply(distance)), height, (int) Math.floor(Math.sqrt(squaredMax - (distance * distance))));
+			if (temp != null && temp.distanceSquared(initial) >= squaredMin && conditions.test(temp.clone()))
+				return temp;
+		}
+		return null;
+	}
+	public static Location findRandomSpotInCircle(Location initial, double minDist, double maxDist) {
+		return initial.clone().add(getRandomizedVector(1.0, 0.0, 1.0).multiply(random.nextDouble(minDist, maxDist)));
+	}
+	public static Location findRandomSpotInCircle(Location initial, double minDist, double maxDist, int attempts, Predicate<Location> conditions) {
+		for (int i=0; i < attempts; i++) {
+			double distance = random.nextDouble(minDist, maxDist);
+			Location temp = initial.clone().add(getRandomizedVector(1.0, 0.0, 1.0).multiply(distance));
+			if (conditions.test(temp.clone()))
+				return temp;
+		}
+		return null;
+	}
+	public static Block rayTraceForBlock(Location location, int maxDistance, int attempts, Predicate<Block> condition, Supplier<Vector> createVector) {
+		for (int i=0; i < attempts; i++) {
+			Vector vec = createVector.get();
+			Location temp = location.clone().add(vec);
+			for (int j=1; j < maxDistance; j++) {
+				Block block = temp.getBlock();
+//				block.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, temp, 1, 0, 0, 0, .001);
+				if (condition.test(block))
+					return block;
+				if (!block.isPassable())
+					break;
+				temp.add(vec);
+			}
+		}
+		return null;
+	}
+	public static Block rayTraceForBlock(Location location, int maxDistance, int attempts, Predicate<Block> condition) {
+		return rayTraceForBlock(location, maxDistance, attempts, condition, () -> getRandomizedVector());
+	}
+	public static Block getHighestExposedBlock(Block block, int maxDistance) {
+		if (block == null)
+			return null;
+		Block b = block;
+		if (b.isPassable())
+			for (int i=0; i < maxDistance; i++) {
+				b = b.getRelative(BlockFace.DOWN);
+				if (!b.isPassable())
+					return b;
+			}
+		else
+			for (int i=0; i < maxDistance; i++) {
+				b = b.getRelative(BlockFace.UP);
+				if (b.isPassable())
+					return b.getRelative(BlockFace.DOWN);
+			}
+		return null;
+	}
+	public static Queue<Block> getBlocksInCircleRadius(Location location, double radius) {
+		Queue<Block> queue = new ArrayDeque<>();
+		double radiusSquared = radius * radius;
+		Vector block = new Vector(location.getX(), location.getY(), location.getZ());
+		World world = location.getWorld();
+		for (double x = -radius; x <= radius; x++)
+			for (double z = -radius; z <= radius; z++) {
+				Vector position = block.clone().add(new Vector(x, 0, z));
+				if (block.distanceSquared(position) <= radiusSquared)
+					queue.add(position.toLocation(world).getBlock());
+			}
+		return queue;
+	}
+	public static Queue<Block> getBlocksInCircleCircumference(Location location, double radius) {
+		Queue<Block> queue = new ArrayDeque<>();
+		double outerRadius = radius * radius;
+		double innerRadius = (radius - 1) * (radius - 1);
+		Vector block = new Vector(location.getX(), location.getY(), location.getZ());
+		World world = location.getWorld();
+		for (double x = -radius; x <= radius; x++)
+			for (double z = -radius; z <= radius; z++) {
+				Vector position = block.clone().add(new Vector(x, 0, z));
+				double distance = block.distanceSquared(position);
+				if (distance <= outerRadius && distance > innerRadius)
+					queue.add(position.toLocation(world).getBlock());
+			}
+		return queue;
+	}
+	public static Queue<Block> getBlocksInSphereRadius(Location location, double radius) {
+		Queue<Block> queue = new ArrayDeque<>();
+		double radiusSquared = radius * radius;
+		for (double x = -radius; x <= radius; x++)
+			for (double y = -radius; y <= radius; y++)
+				for (double z = -radius; z <= radius; z++) {
+					Location position = location.clone().add(x, y, z);
+					if (position.distanceSquared(location) <= radiusSquared) {
+						queue.add(position.getBlock());
+//						position.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, getCenterOfBlock(position.getBlock()), 1, 0, 0, 0, .00001);
+					}
+				}
+		return queue;
+	}
+	public static int clamp(int value, int min, int max) {
+		return value < min ? min : value > max ? max : value;
+	}
+	public static double clamp(double value, double min, double max) {
+		return value < min ? min : value > max ? max : value;
+	}
+	public static float clamp(float value, float min, float max) {
+		return value < min ? min : value > max ? max : value;
+	}
+	public static boolean isLocationsWithinDistance(Location loc1, Location loc2, double distanceSquared) {
+		return loc1 != null && loc2 != null && loc1.getWorld().equals(loc2.getWorld()) && loc1.distanceSquared(loc2) <= distanceSquared;
+	}
+	public static enum AreaClearing {
+		
+		CUBE_3X3_FROM_CENTER(block -> {
+			for (int x = block.getX() - 1; x <= block.getX() + 1; x++)
+				for (int y = block.getY() - 1; y <= block.getY() + 1; y++)
+					for (int z = block.getZ() - 1; z <= block.getZ() + 1; z++)
+						if (!block.getWorld().getBlockAt(x, y, z).isPassable())
+							return false;
+			return true;
+		}),
+		CUBE_3X3_FROM_CENTER_BOTTOM(block -> {
+			for (int x = block.getX() - 1; x <= block.getX() + 1; x++)
+				for (int y = block.getY(); y <= block.getY() + 2; y++)
+					for (int z = block.getZ() - 1; z <= block.getZ() + 1; z++)
+						if (!block.getWorld().getBlockAt(x, y, z).isPassable())
+							return false;
+			return true;
+		}),
+		CUBE_3X3_FROM_CENTER_TOP(block -> {
+			for (int x = block.getX() - 1; x <= block.getX() + 1; x++)
+				for (int y = block.getY() - 2; y <= block.getY(); y++)
+					for (int z = block.getZ() - 1; z <= block.getZ() + 1; z++)
+						if (!block.getWorld().getBlockAt(x, y, z).isPassable())
+							return false;
+			return true;
+		}),
+		PLUS_SIGN_3D_FROM_CENTER(block -> {
+			for (BlockFace face : Set.of(BlockFace.UP, BlockFace.DOWN, BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST))
+				if (!block.getRelative(face).isPassable())
+					return false;
+			return true;
+		});
+		
+		private Function<Block, Boolean> function;
+		
+		private AreaClearing(Function<Block, Boolean> function) {
+			this.function = function;
+		}
+	}
+	public static boolean isAreaClear(Block block, AreaClearing clearing) {
+		return clearing.function.apply(block);
+	}
+	public static boolean isAreaClear(Location location, double radius) {
+		for (Block b : getBlocksInSphereRadius(location, radius))
+			if (!b.isPassable())
+				return false;
+		return true;
+	}
+	public static boolean isBlockColdBiome(Block block) {
+		double humidity = block.getWorld().getHumidity(block.getX(), block.getY(), block.getZ());
+		return humidity >= 0.4 && humidity <= 0.8 && block.getWorld().getTemperature(block.getX(), block.getY(), block.getZ()) < 0.15;
+	}
+	public static boolean isBlockDesertBiome(Block block) {
+		return block.getWorld().getTemperature(block.getX(), block.getY(), block.getZ()) >= 1.8 && block.getWorld().getHumidity(block.getX(), block.getY(), block.getZ()) < 0.1;
+	}
+	public static double getDamageOnBlock(Block block, ItemStack item) {
+		double toolDamage = 1.0;
+		double harvestDamage = 100.0;
+		if (item != null) {
+			switch (item.getType()) {
+			case WOODEN_AXE:
+			case WOODEN_PICKAXE:
+			case WOODEN_SHOVEL:
+				toolDamage = 2.0;
+				break;
+			case STONE_AXE:
+			case STONE_PICKAXE:
+			case STONE_SHOVEL:
+				toolDamage = 4.0;
+				break;
+			case IRON_AXE:
+			case IRON_PICKAXE:
+			case IRON_SHOVEL:
+				toolDamage = 6.0;
+				break;
+			case DIAMOND_AXE:
+			case DIAMOND_PICKAXE:
+			case DIAMOND_SHOVEL:
+				toolDamage = 8.0;
+				break;
+			case GOLDEN_AXE:
+			case GOLDEN_PICKAXE:
+			case GOLDEN_SHOVEL:
+				toolDamage = 12.0;
+				break;
+			case NETHERITE_AXE:
+			case NETHERITE_PICKAXE:
+			case NETHERITE_SHOVEL:
+				toolDamage = 9.0;
+				break;
+			default:
+				break;
+			}
+			switch (item.getType()) {
+			case WOODEN_PICKAXE:
+			case STONE_PICKAXE:
+			case IRON_PICKAXE:
+			case GOLDEN_PICKAXE:
+			case DIAMOND_PICKAXE:
+			case NETHERITE_PICKAXE:
+				if (Tag.MINEABLE_PICKAXE.isTagged(block.getType()))
+					harvestDamage = 30.0;
+				break;
+			case WOODEN_AXE:
+			case STONE_AXE:
+			case IRON_AXE:
+			case GOLDEN_AXE:
+			case DIAMOND_AXE:
+			case NETHERITE_AXE:
+				if (Tag.MINEABLE_AXE.isTagged(block.getType()))
+					harvestDamage = 30.0;
+				break;
+			case WOODEN_SHOVEL:
+			case STONE_SHOVEL:
+			case IRON_SHOVEL:
+			case GOLDEN_SHOVEL:
+			case DIAMOND_SHOVEL:
+			case NETHERITE_SHOVEL:
+				if (Tag.MINEABLE_SHOVEL.isTagged(block.getType()))
+					harvestDamage = 30.0;
+				break;
+			default:
+				break;
+			}
+			if (item.containsEnchantment(VersionUtils.getEfficiency()))
+				toolDamage += Math.pow(item.getEnchantmentLevel(VersionUtils.getEfficiency()), 2.0) + 1;
+		}
+		return toolDamage / block.getType().getHardness() / harvestDamage;
+	}
+	public static Vector getParabolicVelocity(Location from, Location to, double heightGain, double gravity) {
+	    double dx = to.getX() - from.getX();
+	    double dz = to.getZ() - from.getZ();
+	    double horizontalDist = Math.sqrt(dx * dx + dz * dz);
+
+	    double endGain = to.getY() - from.getY();
+	    double maxGain = Math.max(heightGain, endGain + heightGain);
+
+	    double velocityY = Math.sqrt(2 * gravity * maxGain);
+	    double timeUp = velocityY / gravity;
+	    double timeDown = Math.sqrt(2 * (maxGain - endGain) / gravity);
+	    double totalTime = timeUp + timeDown;
+
+	    double velocityXZ = horizontalDist / totalTime;
+
+	    Vector velocity = new Vector(dx, 0, dz).normalize().multiply(velocityXZ);
+	    velocity.setY(velocityY);
+
+	    return velocity;
+	}
+	public static Location getCenterOfBlock(Block block) {
+		return block.getLocation().add(.5, .5, .5);
 	}
 }

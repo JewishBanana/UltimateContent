@@ -9,16 +9,18 @@ import org.bukkit.entity.ShulkerBullet;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.items.ItemBuilder;
-import com.github.jewishbanana.uiframework.items.ItemType;
+import com.github.jewishbanana.uiframework.items.UIItemType;
+import com.github.jewishbanana.ultimatecontent.items.CustomItemBuilder;
+import com.github.jewishbanana.ultimatecontent.items.Rarity;
 import com.github.jewishbanana.ultimatecontent.items.Weapon;
-import com.github.jewishbanana.ultimatecontent.utils.RepeatingTask;
 
 public class StasisGun extends Weapon {
 	
-	public static String REGISTERED_KEY = "ui:stasis_gun";
+	public static final String REGISTERED_KEY = "uc:stasis_gun";
 
 	private double range;
 	private int cooldown;
@@ -42,26 +44,29 @@ public class StasisGun extends Weapon {
 		Location start = shot.getLocation();
 		double distance = range * range;
 		UUID uuid = shot.getUniqueId();
-		new RepeatingTask(0, 1) {
+		new BukkitRunnable() {
 			@Override
 			public void run() {
 				if (shot == null || shot.isDead() || shot.getLocation().distanceSquared(start) >= distance) {
 					if (shot != null)
 						shot.remove();
 					removeProjectile(uuid);
-					cancel();
+					this.cancel();
 					return;
 				}
 				shot.setVelocity(vel);
 			}
-		};
+		}.runTaskTimer(plugin, 0, 1);
 		return true;
 	}
 	@Override
 	public ItemBuilder createItem() {
-		return ItemBuilder.create(getType(), Material.GOLDEN_HOE).assembleLore().setCustomModelData(7000).build();
+		return CustomItemBuilder.create(getType(), Material.GOLDEN_HOE).assembleLore().setCustomModelData(7000).build();
 	}
 	public static void register() {
-		ItemType.registerItem(REGISTERED_KEY, StasisGun.class);
+		UIItemType.registerItem(REGISTERED_KEY, StasisGun.class);
+	}
+	public Rarity getRarity() {
+		return Rarity.LEGENDARY;
 	}
 }

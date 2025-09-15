@@ -6,3 +6,24 @@ description: Adds tons of new custom weapons, armor and other items to the game.
 api-version: 1.17
 depend: [UIFramework]
 softdepend: [WorldGuard, Towny, GriefPrevention, Lands, Kingdoms]
+
+commands:
+    ultimatecontent:
+        usage: /ultimatecontent <event|help|reload>
+        description: Universal command for the plugin. Use /ultimatecontent help, for more information.
+        aliases: [uc, ucontent]
+        
+permissions:
+    ultimatecontent.*:
+        description: Gives access to all commands of UltimateContent.
+        children:
+            ultimatecontent.event: true
+            ultimatecontent.help: true
+            ultimatecontent.reload: true
+    ultimatecontent.event:
+        description: Allows you to use the event command.
+        default: true
+    ultimatecontent.help:
+        description: Allows you to use the help command.
+    ultimatecontent.reload:
+        description: Allows you to use the reload command.
