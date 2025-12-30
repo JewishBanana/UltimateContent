@@ -91,7 +91,7 @@ public class InfestedDevourer extends ComplexEntity<Silverfish> {
 		createStands(entity.getLocation(), new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
 			initStand(stand);
 			stand.setSmall(true);
-			stand.getEquipment().setHelmet(entityType.getLoadoutArmor(LoadoutEquipmentSlot.HEAD).getItem());
+			stand.getEquipment().setHelmet(entityVariant.getLoadoutArmor(LoadoutEquipmentSlot.HEAD).getItem());
 		}, new Vector(0, -.75, 0)));
 		setHeadStand(0);
 		
@@ -198,7 +198,7 @@ public class InfestedDevourer extends ComplexEntity<Silverfish> {
 				stand.setHeadPose(new EulerAngle(Math.toRadians(entityLoc.getPitch()),0,0));
 				if (damageTicks == 0) {
 					if (isTargetInRange(entity, 0, 1.25)) {
-						EntityUtils.damageEntity(currentTarget, entityType.damage, "infestedDevourer", entity, DamageCause.ENTITY_ATTACK);
+						EntityUtils.damageEntity(currentTarget, entityVariant.damage, "infestedDevourer", entity, DamageCause.ENTITY_ATTACK);
 						entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), entityLoc.clone().add(entityLoc.getDirection().multiply(0.3)), 5, .2, .2, .2, .1, Material.REDSTONE_BLOCK.createBlockData());
 						playSound(entity.getLocation(), Sound.ENTITY_FOX_BITE, 1, .5);
 						damageTicks = 15;
@@ -257,7 +257,7 @@ public class InfestedDevourer extends ComplexEntity<Silverfish> {
 		EntityBrain brain = BukkitBrain.getBrain(entity);
 		EntityAI goals = brain.getGoalAI();
 		goals.clear();
-		PathfinderBreakBlocks pathfinder = new PathfinderBreakBlocks(entity, blocks, 10.0, variant == InfestedDevourerVariant.ALPHA ? 30.0 : 6.0, 1.0, 1.8, (float) entityType.volume);
+		PathfinderBreakBlocks pathfinder = new PathfinderBreakBlocks(entity, blocks, 10.0, variant == InfestedDevourerVariant.ALPHA ? 30.0 : 6.0, 1.0, 1.8, (float) entityVariant.volume);
 		pathfinder.endAction = block -> {
 			entity.setVelocity(Utils.getVectorTowards(entity.getLocation(), block.getLocation().add(.5, .5, .5)).multiply(0.5));
 			playSound(entity.getLocation(), Sound.ENTITY_FOX_BITE, 1, .5);

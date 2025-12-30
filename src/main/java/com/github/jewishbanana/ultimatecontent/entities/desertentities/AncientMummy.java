@@ -19,6 +19,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
+import com.github.jewishbanana.ultimatecontent.utils.SpawnUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
@@ -42,12 +43,12 @@ public class AncientMummy extends BaseEntity<Husk> {
 					return;
 				if (cooldown > 0) {
 					if (cooldown-- == 9)
-						entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(entityType.movementSpeed);
+						entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(entityVariant.movementSpeed);
 					return;
 				}
 				if (isTargetInRange(entity, 0, 100)) {
 					cooldown = 12;
-					entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(Math.max(entityType.movementSpeed, 0.45));
+					entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(Math.max(entityVariant.movementSpeed, 0.45));
 					playSound(entity.getLocation(), Sound.ENTITY_ENDERMAN_SCREAM, 1.5, .5);
 				}
 			}
@@ -74,9 +75,9 @@ public class AncientMummy extends BaseEntity<Husk> {
 			if (!(event.getEntity() instanceof Monster))
 				return false;
 			Location loc = event.getLocation();
-			if (!Utils.isEnvironment(loc.getWorld(), Environment.NORMAL))
-				return false;
-			if (!VersionUtils.isBiomeDesert(loc.getBlock().getBiome()))
+			if (!Utils.isEnvironment(loc.getWorld(), Environment.NORMAL) 
+					|| !VersionUtils.isBiomeDesert(loc.getBlock().getBiome()) 
+					|| !SpawnUtils.canMonsterSpawn(loc))
 				return false;
 			return true;
 		});

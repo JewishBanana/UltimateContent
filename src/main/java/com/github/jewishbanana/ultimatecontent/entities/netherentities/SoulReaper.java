@@ -52,19 +52,19 @@ public class SoulReaper extends ComplexEntity<Skeleton> {
 			stand.setInvulnerable(true);
 			stand.setSilent(true);
 			stand.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
-			stand.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(entityType.damage);
-			stand.getAttribute(Attribute.GENERIC_ATTACK_KNOCKBACK).setBaseValue(entityType.knockback);
+			stand.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(entityVariant.damage);
+			stand.getAttribute(Attribute.GENERIC_ATTACK_KNOCKBACK).setBaseValue(entityVariant.knockback);
 			
 			/**
 			 * Pointless attribute as Vex uses its own implementation of MoveControl which does not utilize any attributes for speed
 			 * TODO:
 			 * - Create implementation of VexMoveControl with a setter for the speedModifier variable
 			 */
-			stand.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(entityType.movementSpeed);
+			stand.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(entityVariant.movementSpeed);
 			
 			stand.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(30);
-			stand.setCustomName(entityType.displayName);
-			stand.setCustomNameVisible(entityType.nameVisible);
+			stand.setCustomName(entityVariant.displayName);
+			stand.setCustomNameVisible(entityVariant.nameVisible);
 			setTargetGoals(stand);
 			EntitiesHandler.attachRemoveKey(stand);
 		}, new Vector(0, -.3, 0)));

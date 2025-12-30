@@ -25,6 +25,7 @@ import com.github.jewishbanana.ultimatecontent.abilities.CursedWinds;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
+import com.github.jewishbanana.ultimatecontent.utils.SpawnUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
@@ -63,7 +64,7 @@ public class AncientSkeleton extends BaseEntity<Skeleton> {
 							for (Skeleton minion : minions)
 								if (minion != null)
 									immune.add(minion.getUniqueId());
-							ability.setVolume((float) entityType.volume);
+							ability.setVolume((float) entityVariant.volume);
 							ability.activate(entity.getLocation(), entity, immune, null);
 							return;
 						}
@@ -138,9 +139,9 @@ public class AncientSkeleton extends BaseEntity<Skeleton> {
 			if (!(event.getEntity() instanceof Monster))
 				return false;
 			Location loc = event.getLocation();
-			if (!Utils.isEnvironment(loc.getWorld(), Environment.NORMAL))
-				return false;
-			if (!VersionUtils.isBiomeDesert(loc.getBlock().getBiome()))
+			if (!Utils.isEnvironment(loc.getWorld(), Environment.NORMAL) 
+					|| !VersionUtils.isBiomeDesert(loc.getBlock().getBiome()) 
+					|| !SpawnUtils.canMonsterSpawn(loc))
 				return false;
 			return true;
 		});

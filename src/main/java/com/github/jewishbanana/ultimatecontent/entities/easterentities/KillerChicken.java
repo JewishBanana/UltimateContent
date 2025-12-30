@@ -38,7 +38,7 @@ public class KillerChicken extends BaseEntity<Chicken> {
 		goals = brain.getGoalAI();
 		goals.clear();
 		goals.put(new PathfinderFloat(entity), 1);
-		goals.put(new PathfinderAnimalAttackTarget(entity, entityType.damage, 1.0, 10), 2);
+		goals.put(new PathfinderAnimalAttackTarget(entity, entityVariant.damage, 1.0, 10), 2);
 		goals.put(new PathfinderRandomStrollLand(entity), 3);
 		goals.put(new PathfinderLookAtEntity<>(entity, LivingEntity.class), 4);
 	}

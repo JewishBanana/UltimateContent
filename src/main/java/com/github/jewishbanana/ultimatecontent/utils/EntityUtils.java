@@ -242,7 +242,7 @@ public class EntityUtils {
 		ItemStack[] armor = entity.getEquipment().getArmorContents();
 		for (LoadoutEquipmentSlot slot : slots) {
 			ItemStack item = armor[slot.slotIndex];
-			if (item == null || !item.hasItemMeta() || !leatherArmor.contains(item.getType()) || base.getEntityType().loadout.armor[slot.slotIndex] != null)
+			if (item == null || !item.hasItemMeta() || !leatherArmor.contains(item.getType()) || base.getEntityVariant().loadout.armor[slot.slotIndex] != null)
 				continue;
 			LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
 			meta.setColor(Color.fromRGB(red, green, blue));

@@ -41,8 +41,6 @@ import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidArcher;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidGuardian;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidStalker;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidWorm;
-import com.github.jewishbanana.ultimatecontent.entities.halloweenentities.Ghoul;
-import com.github.jewishbanana.ultimatecontent.entities.halloweenentities.Scarecrow;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedCreeper;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedDevourer;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedEnderman;
@@ -107,12 +105,12 @@ public enum CustomEntityType {
 	
 	KILLER_CHICKEN(KillerChicken.REGISTERED_KEY, Category.EASTER_ENTITIES),
 	RAMPAGING_GOAT(RampagingGoat.REGISTERED_KEY, Category.EASTER_ENTITIES),
-	EASTER_BUNNY(EasterBunny.REGISTERED_KEY, Category.EASTER_ENTITIES),
+	EASTER_BUNNY(EasterBunny.REGISTERED_KEY, Category.EASTER_ENTITIES);
 	
-	SCARECROW(Scarecrow.REGISTERED_KEY, Category.HALLOWEEN_ENTITIES),
-	GHOUL(Ghoul.REGISTERED_KEY, Category.HALLOWEEN_ENTITIES);
+//	SCARECROW(Scarecrow.REGISTERED_KEY, Category.HALLOWEEN_ENTITIES),
+//	GHOUL(Ghoul.REGISTERED_KEY, Category.HALLOWEEN_ENTITIES);
 	
-	private enum Category {
+	public enum Category {
 		END_ENTITIES,
 		DESERT_ENTITIES,
 		DARK_ENTITIES,
@@ -127,46 +125,48 @@ public enum CustomEntityType {
 	
 	private static RandomGenerator random = Utils.random();
 	
-	public String registeredName;
-	public String configPath;
+	public final String registeredName;
+	public final Category category;
+	public final String configPath;
 	public EntityVariant normalVariant;
 	
 	private Map<Double, Variant> variants = new HashMap<>();
 	
 	private CustomEntityType(String registeredName, Category category) {
 		this.registeredName = registeredName;
+		this.category = category;
 		this.configPath = "entities."+category.toString().toLowerCase()+'.'+this.toString().toLowerCase()+'.';
 	}
 	private static void initDefaults(CustomEntityType type) {
 		EntityVariant variant = new EntityVariant(type.configPath);
 		type.normalVariant = variant;
 		switch (type) {
-		case END_TOTEM:
+		case END_TOTEM -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ENDERMITE_STEP, .8, .5) };
 			variant.ambientSoundFrequency = 1;
 			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ENDERMAN_HURT, 1, .5) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_EVOKER_PREPARE_ATTACK, 1, .5) };
 			variant.movementSpeed = 0.32;
-			break;
-		case VOID_GUARDIAN:
+		}
+		case VOID_GUARDIAN -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_DROWNED_AMBIENT, .8, .5) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_DROWNED_DEATH, .8, .5) };
 			setLoadoutToLeatherArmor(variant.defaultLoadout, 50, 50, 50, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.VOID_GUARD.getHead());
 			variant.movementSpeed = 0.25;
-			break;
-		case VOID_ARCHER:
+		}
+		case VOID_ARCHER -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ELDER_GUARDIAN_AMBIENT, 1, .8) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_DONKEY_DEATH, .3, .5) };
 			setLoadoutToLeatherArmor(variant.defaultLoadout, 50, 50, 50, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.VOID_ARCHER.getHead());
 			variant.movementSpeed = 0.05;
-			break;
-		case VOID_WORM:
+		}
+		case VOID_WORM -> {
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_PIGLIN_BRUTE_DEATH, 1, .5) };
 			variant.movementSpeed = 0.3;
-			break;
-		case ELF:
+		}
+		case ELF -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_VILLAGER_AMBIENT, 0.25, 2), new SoundEffect(type.normalVariant, Sound.ENTITY_VILLAGER_YES, 0.25, 2) };
 			variant.ambientSoundFrequency = 5;
 			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_VILLAGER_HURT, 1, 2) };
@@ -174,16 +174,16 @@ public enum CustomEntityType {
 			setLoadoutToLeatherArmor(variant.defaultLoadout, 30, 150, 0, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.CHRISTMAS_ELF1.getHead(), CustomHead.CHRISTMAS_ELF2.getHead());
 			variant.movementSpeed = 0.25;
-			break;
-		case GRINCH:
+		}
+		case GRINCH -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ZOMBIE_AMBIENT, 1, 0.5) };
 			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ZOMBIE_HURT, 1, 0.5) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ZOMBIE_DEATH, 1, 0.5) };
 			setLoadoutToLeatherArmor(variant.defaultLoadout, 4, 94, 28, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.GRINCH.getHead());
 			variant.movementSpeed = 0.35;
-			break;
-		case SANTA:
+		}
+		case SANTA -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_VILLAGER_CELEBRATE, 2, 0.5) };
 			variant.ambientSoundFrequency = 3;
 			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_VILLAGER_HURT, 2, 0.6) };
@@ -191,97 +191,97 @@ public enum CustomEntityType {
 			setLoadoutToLeatherArmor(variant.defaultLoadout, 220, 0, 0, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.SANTA.getHead());
 			variant.movementSpeed = 0.3;
-			break;
-		case ANCIENT_MUMMY:
+		}
+		case ANCIENT_MUMMY -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_HUSK_AMBIENT, 1, 0.7) };
 			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_HUSK_HURT, 1, 0.5) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_HUSK_DEATH, 1, 0.6) };
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.MUMMY.getHead());
 			variant.movementSpeed = 0.25;
-			break;
-		case ANCIENT_SKELETON:
+		}
+		case ANCIENT_SKELETON -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_SKELETON_AMBIENT, 1, 0.5), new SoundEffect(type.normalVariant, Sound.ENTITY_SKELETON_STEP, 1, 0.5) };
 			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_SKELETON_HURT, 1, 0.5) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_SKELETON_DEATH, 1, 0.5) };
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.ANCIENT_SKELETON.getHead());
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.MAIN_HAND, new ItemStack(Material.AIR));
 			variant.movementSpeed = 0.3;
-			break;
-		case SHADOW_LEECH:
+		}
+		case SHADOW_LEECH -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ENDERMITE_AMBIENT, 1, 0.5) };
 			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_FOX_SCREECH, 1, 1.8) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ENDERMITE_DEATH, 0.5, 0.8) };
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.SHADOW_LEECH.getHead());
 			variant.movementSpeed = 0.15;
-			break;
-		case SKELETON_KNIGHT:
+		}
+		case SKELETON_KNIGHT -> {
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.SKELETON_KNIGHT.getHead());
-			break;
-		case ZOMBIE_KNIGHT:
+		}
+		case ZOMBIE_KNIGHT -> {
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.ZOMBIE_KNIGHT.getHead());
-			break;
-		case SWAMP_BEAST:
+		}
+		case SWAMP_BEAST -> {
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.SWAMP_BEAST.getHead());
 			variant.movementSpeed = 0.2;
-			break;
-		case KILLER_CHICKEN:
+		}
+		case KILLER_CHICKEN -> {
 			variant.knockback = 1.0;
 			variant.movementSpeed = 0.25;
-			break;
-		case EASTER_BUNNY:
+		}
+		case EASTER_BUNNY -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_RABBIT_ATTACK, 1, 0.5) };
 			variant.movementSpeed = 0.5;
-			break;
-		case CURSED_DIVER:
+		}
+		case CURSED_DIVER -> {
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.CURSED_DIVER.getHead());
 			variant.movementSpeed = 0.3;
-			break;
-		case LOST_SOUL:
+		}
+		case LOST_SOUL -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_VEX_AMBIENT, 1, 0.5), new SoundEffect(type.normalVariant, Sound.ENTITY_VEX_CHARGE, 1, 0.5) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_VEX_DEATH, 1, .7) };
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.MAIN_HAND, new ItemStack(Material.AIR));
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.LOST_SOUL1.getHead(), CustomHead.LOST_SOUL2.getHead(), CustomHead.LOST_SOUL3.getHead(), CustomHead.LOST_SOUL4.getHead());
-			break;
-		case SOUL_REAPER:
+		}
+		case SOUL_REAPER -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_VEX_AMBIENT, 1, 0.5), new SoundEffect(type.normalVariant, Sound.ENTITY_VEX_CHARGE, 1, 0.5) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_CREEPER_DEATH, 1.5, .5) };
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.SOUL_REAPER.getHead());
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.MAIN_HAND, new ItemStack(Material.AIR));
 			variant.movementSpeed = 0.5;
-			break;
-		case YETI:
+		}
+		case YETI -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_RAVAGER_AMBIENT, 1, 0.5), new SoundEffect(type.normalVariant, Sound.ENTITY_RAVAGER_ATTACK, 1, 0.5), new SoundEffect(type.normalVariant, Sound.ENTITY_RAVAGER_CELEBRATE, 1, 0.5), new SoundEffect(type.normalVariant, Sound.ENTITY_RAVAGER_STUNNED, 1, 0.5) };
 			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_RAVAGER_HURT, 1, 0.5) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_RAVAGER_DEATH, 2, 0.5) };
 			variant.movementSpeed = 0.28;
 			variant.knockback = 3.0;
-			break;
-		case FIRE_PHANTOM:
+		}
+		case FIRE_PHANTOM -> {
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_EVOKER_PREPARE_ATTACK, 1, 0.5) };
-			break;
-		case INFESTED_ZOMBIE:
+		}
+		case INFESTED_ZOMBIE -> {
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.INFESTED_ZOMBIE.getHead());
 			variant.movementSpeed = 0.25;
-			break;
-		case INFESTED_SKELETON:
+		}
+		case INFESTED_SKELETON -> {
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.INFESTED_SKELETON.getHead());
 			variant.movementSpeed = 0.3;
-			break;
-		case INFESTED_CREEPER:
+		}
+		case INFESTED_CREEPER -> {
 			variant.movementSpeed = 0.25;
-			break;
-		case INFESTED_ENDERMAN:
+		}
+		case INFESTED_ENDERMAN -> {
 			variant.movementSpeed = 0.35;
-			break;
-		case INFESTED_SPIRIT:
+		}
+		case INFESTED_SPIRIT -> {
 			if (VersionUtils.isMCVersionOrAbove("1.19")) {
 				variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ALLAY_DEATH, .8, .5), new SoundEffect(type.normalVariant, Sound.ENTITY_ALLAY_AMBIENT_WITHOUT_ITEM, .8, .5) };
 				variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ALLAY_ITEM_GIVEN, 1, .7) };
 			}
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.MAIN_HAND, new ItemStack(Material.AIR));
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.INFESTED_SPIRIT1.getHead(), CustomHead.INFESTED_SPIRIT2.getHead());
-			break;
-		case INFESTED_TRIBESMAN:
+		}
+		case INFESTED_TRIBESMAN -> {
 			if (VersionUtils.isMCVersionOrAbove("1.19")) {
 				variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.BLOCK_SCULK_CATALYST_BLOOM, 1, () -> random.nextFloat() + 0.5F) };
 				variant.ambientSoundFrequency = 3;
@@ -292,16 +292,16 @@ public enum CustomEntityType {
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.INFESTED_TRIBESMAN1.getHead());
 			variant.defaultLoadout.addEquipmentSlotItem(LoadoutEquipmentSlot.HEAD, CustomHead.INFESTED_TRIBESMAN2.getHead(), 33.3f);
 			variant.movementSpeed = 0.25;
-			break;
-		case INFESTED_DEVOURER:
+		}
+		case INFESTED_DEVOURER -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_FOX_AGGRO, 1, 0.5) };
 			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_FOX_EAT, 1, .5) };
 			if (VersionUtils.isMCVersionOrAbove("1.19"))
 				variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.BLOCK_SCULK_SHRIEKER_BREAK, 2, .5) };
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.INFESTED_DEVOURER.getHead());
 			variant.movementSpeed = 0.3;
-			break;
-		case INFESTED_HOWLER:
+		}
+		case INFESTED_HOWLER -> {
 //			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_FOX_AGGRO, 1, 0.5) };
 			if (VersionUtils.isMCVersionOrAbove("1.19")) {
 				variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.BLOCK_SCULK_SHRIEKER_BREAK, 1, .8) };
@@ -309,23 +309,19 @@ public enum CustomEntityType {
 			}
 //			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.INFESTED_HOWLER.getHead());
 			variant.movementSpeed = 0.15;
-			break;
-		case INFESTED_WORM:
-			break;
-		case SCARECROW:
-			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_WITHER_AMBIENT, 2, .5) };
-			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ZOMBIE_VILLAGER_HURT, 1, .5) };
-			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_WITHER_SKELETON_DEATH, 2, .5) };
-			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.MAIN_HAND, new ItemStack(Material.JACK_O_LANTERN));
-			setLoadoutToLeatherArmor(variant.defaultLoadout, 105, 68, 31, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
-			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.SCARECROW.getHead());
-			variant.movementSpeed = 0.5;
-			break;
-		case GHOUL:
-			
-			break;
-		default:
-			break;
+		}
+		case INFESTED_WORM -> {}
+//		case SCARECROW -> {
+//			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_WITHER_AMBIENT, 2, .5) };
+//			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ZOMBIE_VILLAGER_HURT, 1, .5) };
+//			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_WITHER_SKELETON_DEATH, 2, .5) };
+//			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.MAIN_HAND, new ItemStack(Material.JACK_O_LANTERN));
+//			setLoadoutToLeatherArmor(variant.defaultLoadout, 105, 68, 31, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
+//			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.SCARECROW.getHead());
+//			variant.movementSpeed = 0.5;
+//		}
+//		case GHOUL -> {}
+		default -> {}
 		}
 	}
 	private static void setLoadoutToLeatherArmor(CustomLoadout loadout, int red, int green, int blue, LoadoutEquipmentSlot... slots) {

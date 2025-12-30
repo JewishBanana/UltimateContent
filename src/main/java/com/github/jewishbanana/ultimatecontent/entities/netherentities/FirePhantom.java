@@ -6,10 +6,10 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
-import org.bukkit.World.Environment;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Phantom;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
@@ -24,7 +24,6 @@ import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
-import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class FirePhantom extends BaseEntity<Phantom> {
@@ -151,7 +150,9 @@ public class FirePhantom extends BaseEntity<Phantom> {
 		UIEntityManager type = UIEntityManager.registerEntity(FirePhantom.REGISTERED_KEY, FirePhantom.class);
 		
 		type.setSpawnConditions(event -> {
-			return Utils.isEnvironment(event.getLocation().getWorld(), Environment.NETHER);
+			if (event.getEntityType() != EntityType.GHAST)
+				return false;
+			return true;
 		});
 	}
 }

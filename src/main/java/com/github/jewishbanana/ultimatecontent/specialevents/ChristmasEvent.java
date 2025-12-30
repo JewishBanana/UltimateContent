@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.World.Environment;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
+import com.github.jewishbanana.ultimatecontent.utils.SpawnUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class ChristmasEvent {
@@ -18,7 +19,7 @@ public class ChristmasEvent {
 		if (date.getMonth() == Month.DECEMBER) {
 			eventEntitySpawnCondition = event -> {
 				Location loc = event.getLocation();
-				return Utils.isEnvironment(loc.getWorld(), Environment.NORMAL) && Utils.isBlockColdBiome(loc.getBlock());
+				return Utils.isEnvironment(loc.getWorld(), Environment.NORMAL) && Utils.isBlockColdBiome(loc.getBlock()) && SpawnUtils.canMonsterSpawn(loc);
 			};
 		} else
 			eventEntitySpawnCondition = event -> false;

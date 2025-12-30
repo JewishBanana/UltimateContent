@@ -94,7 +94,7 @@ public class EasterBunny extends BossEntity<Rabbit> {
 				if (biteTicks <= 0) {
 					if (isTargetInRange(entity, 0, 1.2)) {
 						biteTicks = 8;
-						target.damage(entityType.damage, entity);
+						target.damage(entityVariant.damage, entity);
 					}
 				} else
 					biteTicks--;

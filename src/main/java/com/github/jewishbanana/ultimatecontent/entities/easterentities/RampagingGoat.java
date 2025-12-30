@@ -73,15 +73,15 @@ public class RampagingGoat extends BaseEntity<Goat> {
 		goals = brain.getGoalAI();
 		goals.clear();
 		goals.put(new PathfinderFloat(entity), 1);
-		goals.put(new PathfinderGoatRampage(entity, entityType.damage, 9.0, 80), 2);
+		goals.put(new PathfinderGoatRampage(entity, entityVariant.damage, 9.0, 80), 2);
 		goals.put(new PathfinderRandomStrollLand(entity), 3);
 		goals.put(new PathfinderLookAtEntity<>(entity, LivingEntity.class), 4);
 	}
 	public void onDeath(EntityDeathEvent event) {
 		List<ItemStack> dropList = event.getDrops();
 		dropList.clear();
-		if (dropsItemsOnDeath() && !entityType.drops.isEmpty()) {
-			for (CustomDrop drop : entityType.drops) {
+		if (dropsItemsOnDeath() && !entityVariant.drops.isEmpty()) {
+			for (CustomDrop drop : entityVariant.drops) {
 				ItemStack stack = drop.generateDrop();
 				if (stack == null)
 					continue;

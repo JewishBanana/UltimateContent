@@ -132,8 +132,8 @@ public class AbilityAttributes extends Ability {
 		if (owner == null)
 			return canEntityBeHarmed(entity);
 		return canEntityBeHarmed(entity)
-				&& !(entity instanceof Tameable tameable && tameable.getOwner() != null && tameable.getOwner().getUniqueId().equals(owner.getUniqueId()))
-				&& !(UIEntityManager.getEntity(entity) instanceof TameableEntity tameable && tameable.getOwner().equals(owner.getUniqueId()));
+				&& !(entity instanceof Tameable tameable && Utils.isNotNullAndCondition(tameable.getOwner(), t -> t.getUniqueId().equals(owner.getUniqueId())))
+				&& !(UIEntityManager.getEntity(entity) instanceof TameableEntity tameable && Utils.isNotNullAndCondition(tameable.getOwner(), t -> t.equals(owner.getUniqueId())));
 	}
 	public void playSound(Location loc, Sound sound, double volume, double pitch) {
 		loc.getWorld().playSound(loc, sound, getSoundCategory(), (float) (volume * this.volume), (float) pitch);

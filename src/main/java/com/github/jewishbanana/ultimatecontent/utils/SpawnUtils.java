@@ -24,4 +24,7 @@ public class SpawnUtils {
 				&& location.getBlock().getLightFromBlocks() == 0
 				&& location.getWorld().getNearbyEntities(location, minDistance, minDistance, minDistance, e -> e instanceof Player).size() == 0;
 	}
+	public static boolean canMonsterSpawn(Location location) {
+		return canMonsterSpawn(location, MIN_SPAWN_DISTANCE_FROM_PLAYERS);
+	}
 }

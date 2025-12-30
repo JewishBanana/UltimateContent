@@ -3,6 +3,7 @@ package com.github.jewishbanana.ultimatecontent.entities.darkentities;
 import org.bukkit.Location;
 import org.bukkit.World.Environment;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Zombie;
@@ -13,6 +14,7 @@ import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
+import com.github.jewishbanana.ultimatecontent.utils.Utils.AreaClearing;
 
 public class ZombieKnight extends BaseEntity<Zombie> {
 	
@@ -48,7 +50,7 @@ public class ZombieKnight extends BaseEntity<Zombie> {
 			Location loc = event.getLocation();
 			if (!Utils.isEnvironment(loc.getWorld(), Environment.NORMAL))
 				return false;
-			if (!Utils.isAreaClear(loc.clone().add(0, 1.75, 0), 1.5))
+			if (!Utils.isAreaClear(loc.getBlock().getRelative(BlockFace.UP), AreaClearing.PLUS_SIGN_3D_FROM_CENTER))
 				return false;
 			return true;
 		});

@@ -10,10 +10,7 @@ import java.util.random.RandomGenerator;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Biome;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
@@ -65,8 +62,8 @@ public class EntitySpawningHandler {
 											continue;
 										BaseEntity<?> entity = pair.getFirst().apply(loc);
 										if (entity != null) {
-											if (entity.getCastedEntity() instanceof LivingEntity alive)
-												alive.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 10000, 0, true, false));
+//											if (entity.getCastedEntity() instanceof LivingEntity alive)
+//												alive.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 10000, 0, true, false));
 											break;
 										}
 									}

@@ -80,7 +80,7 @@ public class ShadowLeech extends ComplexEntity<Silverfish> {
 		createStands(entity.getLocation(), new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
 			initStand(stand);
 			stand.setSmall(true);
-			stand.getEquipment().setHelmet(entityType.getLoadoutArmor(LoadoutEquipmentSlot.HEAD).getItem());
+			stand.getEquipment().setHelmet(entityVariant.getLoadoutArmor(LoadoutEquipmentSlot.HEAD).getItem());
 		}, new Vector(0, -.75, 0)));
 		setHeadStand(0);
 		
@@ -122,7 +122,7 @@ public class ShadowLeech extends ComplexEntity<Silverfish> {
 					entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), entity.getLocation(), 8, .1, .1, .1, 1, blockData);
 				else
 					entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), entity.getLocation(), 3, .1, .1, .1, 1, blockData);
-				EntityUtils.pureDamageEntity(attached, entityType.damage, "shadowLeech", entity, DamageCause.ENTITY_ATTACK);
+				EntityUtils.pureDamageEntity(attached, entityVariant.damage, "shadowLeech", entity, DamageCause.ENTITY_ATTACK);
 				playSound(entity.getLocation(), Sound.ENTITY_ENDERMITE_DEATH, .5, .8);
 			}
 		}.runTaskTimer(plugin, 0, 10));

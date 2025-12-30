@@ -563,4 +563,7 @@ public class Utils {
 	public static Location getCenterOfBlock(Block block) {
 		return block.getLocation().add(.5, .5, .5);
 	}
+	public static <T> boolean isNotNullAndCondition(T object, Predicate<T> condition) {
+		return object != null && condition.test(object);
+	}
 }

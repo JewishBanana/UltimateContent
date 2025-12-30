@@ -45,7 +45,7 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 	public UndeadMiner(Zombie entity) {
 		super(entity, CustomEntityType.UNDEAD_MINER);
 		
-		if (entityType.getOffHandItem() == null) {
+		if (entityVariant.getOffHandItem() == null) {
 			List<Material> blocks = new ArrayList<>();
 			Environment environment = entity.getWorld().getEnvironment();
 			Material underBlock = entity.getLocation().getBlock().getRelative(BlockFace.DOWN).getType();

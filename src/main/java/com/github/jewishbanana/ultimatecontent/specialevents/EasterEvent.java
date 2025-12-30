@@ -179,7 +179,6 @@ public class EasterEvent extends SpecialEvent {
     		double chance = 3.0;
     		if (item != null)
     			chance += item.getEnchantmentLevel(VersionUtils.getLuckOfTheSea()) * 3.0;
-    		Bukkit.broadcastMessage("chance is "+chance);
     		if (random.nextDouble() * 100 < chance) {
     			if (player.getInventory().firstEmpty() == -1)
         			player.getWorld().dropItemNaturally(player.getLocation(), UIItemType.getItem(BlueEgg.class));

@@ -55,9 +55,9 @@ public class VoidGuardian extends BaseEntity<Zombie> {
 					if (entity.getHealth() > maxHealth / 2.0) {
 						rageMode = false;
 						changeColor(50, 50, 50);
-						if (entityType.loadout.armor[3] == null)
+						if (entityVariant.loadout.armor[3] == null)
 							entity.getEquipment().setHelmet(CustomHead.VOID_GUARD.getHead());
-						entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(entityType.movementSpeed);
+						entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(entityVariant.movementSpeed);
 						if (lastToRage != null)
 							DependencyUtils.awardAchievementProgress(lastToRage, "master.series.void_master", 1, 2);
 						lastToRage = null;
@@ -74,9 +74,9 @@ public class VoidGuardian extends BaseEntity<Zombie> {
 		if (entity.getHealth() <= maxHealth / 2.0) {
 			rageMode = true;
 			changeColor(76, 48, 255);
-			if (entityType.loadout.armor[3] == null)
+			if (entityVariant.loadout.armor[3] == null)
 				entity.getEquipment().setHelmet(CustomHead.VOID_GUARD_RAGE.getHead());
-			entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(entityType.movementSpeed * 2.0);
+			entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(entityVariant.movementSpeed * 2.0);
 		}
 	}
 	public void wasHit(EntityDamageByEntityEvent event) {
@@ -94,7 +94,7 @@ public class VoidGuardian extends BaseEntity<Zombie> {
 		Zombie entity = getCastedEntity();
 		ItemStack[] armor = entity.getEquipment().getArmorContents();
 		for (int i=0; i < 3; i++)
-			if (entityType.loadout.armor[i] == null) {
+			if (entityVariant.loadout.armor[i] == null) {
 				LeatherArmorMeta meta = (LeatherArmorMeta) armor[i].getItemMeta();
 				meta.setColor(Color.fromRGB(red, green, blue));
 				armor[i].setItemMeta(meta);

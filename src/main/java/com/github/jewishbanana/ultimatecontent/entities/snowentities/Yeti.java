@@ -26,6 +26,7 @@ import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.utils.CustomHead;
 import com.github.jewishbanana.ultimatecontent.utils.PhysicsEngine;
+import com.github.jewishbanana.ultimatecontent.utils.SpawnUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
@@ -286,7 +287,7 @@ public class Yeti extends ComplexEntity<IronGolem> {
 					ability.initFields();
 					ability.range = 12.0;
 					ability.freezeTicks = 200;
-					ability.setVolume((float) entityType.volume);
+					ability.setVolume((float) entityVariant.volume);
 					ability.activate(entity.getLocation(), entity, null);
 				}
 			}
@@ -334,7 +335,8 @@ public class Yeti extends ComplexEntity<IronGolem> {
 		UIEntityManager type = UIEntityManager.registerEntity(Yeti.REGISTERED_KEY, Yeti.class);
 		
 		type.setSpawnConditions(event -> {
-			return Utils.isBlockColdBiome(event.getLocation().getBlock());
+			Location loc = event.getLocation();
+			return Utils.isBlockColdBiome(loc.getBlock()) && SpawnUtils.canMonsterSpawn(loc);
 		});
 	}
 }

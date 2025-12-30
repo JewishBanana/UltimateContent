@@ -29,7 +29,7 @@ public class LostSoul extends ComplexEntity<Vex> implements TameableEntity {
 		createStands(entity.getLocation(), new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
 			initStand(stand);
 			stand.setSmall(true);
-			stand.getEquipment().setHelmet(entityType.getLoadoutArmor(LoadoutEquipmentSlot.HEAD).getItem());
+			stand.getEquipment().setHelmet(entityVariant.getLoadoutArmor(LoadoutEquipmentSlot.HEAD).getItem());
 		}, new Vector(0, -.3, 0)));
 		setHeadStand(0);
 		

@@ -66,25 +66,27 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 		infestedEntityParticles = VersionUtils.isMCVersionOrAbove("1.19") ? Material.SCULK.createBlockData() : Material.NETHERRACK.createBlockData();
 	}
 	
-	protected EntityVariant entityType;
+	protected final CustomEntityType entityType;
+	protected final EntityVariant entityVariant;
 	
 	private UUID owner;
 	private boolean dropsItemsOnDeath = true;
-	private Variant entityVariant;
+	private final Variant exactVariant;
 	
 	public BaseEntity(T entity, CustomEntityType type) {
 		super(entity);
-		this.entityVariant = type.determineVariant(entity);
-		this.entityType = entityVariant != null ? entityVariant.getEntityVariant() : type.normalVariant;
+		this.entityType = type;
+		this.exactVariant = type.determineVariant(entity);
+		this.entityVariant = exactVariant != null ? exactVariant.getEntityVariant() : type.normalVariant;
 		setAttributes(entity);
-		if (entityType.ambientSounds != null) {
-			final int[] timer = {random.nextInt(entityType.ambientSoundFrequency)+entityType.ambientSoundFrequency};
+		if (entityVariant.ambientSounds != null) {
+			final int[] timer = {random.nextInt(entityVariant.ambientSoundFrequency)+entityVariant.ambientSoundFrequency};
 			scheduleTask(new BukkitRunnable() {
 				@Override
 				public void run() {
 					if (--timer[0] == 0) {
-						timer[0] = random.nextInt(entityType.ambientSoundFrequency)+entityType.ambientSoundFrequency;
-						playRandomSoundEffect(entityType.ambientSounds);
+						timer[0] = random.nextInt(entityVariant.ambientSoundFrequency)+entityVariant.ambientSoundFrequency;
+						playRandomSoundEffect(entityVariant.ambientSounds);
 					}
 				}
 			}.runTaskTimer(plugin, 0, 20));
@@ -107,7 +109,7 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 				equipment.setBootsDropChance(0);
 			}
 			if (shouldEquipBaseEntity())
-				entityType.equipEntityWithLoadout(alive);
+				entityVariant.equipEntityWithLoadout(alive);
 		}
 	}
 	public void setAIGoals(T entity) {
@@ -125,12 +127,12 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 			while (iterator.hasNext())
 				if (!slots.contains(iterator.next()))
 					iterator.remove();
-			entityType.populateDropList(event.getDrops());
+			entityVariant.populateDropList(event.getDrops());
 		}
-		playRandomSoundEffect(entityType.deathSounds);
+		playRandomSoundEffect(entityVariant.deathSounds);
 	}
 	public void onDamaged(EntityDamageEvent event) {
-		playRandomSoundEffect(entityType.hurtSounds);
+		playRandomSoundEffect(entityVariant.hurtSounds);
 	}
 	public void unload() {
 		super.unload();
@@ -140,28 +142,28 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 		if (entity instanceof LivingEntity) {
 			LivingEntity alive = (LivingEntity) entity;
 			AttributeInstance instance = null;
-			if (entityType.health > 0) {
+			if (entityVariant.health > 0) {
 				instance = alive.getAttribute(Attribute.GENERIC_MAX_HEALTH);
 				if (instance != null)
-					instance.setBaseValue(entityType.health);
+					instance.setBaseValue(entityVariant.health);
 			}
-			if (entityType.damage >= 0) {
+			if (entityVariant.damage >= 0) {
 				instance = alive.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
 				if (instance != null)
-					instance.setBaseValue(entityType.damage);
+					instance.setBaseValue(entityVariant.damage);
 			}
-			if (entityType.knockback >= 0) {
+			if (entityVariant.knockback >= 0) {
 				instance = alive.getAttribute(Attribute.GENERIC_ATTACK_KNOCKBACK);
 				if (instance != null)
-					instance.setBaseValue(entityType.knockback);
+					instance.setBaseValue(entityVariant.knockback);
 			}
-			if (entityType.movementSpeed >= 0) {
+			if (entityVariant.movementSpeed >= 0) {
 				instance = alive.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
 				if (instance != null)
-					instance.setBaseValue(entityType.movementSpeed);
+					instance.setBaseValue(entityVariant.movementSpeed);
 			}
 		}
-		entity.setCustomNameVisible(entityType.nameVisible);
+		entity.setCustomNameVisible(entityVariant.nameVisible);
 	}
 	public UUID getOwner() {
 		return owner;
@@ -172,7 +174,7 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 		Entity entity = getEntity();
 		if (entity == null)
 			return;
-		if (uuid == null ) {
+		if (uuid == null) {
 			entity.getPersistentDataContainer().remove(tameOwner);
 			setAIGoals(getCastedEntity());
 			this.owner = null;
@@ -194,7 +196,7 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 			playSoundEffect(effects[random.nextInt(effects.length)]);
 	}
 	public void playSound(Location location, Sound sound, double volume, double pitch) {
-		location.getWorld().playSound(location, sound, getSoundCategory(), (float) (volume * entityType.volume), (float) pitch);
+		location.getWorld().playSound(location, sound, getSoundCategory(), (float) (volume * entityVariant.volume), (float) pitch);
 	}
 	public void makeParticleTask(Entity entity, int ticks, Particle particle, Vector offset, int count, double dx, double dy, double dz, double speed) {
 		scheduleTask(new BukkitRunnable() {
@@ -292,23 +294,23 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 	public SoundCategory getSoundCategory() {
 		return SoundCategory.HOSTILE;
 	}
-	public EntityVariant getEntityType() {
-		return entityType;
+	public EntityVariant getEntityVariant() {
+		return entityVariant;
 	}
 	public int getSectionInteger(String value, int defaultValue) {
-		return DataUtils.getConfigInt(entityType.configPath+value, defaultValue);
+		return DataUtils.getConfigInt(entityVariant.configPath+value, defaultValue);
 	}
 	public double getSectionDouble(String value, double defaultValue) {
-		return DataUtils.getConfigDouble(entityType.configPath+value, defaultValue);
+		return DataUtils.getConfigDouble(entityVariant.configPath+value, defaultValue);
 	}
 	public boolean getSectionBoolean(String value, boolean defaultValue) {
-		return DataUtils.getConfigBoolean(entityType.configPath+value, defaultValue);
+		return DataUtils.getConfigBoolean(entityVariant.configPath+value, defaultValue);
 	}
 	public String getSectionString(String value, String defaultValue) {
-		return DataUtils.getConfigString(entityType.configPath+value, defaultValue);
+		return DataUtils.getConfigString(entityVariant.configPath+value, defaultValue);
 	}
 	public String getDisplayName() {
-		return entityType.displayName;
+		return entityVariant.displayName;
 	}
 	public boolean dropsItemsOnDeath() {
 		return dropsItemsOnDeath;
@@ -316,9 +318,12 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 	public void setDropsItemsOnDeath(boolean dropsItemsOnDeath) {
 		this.dropsItemsOnDeath = dropsItemsOnDeath;
 	}
+	public CustomEntityType getEntityType() {
+		return entityType;
+	}
 	@SuppressWarnings("unchecked")
 	public <K extends Variant> K getEntityVariant(Class<K> variantClass) {
-		return (K) entityVariant;
+		return (K) exactVariant;
 	}
 	public boolean shouldEquipBaseEntity() {
 		return true;

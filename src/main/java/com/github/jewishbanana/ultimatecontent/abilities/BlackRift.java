@@ -76,7 +76,7 @@ public class BlackRift extends AbilityAttributes {
 							continue;
 						Location temp = e.getLocation();
 						e.setVelocity(Utils.getVectorTowards(temp, loc).multiply(0.3));
-						if (e instanceof LivingEntity && !e.isDead() && temp.distance(loc) < 1 && !(e instanceof ItemFrame)) {
+						if (e instanceof LivingEntity && !e.isDead() && temp.distanceSquared(loc) < 1 && !(e instanceof ItemFrame)) {
 							if (shooter != null)
 								EntityUtils.pureDamageEntity((LivingEntity) e, damage, "deaths.unstableRiftSource", (LivingEntity) shooter, DamageCause.VOID);
 							else

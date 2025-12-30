@@ -96,13 +96,13 @@ public class EntitiesHandler implements Listener {
 			event.setCancelled(true);
 			VoidWorm worm = voidWormFangs.remove(uuid);
 			if (event.getEntity() instanceof LivingEntity)
-				((LivingEntity) event.getEntity()).damage(worm.getEntityType().damage, worm.getEntity());
+				((LivingEntity) event.getEntity()).damage(worm.getEntityVariant().damage, worm.getEntity());
 		}
 		Elf elf = elfArrows.get(uuid);
 		if (elf != null && (event.getEntity().hasMetadata("uc-christmasmobs") || event.getEntity().getUniqueId().equals(elf.getOwner())))
 			event.setCancelled(true);
 		if (frostySnowballs.containsKey(uuid))
-			event.setDamage(frostySnowballs.remove(uuid).getEntityType().damage);
+			event.setDamage(frostySnowballs.remove(uuid).getEntityVariant().damage);
 		if (explodingEntities.containsKey(uuid))
 			event.setDamage(event.getDamage() * explodingEntities.get(uuid).getExplosionDamageMultiplier());
 	}

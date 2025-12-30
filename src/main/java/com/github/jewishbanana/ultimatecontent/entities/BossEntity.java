@@ -67,7 +67,7 @@ public class BossEntity<T extends Entity> extends BaseEntity<T> {
 			songPlayer.stopSong();
 	}
 	public BossBar createBossBar() {
-		return Bukkit.createBossBar(this.entityType.displayName, BarColor.RED, BarStyle.SOLID, BarFlag.DARKEN_SKY, BarFlag.CREATE_FOG);
+		return Bukkit.createBossBar(this.entityVariant.displayName, BarColor.RED, BarStyle.SOLID, BarFlag.DARKEN_SKY, BarFlag.CREATE_FOG);
 	}
 	public Song getSongTheme() {
 		return null;

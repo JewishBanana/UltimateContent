@@ -73,7 +73,6 @@ import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidArcher;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidGuardian;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidStalker;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidWorm;
-import com.github.jewishbanana.ultimatecontent.entities.halloweenentities.Scarecrow;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedCreeper;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedDevourer;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedEnderman;
@@ -81,7 +80,6 @@ import com.github.jewishbanana.ultimatecontent.entities.infestedentities.Infeste
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedSkeleton;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedSpirit;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedTribesman;
-import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedWorm;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedZombie;
 import com.github.jewishbanana.ultimatecontent.entities.netherentities.FirePhantom;
 import com.github.jewishbanana.ultimatecontent.entities.netherentities.LostSoul;
@@ -308,7 +306,7 @@ public class Main extends JavaPlugin {
 		InfestedTribesman.register();
 		InfestedDevourer.register();
 		InfestedHowler.register();
-		InfestedWorm.register();
+//		InfestedWorm.register();
 		
 		// Nether Entities
 		LostSoul.register();
@@ -327,7 +325,7 @@ public class Main extends JavaPlugin {
 		EasterBunny.register();
 		
 		// Halloween Entities
-		Scarecrow.register();
+//		Scarecrow.register();
 	}
 	private void init() {
 		reload();
