@@ -2,7 +2,7 @@ package com.github.jewishbanana.ultimatecontent.entities.easterentities;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.Set;
@@ -59,11 +59,12 @@ public class EasterBunny extends BossEntity<Rabbit> {
 	
 	public static final String REGISTERED_KEY = "uc:easter_bunny";
 	
-	private static final Set<Material> flowers = new HashSet<>();
+	private static final Set<Material> flowers;
 	static {
-		flowers.addAll(Tag.FLOWERS.getValues());
+		flowers = EnumSet.copyOf(Tag.FLOWERS.getValues());
 		flowers.addAll(Tag.SMALL_FLOWERS.getValues());
-		flowers.addAll(Tag.TALL_FLOWERS.getValues());
+		if (!VersionUtils.isMCVersionOrAbove("1.21.4"))
+			flowers.addAll(Tag.TALL_FLOWERS.getValues());
 		flowers.addAll(Arrays.asList(VersionUtils.getShortGrass(), Material.TALL_GRASS));
 	}
 	
