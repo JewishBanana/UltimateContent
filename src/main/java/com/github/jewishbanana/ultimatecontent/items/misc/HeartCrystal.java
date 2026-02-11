@@ -2,7 +2,7 @@ package com.github.jewishbanana.ultimatecontent.items.misc;
 
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -27,11 +27,12 @@ public class HeartCrystal extends BaseItem {
 	public boolean interacted(PlayerInteractEvent event) {
 		if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			Player p = event.getPlayer();
-			if (p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue() >= 40.0)
+			AttributeInstance attribute = p.getAttribute(VersionUtils.getMaxHealthAttribute());
+			if (attribute.getBaseValue() >= 40.0)
 				return true;
-			double amount = Math.min(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue()+2.0, 40.0);
-			p.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(amount);
-			p.setHealth(Math.min(p.getHealth()+2.0, p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue()));
+			double amount = Math.min(attribute.getBaseValue() + 2.0, 40.0);
+			attribute.setBaseValue(amount);
+			p.setHealth(Math.min(p.getHealth() + 2.0, attribute.getBaseValue()));
 			EntityUtils.playDamageEffect(p);
 			p.playSound(p, Sound.BLOCK_CHORUS_FLOWER_GROW, 1, 0.5f);
 			if (item.getAmount() == 1)

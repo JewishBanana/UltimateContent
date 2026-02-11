@@ -13,12 +13,12 @@ import me.gamercoder215.mobchip.bukkit.BukkitBrain;
 
 public class PathfinderMaintainTargetDistance extends CustomPathfinder {
 	
-	private double closestDistance;
-	private double farthestDistance;
+	private float closestDistance;
+	private float farthestDistance;
 	private Location goal;
 	private NavigationUtils navi;
 
-	public PathfinderMaintainTargetDistance(@NotNull Mob m, double closestDistance, double farthestDistance) {
+	public PathfinderMaintainTargetDistance(@NotNull Mob m, float closestDistance, float farthestDistance) {
 		super(m);
 		this.closestDistance = closestDistance * closestDistance;
 		this.farthestDistance = farthestDistance * farthestDistance;
@@ -37,7 +37,7 @@ public class PathfinderMaintainTargetDistance extends CustomPathfinder {
 			return true;
 		if (distance >= closestDistance)
 			return false;
-		goal = NavigationUtils.findPositionInDirection(entity, Utils.getVectorTowards(target.getLocation(), entity.getLocation()).setY(0).normalize(), 3.0, 7.0);
+		goal = NavigationUtils.findPositionInDirection(entity, Utils.getVectorTowards(target.getLocation(), entity.getLocation()).setY(0).normalize(), 3f, 7f);
 		if (goal == null)
 			return false;
 		navi = NavigationUtils.createNavigationPath(entity).addLocation(goal);

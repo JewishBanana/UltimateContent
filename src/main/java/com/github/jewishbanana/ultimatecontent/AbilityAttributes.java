@@ -1,5 +1,6 @@
 package com.github.jewishbanana.ultimatecontent;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,6 +39,7 @@ import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.UIAbilityType;
 import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
 import com.github.jewishbanana.ultimatecontent.items.BaseItem;
+import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
@@ -47,43 +49,40 @@ public class AbilityAttributes extends Ability {
 	protected static final JavaPlugin plugin;
 	protected static final RandomGenerator random;
 	
-	public static final Map<UIAbilityType, Set<Material>> globalMaterialBlacklist;
-	public static final Map<UIAbilityType, Set<EntityType>> globalEntityBlacklist;
-	public static final Map<UIAbilityType, Set<Class<? extends CustomEntity<?>>>> globalCustomEntityBlacklist;
+	public static final Map<UIAbilityType, AbilityTypeBlacklists> globalBlacklists;
 	static {
 		plugin = Main.getInstance();
 		random = RandomGenerator.of("SplittableRandom");
-		globalMaterialBlacklist = new HashMap<>();
-		globalEntityBlacklist = new HashMap<>();
-		globalCustomEntityBlacklist = new HashMap<>();
+		globalBlacklists = new HashMap<>();
 	}
 	
+	private String defaultPath;
 	private String configPath;
 	private Target target = Target.DEFAULT;
 	private boolean cooldownMessages = true;
 	private String displayName;
 	private String description;
 	
-	private double chance = 100.0;
-	private float volume = 1.0f;
+	private float chance = 1f;
+	private float volume = 1f;
 	private Set<Material> immuneMaterials;
 	private Set<EntityType> immuneEntities;
 	private Set<Class<? extends CustomEntity<?>>> immuneCustom;
 	
+	protected static class AbilityTypeBlacklists {
+		protected Set<Material> materials;
+		protected Set<EntityType> entityTypes;
+		protected Set<Class<? extends CustomEntity<?>>> customEntityTypes;
+	}
 	public AbilityAttributes(UIAbilityType type) {
 		super(type);
-		Set<Material> materialList = globalMaterialBlacklist.get(type);
-		if (materialList != null)
-			this.immuneMaterials = materialList;
-		Set<EntityType> entityList = globalEntityBlacklist.get(type);
-		if (entityList != null)
-			this.immuneEntities = entityList;
-		Set<Class<? extends CustomEntity<?>>> customEntityList = globalCustomEntityBlacklist.get(type);
-		if (customEntityList != null)
-			this.immuneCustom = customEntityList;
+		AbilityTypeBlacklists blacklists = globalBlacklists.get(type);
+		if (blacklists != null) {
+			this.immuneMaterials = blacklists.materials;
+			this.immuneEntities = blacklists.entityTypes;
+			this.immuneCustom = blacklists.customEntityTypes;
+		}
 	}
-	public void initFields() {}
-	
 	/**
 	 * <STRONG>This method should be overriden in the abilities class.</STRONG>
 	 * <p>
@@ -99,7 +98,7 @@ public class AbilityAttributes extends Ability {
 	public void activate(Location loc, GenericItem base) {}
 	
 	public boolean shouldActivate() {
-		return chance == 100.0 || random.nextDouble() * 100 < chance;
+		return chance == 1f || random.nextFloat() < chance;
 	}
 	public void internalActivation(Entity entity, Event event, GenericItem base, Entity activator) {
 		activate(entity, base);
@@ -135,8 +134,8 @@ public class AbilityAttributes extends Ability {
 				&& !(entity instanceof Tameable tameable && Utils.isNotNullAndCondition(tameable.getOwner(), t -> t.getUniqueId().equals(owner.getUniqueId())))
 				&& !(UIEntityManager.getEntity(entity) instanceof TameableEntity tameable && Utils.isNotNullAndCondition(tameable.getOwner(), t -> t.equals(owner.getUniqueId())));
 	}
-	public void playSound(Location loc, Sound sound, double volume, double pitch) {
-		loc.getWorld().playSound(loc, sound, getSoundCategory(), (float) (volume * this.volume), (float) pitch);
+	public void playSound(Location loc, Sound sound, float volume, float pitch) {
+		loc.getWorld().playSound(loc, sound, getSoundCategory(), volume * this.volume, pitch);
 	}
 	/**
 	 * Run whenever a PlayerInteractEvent is fired involving the ability.
@@ -468,47 +467,69 @@ public class AbilityAttributes extends Ability {
 	}
 	
 	public int getIntegerField(String field, int defaultValue) {
-		if (configPath == null)
-			return defaultValue;
-		if (!plugin.getConfig().contains(configPath+'.'+field))
-			return defaultValue;
-		try {
-			return plugin.getConfig().getInt(configPath+'.'+field);
-		} catch (NumberFormatException e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
-			return defaultValue;
-		}
+		if (plugin.getConfig().contains(configPath+'.'+field, true))
+			try {
+				return plugin.getConfig().getInt(configPath+'.'+field);
+			} catch (NumberFormatException e) {
+				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
+			}
+		if (plugin.getConfig().contains(defaultPath+'.'+field))
+			try {
+				return plugin.getConfig().getInt(defaultPath+'.'+field);
+			} catch (NumberFormatException e) {
+				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+defaultPath+'.'+field+"' please fix this value!"));
+			}
+		return defaultValue;
+	}
+	public int getIntegerField(String field) {
+		return getIntegerField(field, 0);
 	}
 	public double getDoubleField(String field, double defaultValue) {
-		if (configPath == null)
-			return defaultValue;
-		if (!plugin.getConfig().contains(configPath+'.'+field))
-			return defaultValue;
-		try {
-			return plugin.getConfig().getDouble(configPath+'.'+field);
-		} catch (NumberFormatException e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
-			return defaultValue;
-		}
+		if (plugin.getConfig().contains(configPath+'.'+field, true))
+			try {
+				return plugin.getConfig().getDouble(configPath+'.'+field);
+			} catch (NumberFormatException e) {
+				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
+			}
+		if (plugin.getConfig().contains(defaultPath+'.'+field))
+			try {
+				return plugin.getConfig().getDouble(defaultPath+'.'+field);
+			} catch (NumberFormatException e) {
+				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+defaultPath+'.'+field+"' please fix this value!"));
+			}
+		return defaultValue;
+	}
+	public double getDoubleField(String field) {
+		return getDoubleField(field, 0.0);
 	}
 	public boolean getBooleanField(String field, boolean defaultValue) {
-		if (configPath == null)
-			return defaultValue;
-		if (!plugin.getConfig().contains(configPath+'.'+field))
-			return defaultValue;
-		try {
-			return plugin.getConfig().getBoolean(configPath+'.'+field);
-		} catch (NumberFormatException e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
-			return defaultValue;
-		}
+		if (plugin.getConfig().contains(configPath+'.'+field, true))
+			try {
+				return plugin.getConfig().getBoolean(configPath+'.'+field);
+			} catch (NumberFormatException e) {
+				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
+			}
+		if (plugin.getConfig().contains(defaultPath+'.'+field))
+			try {
+				return plugin.getConfig().getBoolean(defaultPath+'.'+field);
+			} catch (NumberFormatException e) {
+				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+defaultPath+'.'+field+"' please fix this value!"));
+			}
+		return defaultValue;
+	}
+	public boolean getBooleanField(String field) {
+		return getBooleanField(field, false);
 	}
 	public static void reload() {
-		globalMaterialBlacklist.clear();
-		globalEntityBlacklist.clear();
-		globalCustomEntityBlacklist.clear();
+		globalBlacklists.clear();
 	}
 	
+	public String getDefaultConfigPath() {
+		return defaultPath;
+	}
+	public void setDefaultConfigPath(String configPath) {
+		this.defaultPath = configPath;
+	}
 	public String getConfigPath() {
 		return configPath;
 	}
@@ -530,7 +551,7 @@ public class AbilityAttributes extends Ability {
 	public double getChance() {
 		return chance;
 	}
-	public void setChance(double chance) {
+	public void setChance(float chance) {
 		this.chance = chance;
 	}
 	public float getVolume() {
@@ -561,9 +582,9 @@ public class AbilityAttributes extends Ability {
 		return immuneMaterials;
 	}
 	public void setImmuneMaterials(Set<Material> immuneMaterials) {
-		Set<Material> global = globalMaterialBlacklist.get(getType());
-		if (global != null) {
-			Set<Material> temp = new HashSet<>(global);
+		AbilityTypeBlacklists blacklists = globalBlacklists.get(getType());
+		if (blacklists != null) {
+			Set<Material> temp = EnumSet.copyOf(blacklists.materials);
 			temp.addAll(immuneMaterials);
 			this.immuneMaterials = temp;
 			return;
@@ -574,9 +595,9 @@ public class AbilityAttributes extends Ability {
 		return immuneEntities;
 	}
 	public void setImmuneEntities(Set<EntityType> immuneEntities) {
-		Set<EntityType> global = globalEntityBlacklist.get(getType());
-		if (global != null) {
-			Set<EntityType> temp = new HashSet<>(global);
+		AbilityTypeBlacklists blacklists = globalBlacklists.get(getType());
+		if (blacklists != null) {
+			Set<EntityType> temp = EnumSet.copyOf(blacklists.entityTypes);
 			temp.addAll(immuneEntities);
 			this.immuneEntities = temp;
 			return;
@@ -587,29 +608,96 @@ public class AbilityAttributes extends Ability {
 		return immuneCustom;
 	}
 	public void setImmuneCustomEntities(Set<Class<? extends CustomEntity<?>>> immuneCustom) {
-		Set<Class<? extends CustomEntity<?>>> global = globalCustomEntityBlacklist.get(getType());
-		if (global != null) {
-			Set<Class<? extends CustomEntity<?>>> temp = new HashSet<>(global);
+		AbilityTypeBlacklists blacklists = globalBlacklists.get(getType());
+		if (blacklists != null) {
+			Set<Class<? extends CustomEntity<?>>> temp = new HashSet<>(blacklists.customEntityTypes);
 			temp.addAll(immuneCustom);
 			this.immuneCustom = temp;
 			return;
 		}
 		this.immuneCustom = immuneCustom;
 	}
-	public Map<String, Object> serialize() {
-		Map<String, Object> map = super.serialize();
-		map.put("cooldownMessages", cooldownMessages);
-		map.put("chance", chance);
-		map.put("volume", volume);
-		return map;
+	public int registerSerializedIntegerField(String identifier, Map<String, Object> map, int defaultValue) {
+		return registerSerializedField(identifier, map, getIntegerField(identifier, defaultValue)).getValue();
+	}
+	public int registerSerializedIntegerField(String identifier, Map<String, Object> map) {
+		return registerSerializedIntegerField(identifier, map, 0);
+	}
+	public double registerSerializedDoubleField(String identifier, Map<String, Object> map, double defaultValue) {
+		return registerSerializedField(identifier, map, getDoubleField(identifier, defaultValue)).getValue();
+	}
+	public double registerSerializedDoubleField(String identifier, Map<String, Object> map) {
+		return registerSerializedDoubleField(identifier, map, 0.0);
+	}
+	public boolean registerSerializedBooleanField(String identifier, Map<String, Object> map, boolean defaultValue) {
+		return registerSerializedField(identifier, map, getBooleanField(identifier, defaultValue)).getValue();
+	}
+	public boolean registerSerializedBooleanField(String identifier, Map<String, Object> map) {
+		return registerSerializedBooleanField(identifier, map, false);
 	}
 	public void deserialize(Map<String, Object> map) {
 		super.deserialize(map);
-		cooldownMessages = (boolean) map.get("cooldownMessages");
-		chance = (double) map.get("chance");
-		volume = (float) map.get("volume");
+		cooldownMessages = registerSerializedBooleanField("cooldownMessages", map, true);
+		chance = (float) registerSerializedDoubleField("chance", map, 1f);
+		volume = (float) registerSerializedDoubleField("volume", map, 1f);
+		try {
+			String value = (String) map.get("target");
+			if (value != null) {
+				Target target = Target.forName(value);
+				if (target == null)
+					Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading ability from config path &d'"+configPath+".target' &ethere is no such target type &a'"+DataUtils.getConfigString(configPath+".target")+"'"));
+				else
+					setTarget(target);
+			}
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+		}
+		if (map.containsKey("blacklist")) {
+			if (plugin.getConfig().contains(configPath+".blacklist.blocks", true)) {
+				Set<Material> types = new HashSet<>();
+				for (String s : DataUtils.getConfigStringList(configPath+".blacklist.blocks")) {
+					Material material = Material.matchMaterial(s);
+					if (material == null) {
+						Main.consoleSender.sendMessage(Utils.prefix+Utils.convertString("&cError in adding material type &d'"+s+"' &cto ability &e"+getDisplayName()+" &cblock blacklist in config section &b"+configPath+".blacklist.blocks &cplease fix this value to match the minecraft name. This material type will be omitted from the abilities block blacklist!"));
+						continue;
+					}
+					types.add(material);
+				}
+				if (!types.isEmpty())
+					setImmuneMaterials(EnumSet.copyOf(types));
+			}
+			if (plugin.getConfig().contains(configPath+".blacklist.entities", true)) {
+				Set<EntityType> types = new HashSet<>();
+				Set<Class<? extends CustomEntity<?>>> customTypes = new HashSet<>();
+				for (String s : DataUtils.getConfigStringList(configPath+".blacklist.entities"))
+					try {
+						UIEntityManager customType = UIEntityManager.getEntityType(s);
+						if (customType != null) {
+							customTypes.add(customType.getEntityClass());
+							continue;
+						}
+						EntityType entityType = EntityType.valueOf(s.toUpperCase());
+						types.add(entityType);
+					} catch (IllegalArgumentException e) {
+						Main.consoleSender.sendMessage(Utils.prefix+Utils.convertString("&cError in adding entity type &d'"+s+"' &cto ability &e"+getDisplayName()+" &centity blacklist in config section &b"+configPath+".blacklist.entities &cplease fix this value to match the minecraft name or custom entity type name. This entity type will be omitted from the abilities entity blacklist!"));
+					}
+				if (!types.isEmpty())
+					setImmuneEntities(EnumSet.copyOf(types));
+				if (!customTypes.isEmpty())
+					setImmuneCustomEntities(customTypes);
+			}
+		}
+	}
+	public static <T extends AbilityAttributes> T createInitializedAbilityInstance(Class<T> abilityClass) {
+		T ability = UIAbilityType.createAbilityInstance(abilityClass);
+		String path = "abilities."+ability.getType().getRegisteredName().replaceFirst("uc:", "");
+		ability.setConfigPath(path);
+		ability.setDefaultConfigPath(path);
+		ability.deserialize(plugin.getConfig().getConfigurationSection(path).getValues(false));
+		return ability;
 	}
 	public enum Target {
+		
 		DEFAULT,
 		ACTIVATOR,
 		PROJECTILE,

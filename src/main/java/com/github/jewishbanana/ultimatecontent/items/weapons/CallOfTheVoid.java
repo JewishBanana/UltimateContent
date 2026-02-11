@@ -21,7 +21,7 @@ public class CallOfTheVoid extends Weapon {
 
 	public CallOfTheVoid(ItemStack item) {
 		super(item);
-		this.arrowParticles = getBooleanField("projectileParticles", true);
+		this.arrowParticles = getBooleanField("projectileParticles");
 	}
 	public boolean shotBow(EntityShootBowEvent event) {
 		if (!arrowParticles)

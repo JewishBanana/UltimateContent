@@ -17,6 +17,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.WanderingTrader;
@@ -138,97 +139,105 @@ public class EasterEvent extends SpecialEvent {
     }
     public void reload() {
     	super.reload();
-    	killerChickenSpawnRate = UIEntityManager.getEntityType(KillerChicken.REGISTERED_KEY).getSpawnRate();
+    	killerChickenSpawnRate = UIEntityManager.getEntityType(KillerChicken.REGISTERED_KEY).getSpawnRate() / 100.0;
     }
     @EventHandler(ignoreCancelled = true)
-	public void onChickenLayEgg(EntityDropItemEvent e) {
-    	if (e.getEntityType() == EntityType.CHICKEN
-    			&& e.getItemDrop().getItemStack().getType() == Material.EGG
-    			&& random.nextDouble() * 100 < 5.0) {
-    		e.getItemDrop().setItemStack(UIItemType.getItem(GreenEgg.class));
-    		droppedEggs.put(e.getItemDrop().getUniqueId(), Pair.of(GreenEgg.class, new HashSet<>()));
-    		e.getItemDrop().getPersistentDataContainer().set(eggKey, PersistentDataType.STRING, "greenEgg");
-    	}
+	public void onChickenLayEgg(EntityDropItemEvent event) {
+    	if (event.getEntityType() != EntityType.CHICKEN || random.nextFloat() >= 0.05)
+    		return;
+    	Item item = event.getItemDrop();
+    	if (item.getItemStack().getType() != Material.EGG)
+    		return;
+    	item.setItemStack(UIItemType.getItem(GreenEgg.class));
+    	droppedEggs.put(item.getUniqueId(), Pair.of(GreenEgg.class, new HashSet<>()));
+    	item.getPersistentDataContainer().set(eggKey, PersistentDataType.STRING, "greenEgg");
     }
 	@EventHandler(ignoreCancelled = true)
-	public void onItemPickup(EntityPickupItemEvent e) {
-		if (e.getEntity() instanceof Player player
-				&& droppedEggs.containsKey(e.getItem().getUniqueId())) {
-			Pair<Class<? extends GenericItem>, Set<UUID>> pair = droppedEggs.get(e.getItem().getUniqueId());
-			if (eggs.get(pair.getFirst()).hasAcheived(player.getUniqueId())) {
-				if (!pair.getSecond().contains(e.getEntity().getUniqueId())) {
-					player.sendMessage(Utils.convertString(DataUtils.getConfigString("language.events.easter.restrictAction")));
-					pair.getSecond().add(e.getEntity().getUniqueId());
-				}
-				e.setCancelled(true);
-				return;
+	public void onItemPickup(EntityPickupItemEvent event) {
+		if (!(event.getEntity() instanceof Player player))
+			return;
+		Pair<Class<? extends GenericItem>, Set<UUID>> pair = droppedEggs.get(event.getItem().getUniqueId());
+		if (pair == null)
+			return;
+		UUID uuid = player.getUniqueId();
+		if (eggs.get(pair.getFirst()).hasAcheived(uuid)) {
+			Set<UUID> set = pair.getSecond();
+			if (!set.contains(uuid)) {
+				player.sendMessage(Utils.convertString(DataUtils.getConfigString("language.events.easter.restrictAction")));
+				set.add(uuid);
 			}
-			eggs.get(pair.getFirst()).setAcheived(player.getUniqueId());
+			event.setCancelled(true);
+			return;
 		}
+		eggs.get(pair.getFirst()).setAcheived(uuid);
 	}
 	@EventHandler(ignoreCancelled = true)
-	public void onItemMerge(ItemMergeEvent e) {
-		if (droppedEggs.containsKey(e.getEntity().getUniqueId()) || droppedEggs.containsKey(e.getTarget().getUniqueId()))
-			e.setCancelled(true);
+	public void onItemMerge(ItemMergeEvent event) {
+		if (droppedEggs.containsKey(event.getEntity().getUniqueId()) || droppedEggs.containsKey(event.getTarget().getUniqueId()))
+			event.setCancelled(true);
 	}
     @EventHandler(ignoreCancelled = true)
-    public void onFish(PlayerFishEvent e) {
-    	Player player = e.getPlayer();
-    	if (e.getCaught() instanceof Item && !eggs.get(BlueEgg.class).hasAcheived(player.getUniqueId())) {
-    		ItemStack item = player.getEquipment().getItem(e.getHand());
-    		double chance = 3.0;
+    public void onFish(PlayerFishEvent event) {
+    	Player player = event.getPlayer();
+    	UUID uuid = player.getUniqueId();
+    	if (event.getCaught() instanceof Item && !eggs.get(BlueEgg.class).hasAcheived(uuid)) {
+    		ItemStack item = player.getEquipment().getItem(event.getHand());
+    		double chance = 0.03;
     		if (item != null)
-    			chance += item.getEnchantmentLevel(VersionUtils.getLuckOfTheSea()) * 3.0;
-    		if (random.nextDouble() * 100 < chance) {
+    			chance += item.getEnchantmentLevel(VersionUtils.getLuckOfTheSea()) * 0.03;
+    		if (random.nextFloat() < chance) {
     			if (player.getInventory().firstEmpty() == -1)
         			player.getWorld().dropItemNaturally(player.getLocation(), UIItemType.getItem(BlueEgg.class));
         		else
         			player.getInventory().addItem(UIItemType.getItem(BlueEgg.class));
-        		eggs.get(BlueEgg.class).setAcheived(player.getUniqueId());
+        		eggs.get(BlueEgg.class).setAcheived(uuid);
     		}
     	}
     }
     @EventHandler(ignoreCancelled = true)
-    public void onLootGen(LootGenerateEvent e) {
-    	if (e.getInventoryHolder() instanceof Chest chest
+    public void onLootGen(LootGenerateEvent event) {
+    	if (event.getInventoryHolder() instanceof Chest chest
 				&& chest.getBlock().getLocation().getBlockY() < 30
-				&& e.getEntity() instanceof Player player
+				&& event.getEntity() instanceof Player player
 				&& !eggs.get(OrangeEgg.class).hasAcheived(player.getUniqueId())
 				&& random.nextDouble() * 100 < 10.0) {
-			e.getLoot().add(UIItemType.getItem(OrangeEgg.class));
+			event.getLoot().add(UIItemType.getItem(OrangeEgg.class));
 			eggs.get(OrangeEgg.class).setAcheived(player.getUniqueId());
 		}
 	}
-    @EventHandler(ignoreCancelled = true)
-    public void onTradeAquire(VillagerAcquireTradeEvent e) {
-    	if (e.getEntity() instanceof WanderingTrader
-    			&& !modifiedTrades.contains(e.getEntity().getUniqueId())
-    			&& random.nextDouble() * 100 < 20.0) {
-    		MerchantRecipe newRecipe = new MerchantRecipe(UIItemType.getItem(PurpleEgg.class), 1);
-    		newRecipe.addIngredient(new ItemStack(Material.EMERALD, random.nextInt(10)+6));
-    		newRecipe.setVillagerExperience(20);
-    		e.setRecipe(newRecipe);
-    		modifiedTrades.add(e.getEntity().getUniqueId());
-    	}
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    public void onTradeAquire(VillagerAcquireTradeEvent event) {
+    	if (!(event.getEntity() instanceof WanderingTrader) || random.nextFloat() >= 0.2)
+    		return;
+    	UUID uuid = event.getEntity().getUniqueId();
+    	if (modifiedTrades.contains(uuid))
+    		return;
+    	MerchantRecipe newRecipe = new MerchantRecipe(UIItemType.getItem(PurpleEgg.class), 1);
+    	newRecipe.addIngredient(new ItemStack(Material.EMERALD, random.nextInt(10)+6));
+    	newRecipe.setVillagerExperience(20);
+    	event.setRecipe(newRecipe);
+    	modifiedTrades.add(uuid);
     }
     @EventHandler(ignoreCancelled = true)
-	public void onClick(InventoryClickEvent e) {
-		if (!(e.getClickedInventory() instanceof MerchantInventory))
+	public void onClick(InventoryClickEvent event) {
+		if (!(event.getClickedInventory() instanceof MerchantInventory))
 			return;
-		GenericItem base = GenericItem.getItemBase(e.getCurrentItem());
+		GenericItem base = GenericItem.getItemBase(event.getCurrentItem());
 		if (base != null && base.getClass().equals(PurpleEgg.class)) {
-			if (eggs.get(PurpleEgg.class).hasAcheived(e.getWhoClicked().getUniqueId())) {
-				e.getWhoClicked().sendMessage(Utils.convertString(DataUtils.getConfigString("language.events.easter.restrictAction")));
-				e.setCancelled(true);
+			HumanEntity player = event.getWhoClicked();
+			UUID uuid = player.getUniqueId();
+			if (eggs.get(PurpleEgg.class).hasAcheived(uuid)) {
+				player.sendMessage(Utils.convertString(DataUtils.getConfigString("language.events.easter.restrictAction")));
+				event.setCancelled(true);
 				return;
 			}
-			eggs.get(PurpleEgg.class).setAcheived(e.getWhoClicked().getUniqueId());
+			eggs.get(PurpleEgg.class).setAcheived(uuid);
 		}
 	}
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
 	public void onCreatureSpawn(CreatureSpawnEvent e) {
     	if (e.getEntityType() == EntityType.CHICKEN
-    			&& random.nextDouble() * 100.0 < killerChickenSpawnRate
+    			&& random.nextFloat() < killerChickenSpawnRate
     			&& UIEntityManager.getEntity(e.getEntity()) == null) {
     		e.setCancelled(true);
     		UIEntityManager.spawnEntity(e.getLocation(), KillerChicken.class);

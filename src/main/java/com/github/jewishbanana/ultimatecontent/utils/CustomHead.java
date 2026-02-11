@@ -92,8 +92,7 @@ public enum CustomHead {
 						textures.setSkin(getUrlFromBase64(type.base));
 					profile.setTextures(textures);
 				} catch (Exception e) {
-					e.printStackTrace();
-					Utils.sendErrorMessage();
+					Utils.sendExceptionLog(e);
 				}
 				type.head = new ItemStack(Material.PLAYER_HEAD);
 				SkullMeta meta = (SkullMeta) type.head.getItemMeta();
@@ -110,8 +109,7 @@ public enum CustomHead {
 					field.setAccessible(true);
 					field.set(meta, profile);
 				} catch (Exception e) {
-					e.printStackTrace();
-					Utils.sendErrorMessage();
+					Utils.sendExceptionLog(e);
 				}
 				type.head.setItemMeta(meta);
 			}

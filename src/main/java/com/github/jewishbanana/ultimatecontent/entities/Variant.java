@@ -1,9 +1,9 @@
 package com.github.jewishbanana.ultimatecontent.entities;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import org.bukkit.NamespacedKey;
 
@@ -11,7 +11,7 @@ import com.github.jewishbanana.ultimatecontent.Main;
 
 public interface Variant {
 	
-	public static final Map<CustomEntityType, Queue<Variant>> variants = new HashMap<>();
+	public static final Map<CustomEntityType, List<Variant>> variants = new HashMap<>();
 	public static final NamespacedKey variantKey = new NamespacedKey(Main.getInstance(), "uc-variant");
 	public static final Map<Variant, EntityVariant> entityVariants = new HashMap<>();
 	public static final Map<Variant, String> entityKeys = new HashMap<>();
@@ -29,7 +29,7 @@ public interface Variant {
 		variant.overwriteFromPath(variant.configPath+"variants."+variantPathName);
 		if (useDefaultLoadout())
 			variant.loadout.defaultLoad = type.normalVariant.defaultLoadout;
-		Queue<Variant> queue = variants.getOrDefault(type, new ArrayDeque<>());
+		List<Variant> queue = variants.getOrDefault(type, new ArrayList<>());
 		queue.add(this);
 		variants.put(type, queue);
 		entityVariants.put(this, variant);

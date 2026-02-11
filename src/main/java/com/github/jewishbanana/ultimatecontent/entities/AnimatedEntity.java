@@ -14,6 +14,8 @@ import me.gamercoder215.mobchip.bukkit.BukkitBrain;
 
 public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 	
+	private static final double WALK_THRESHOLD = 0.01;
+	
 	private CreatureStand<ArmorStand> stand;
 	protected AnimationHandler walkAnimation;
 	private AnimationHandler attackAnimation;
@@ -23,13 +25,12 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 		super(entity, type);
 		this.attackAnimation = new AnimationHandler(true, false, false);
 		this.attackAnimation.setAnimations(this.attackAnimation.new Animation(
-					this.attackAnimation.new AnimationCheckpoint(BodyPart.RIGHT_ARM, 0, 0, 0, -112, 30, 0, 8, true, 0.5, 0.5),
-					this.attackAnimation.new AnimationCheckpoint(BodyPart.LEFT_ARM, 0, 0, 0, -112, -30, 0, 8, true, 0.5, 0.5)
+					this.attackAnimation.new AnimationCheckpoint(BodyPart.RIGHT_ARM, 0, 0, 0, -112, 30, 0, 8, true, 0.5f, 0.5f),
+					this.attackAnimation.new AnimationCheckpoint(BodyPart.LEFT_ARM, 0, 0, 0, -112, -30, 0, 8, true, 0.5f, 0.5f)
 				)
 			);
-		
+		EntityBody body = BukkitBrain.getBrain(entity).getBody();
 		scheduleTask(new BukkitRunnable() {
-			private EntityBody body = BukkitBrain.getBrain(entity).getBody();
 			private Location step = entity.getLocation();
 			
 			@Override
@@ -37,12 +38,11 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 				Location entityLoc = entity.getLocation();
 				float rot = body.getBodyRotation();
 				ArmorStand mainStand = stand.getEntity(entityLoc);
-				mainStand.setHeadPose(new EulerAngle(Math.toRadians(entity.getLocation().getPitch()), Math.toRadians(entityLoc.getYaw() - rot), 0));
+				mainStand.setHeadPose(new EulerAngle(Math.toRadians(entityLoc.getPitch()), Math.toRadians(entityLoc.getYaw() - rot), 0));
 				entityLoc.setYaw(rot);
 				mainStand.teleport(entityLoc);
-				
-				if (shouldWalk && step.distanceSquared(entity.getLocation()) > 0.01 && entity.isOnGround()) {
-					step = entity.getLocation();
+				if (shouldWalk && step.distanceSquared(entityLoc) > WALK_THRESHOLD && entity.isOnGround()) {
+					step = entityLoc;
 					walkAnimation.go();
 				} else
 					walkAnimation.stop();
@@ -57,15 +57,21 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 	}
 	public void unload() {
 		super.unload();
-		if (stand != null && stand.getEntityOrNull() != null)
-			stand.getEntityOrNull().remove();
+		if (stand != null) {
+			ArmorStand standEntity = stand.getEntityOrNull();
+			if (standEntity != null)
+				standEntity.remove();
+		}
 	}
 	public boolean shouldEquipBaseEntity() {
 		return false;
 	}
 	public void swingArms() {
-		if (stand != null && stand.getEntityOrNull() != null)
-			attackAnimation.startAnimation(stand.getEntityOrNull());
+		if (stand != null) {
+			ArmorStand standEntity = stand.getEntityOrNull();
+			if (standEntity != null)
+				attackAnimation.startAnimation(standEntity);
+		}
 	}
 	public CreatureStand<ArmorStand> getAnimatedStand() {
 		return stand;
@@ -85,7 +91,7 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 		
 		private Animation[] animations;
 		private int currentPoint = 0, continueFrame = 0, frameRate = 1;
-		public boolean shouldStop = true,resetOnStop,adjustOnStop,isDone,continous;
+		public boolean shouldStop = true, resetOnStop, adjustOnStop, isDone, continous;
 		
 		/**
 		 * @param resetOnStop - True if the animation sequence should reset to frame 0 when interrupted
@@ -101,12 +107,15 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 			if (shouldStop) {
 				if (!continous && isDone)
 					return;
-				if (!animations[currentPoint].isFinished) {
-					animations[currentPoint].tick(stand);
-					if (animations[currentPoint].isFinished) {
-						if (adjustOnStop)
-							for (AnimationCheckpoint point : animations[0].points)
-								point.adjustToFrame(stand, 0);
+				Animation currentAnim = animations[currentPoint];
+				if (!currentAnim.isFinished) {
+					currentAnim.tick(stand);
+					if (currentAnim.isFinished) {
+						if (adjustOnStop) {
+							AnimationCheckpoint[] points = animations[0].points;
+							for (int i = 0; i < points.length; i++)
+								points[i].adjustToFrame(stand, 0);
+						}
 						if (resetOnStop) {
 							currentPoint = 0;
 							animations[currentPoint].isFinished = false;
@@ -117,8 +126,9 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 					isDone = true;
 				return;
 			}
-			if (!animations[currentPoint].isFinished)
-				animations[currentPoint].tick(stand);
+			Animation currentAnim = animations[currentPoint];
+			if (!currentAnim.isFinished)
+				currentAnim.tick(stand);
 			else {
 				currentPoint++;
 				if (currentPoint >= animations.length)
@@ -143,8 +153,8 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 			stop();
 		}
 		public void forceStop(ArmorStand stand) {
-			for (Animation anim : animations)
-				anim.forceStop(stand);
+			for (int i = 0; i < animations.length; i++)
+				animations[i].forceStop(stand);
 			shouldStop = true;
 		}
 		public boolean isFinished() {
@@ -164,7 +174,7 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 		}
 		public class Animation {
 			
-			private AnimationCheckpoint[] points;
+			private final AnimationCheckpoint[] points;
 			private boolean isFinished;
 			
 			@SafeVarargs
@@ -174,40 +184,42 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 			public void tick(ArmorStand stand) {
 				isFinished = false;
 				boolean ticked = false;
-				for (AnimationCheckpoint point : points)
-					if (!point.isFinished) {
-						point.tick(stand);
+				for (int i = 0; i < points.length; i++) {
+					if (!points[i].isFinished) {
+						points[i].tick(stand);
 						ticked = true;
 					}
+				}
 				if (!ticked) {
 					isFinished = true;
-					for (AnimationCheckpoint point : points)
-						point.reset();
+					for (int i = 0; i < points.length; i++)
+						points[i].reset();
 				}
 			}
 			public void forceStop(ArmorStand stand) {
-				for (AnimationCheckpoint point : points)
-					point.forceStop(stand);
+				for (int i = 0; i < points.length; i++)
+					points[i].forceStop(stand);
 				isFinished = true;
 			}
 		}
 		public class AnimationCheckpoint {
 			
-			private BodyPart part;
+			private final BodyPart part;
+			private final boolean reverse;
+			private final boolean overrideValues;
+			private final float[][] frames;
 			private int frame = 1;
-			private boolean reverse,flipped,isFinished,overrideValues;
-			private double[][] frames;
+			private boolean flipped, isFinished;
 			
-			public AnimationCheckpoint(BodyPart part, double initialX, double initialY, double initialZ, double targetX, double targetY, double targetZ, int ticks, boolean reverse, double acceleration, double decceleration, boolean overrideValues) {
+			public AnimationCheckpoint(BodyPart part, float initialX, float initialY, float initialZ, float targetX, float targetY, float targetZ, int ticks, boolean reverse, float acceleration, float decceleration, boolean overrideValues) {
 				this.part = part;
 				this.reverse = reverse;
 				this.overrideValues = overrideValues;
-				
-				frames = new double[ticks+1][];
-				frames[0] = new double[] {initialX, initialY, initialZ};
-				double speedX = (targetX - initialX) / ticks;
-				double speedY = (targetY - initialY) / ticks;
-				double speedZ = (targetZ - initialZ) / ticks;
+				frames = new float[ticks + 1][];
+				frames[0] = new float[] {initialX, initialY, initialZ};
+				float speedX = (targetX - initialX) / ticks;
+				float speedY = (targetY - initialY) / ticks;
+				float speedZ = (targetZ - initialZ) / ticks;
 				int halfSteps = ticks / 2;
 				int quarterSteps = halfSteps / 2;
 				if (acceleration > 0 && decceleration == 0) {
@@ -217,49 +229,51 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 					quarterSteps = halfSteps;
 					halfSteps = 0;
 				}
-				double accStep = acceleration / (double) (quarterSteps);
-				double decStep = decceleration / (double) (quarterSteps);
-				for (int i=0; i < frames.length-1; i++) {
-					if (frames[i+1] == null)
-						frames[i+1] = new double[]{speedX, speedY, speedZ};
+				float accStep = acceleration / quarterSteps;
+				float decStep = decceleration / quarterSteps;
+				for (int i = 0; i < frames.length - 1; i++) {
+					if (frames[i + 1] == null)
+						frames[i + 1] = new float[]{speedX, speedY, speedZ};
 					if (i < quarterSteps && quarterSteps < halfSteps) {
-						double[] startSpeeds = new double[3];
-						startSpeeds[0] = speedX * (1 - (accStep * (quarterSteps-i)));
-						startSpeeds[1] = speedY * (1 - (accStep * (quarterSteps-i)));
-						startSpeeds[2] = speedZ * (1 - (accStep * (quarterSteps-i)));
-						frames[i+1] = startSpeeds;
-						double[] endSpeeds = new double[3];
-						endSpeeds[0] = speedX * (1 + (accStep * (quarterSteps-i)));
-						endSpeeds[1] = speedY * (1 + (accStep * (quarterSteps-i)));
-						endSpeeds[2] = speedZ * (1 + (accStep * (quarterSteps-i)));
-						frames[halfSteps-(i+1)+1] = endSpeeds;
+						float multiplier = accStep * (quarterSteps - i);
+						float[] startSpeeds = new float[3];
+						startSpeeds[0] = speedX * (1 - multiplier);
+						startSpeeds[1] = speedY * (1 - multiplier);
+						startSpeeds[2] = speedZ * (1 - multiplier);
+						frames[i + 1] = startSpeeds;
+						float[] endSpeeds = new float[3];
+						endSpeeds[0] = speedX * (1 + multiplier);
+						endSpeeds[1] = speedY * (1 + multiplier);
+						endSpeeds[2] = speedZ * (1 + multiplier);
+						frames[halfSteps - (i + 1) + 1] = endSpeeds;
 					} else if (i >= halfSteps) {
-						if (i >= halfSteps+quarterSteps)
+						if (i >= halfSteps + quarterSteps)
 							continue;
-						double[] startSpeeds = new double[3];
-						startSpeeds[0] = speedX * (1 + (decStep * (quarterSteps-(i-halfSteps))));
-						startSpeeds[1] = speedY * (1 + (decStep * (quarterSteps-(i-halfSteps))));
-						startSpeeds[2] = speedZ * (1 + (decStep * (quarterSteps-(i-halfSteps))));
-						frames[i+1] = startSpeeds;
-						double[] endSpeeds = new double[3];
-						endSpeeds[0] = speedX * (1 - (decStep * (quarterSteps-(i-halfSteps))));
-						endSpeeds[1] = speedY * (1 - (decStep * (quarterSteps-(i-halfSteps))));
-						endSpeeds[2] = speedZ * (1 - (decStep * (quarterSteps-(i-halfSteps))));
-						frames[ticks-((i-halfSteps)+1)+1] = endSpeeds;
+						float multiplier = decStep * (quarterSteps - (i - halfSteps));
+						float[] startSpeeds = new float[3];
+						startSpeeds[0] = speedX * (1 + multiplier);
+						startSpeeds[1] = speedY * (1 + multiplier);
+						startSpeeds[2] = speedZ * (1 + multiplier);
+						frames[i + 1] = startSpeeds;
+						float[] endSpeeds = new float[3];
+						endSpeeds[0] = speedX * (1 - multiplier);
+						endSpeeds[1] = speedY * (1 - multiplier);
+						endSpeeds[2] = speedZ * (1 - multiplier);
+						frames[ticks - ((i - halfSteps) + 1) + 1] = endSpeeds;
 					}
 				}
-				for (int i=1; i < frames.length; i++) {
+				for (int i = 1; i < frames.length; i++) {
 					initialX += frames[i][0];
 					initialY += frames[i][1];
 					initialZ += frames[i][2];
-					frames[i] = new double[] {initialX, initialY, initialZ};
+					frames[i] = new float[] {initialX, initialY, initialZ};
 				}
 			}
-			public AnimationCheckpoint(BodyPart part, double initialX, double initialY, double initialZ, double targetX, double targetY, double targetZ, int ticks, boolean reverse, double acceleration, double decceleration) {
+			public AnimationCheckpoint(BodyPart part, float initialX, float initialY, float initialZ, float targetX, float targetY, float targetZ, int ticks, boolean reverse, float acceleration, float decceleration) {
 				this(part, initialX, initialY, initialZ, targetX, targetY, targetZ, ticks, reverse, acceleration, decceleration, false);
 			}
-			public AnimationCheckpoint(BodyPart part, double initialX, double initialY, double initialZ, double targetX, double targetY, double targetZ, int ticks, boolean reverse) {
-				this(part, initialX, initialY, initialZ, targetX, targetY, targetZ, ticks, reverse, 0.0, 0.0, false);
+			public AnimationCheckpoint(BodyPart part, float initialX, float initialY, float initialZ, float targetX, float targetY, float targetZ, int ticks, boolean reverse) {
+				this(part, initialX, initialY, initialZ, targetX, targetY, targetZ, ticks, reverse, 0.0f, 0.0f, false);
 			}
 			public void tick(ArmorStand stand) {
 				if (isFinished)
@@ -274,37 +288,62 @@ public class AnimatedEntity<T extends Mob> extends BaseEntity<T> {
 						isFinished = true;
 						return;
 					}
-					frame = frames.length-1;
+					frame = frames.length - 1;
 					flipped = true;
 				}
 			}
 			public void adjustToFrame(ArmorStand stand, int frame) {
-				EulerAngle angle = new EulerAngle(Math.toRadians(frames[frame][0]), Math.toRadians(frames[frame][1]), Math.toRadians(frames[frame][2]));
+				float[] frameData = frames[frame];
+				EulerAngle angle = new EulerAngle(Math.toRadians(frameData[0]), Math.toRadians(frameData[1]), Math.toRadians(frameData[2]));
 				EulerAngle pose;
 				switch (part) {
 				case BODY:
-					pose = stand.getBodyPose();
-					stand.setBodyPose(overrideValues ? angle : new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					if (overrideValues) {
+						stand.setBodyPose(angle);
+					} else {
+						pose = stand.getBodyPose();
+						stand.setBodyPose(new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					}
 					break;
 				case HEAD:
-					pose = stand.getHeadPose();
-					stand.setHeadPose(overrideValues ? angle : new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					if (overrideValues) {
+						stand.setHeadPose(angle);
+					} else {
+						pose = stand.getHeadPose();
+						stand.setHeadPose(new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					}
 					break;
 				case RIGHT_ARM:
-					pose = stand.getRightArmPose();
-					stand.setRightArmPose(overrideValues ? angle : new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					if (overrideValues) {
+						stand.setRightArmPose(angle);
+					} else {
+						pose = stand.getRightArmPose();
+						stand.setRightArmPose(new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					}
 					break;
 				case LEFT_ARM:
-					pose = stand.getLeftArmPose();
-					stand.setLeftArmPose(overrideValues ? angle : new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					if (overrideValues) {
+						stand.setLeftArmPose(angle);
+					} else {
+						pose = stand.getLeftArmPose();
+						stand.setLeftArmPose(new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					}
 					break;
 				case RIGHT_LEG:
-					pose = stand.getRightLegPose();
-					stand.setRightLegPose(overrideValues ? angle : new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					if (overrideValues) {
+						stand.setRightLegPose(angle);
+					} else {
+						pose = stand.getRightLegPose();
+						stand.setRightLegPose(new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					}
 					break;
 				case LEFT_LEG:
-					pose = stand.getLeftLegPose();
-					stand.setLeftLegPose(overrideValues ? angle : new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					if (overrideValues) {
+						stand.setLeftLegPose(angle);
+					} else {
+						pose = stand.getLeftLegPose();
+						stand.setLeftLegPose(new EulerAngle(angle.getX() != 0 ? angle.getX() : pose.getX(), angle.getY() != 0 ? angle.getY() : pose.getY(), angle.getZ() != 0 ? angle.getZ() : pose.getZ()));
+					}
 					break;
 				}
 			}

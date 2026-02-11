@@ -1,6 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.utils;
 
 import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -8,15 +9,16 @@ import org.bukkit.EntityEffect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Tameable;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -31,9 +33,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
+import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.Main;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.EntityVariant.LoadoutEquipmentSlot;
+import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
 
 public class EntityUtils {
 	
@@ -41,17 +45,20 @@ public class EntityUtils {
 	private static Set<Material> leatherArmor;
 	private static final FixedMetadataValue fallingBlockData;
 	private static final FixedMetadataValue damageData;
+	private static final boolean isVersion192OrAbove;
 	static {
 		plugin = Main.getInstance();
 		leatherArmor = Set.of(Material.LEATHER_BOOTS, Material.LEATHER_LEGGINGS, Material.LEATHER_CHESTPLATE, Material.LEATHER_HELMET);
 		fallingBlockData = new FixedMetadataValue(plugin, "protected");
 		damageData = Main.getFixedMetadata();
+		isVersion192OrAbove = VersionUtils.isMCVersionOrAbove("1.19.2");
 	}
 	
 	@SuppressWarnings("removal")
-	private static <T extends EntityDamageEvent> boolean pureDamageEntity(LivingEntity entity, double damage, String meta, boolean ignoreTotem, T event) {
+	public static boolean pureDamageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause, Entity source, boolean ignoreTotem, boolean silent, Sound playerHurtSound) {
 		if (entity == null || entity.isDead())
 			return false;
+		EntityDamageEvent event = source == null ? new EntityDamageEvent(entity, cause, damage) : new EntityDamageByEntityEvent(source, entity, cause, damage);
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled())
 			return false;
@@ -68,35 +75,31 @@ public class EntityUtils {
 				entity.setMetadata(meta, damageData);
 			entity.setHealth(0);
 			playDamageEffect(entity);
+			if (!silent && !entity.isSilent())
+				playEntityHarmSound(entity, playerHurtSound);
 			if (meta != null)
 				entity.removeMetadata(meta, plugin);
 			return true;
 		}
-		entity.setHealth(entity.getHealth()-damage);
+		entity.setHealth(Math.min(Math.max(entity.getHealth()-damage, 0), entity.getHealth()));
 		playDamageEffect(entity);
+		if (!silent && !entity.isSilent())
+			playEntityHarmSound(entity, playerHurtSound);
 		if (event instanceof EntityDamageByEntityEvent damageEntityEvent && entity instanceof Mob mob && damageEntityEvent.getDamager() instanceof LivingEntity livingDamager)
 			mob.setTarget(livingDamager);
 		return true;
 	}
-	@SuppressWarnings("removal")
-	public static boolean pureDamageEntity(LivingEntity entity, double damage, String meta, Entity source, @NotNull DamageCause cause, boolean ignoreTotem) {
-		if (source != null)
-			return pureDamageEntity(entity, damage, meta, ignoreTotem, new EntityDamageByEntityEvent(source, entity, cause, damage));
-		return pureDamageEntity(entity, damage, meta, ignoreTotem, new EntityDamageEvent(entity, cause, damage));
+	public static boolean pureDamageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause, Entity source, boolean ignoreTotem, boolean silent) {
+		return pureDamageEntity(entity, damage, meta, cause, source, ignoreTotem, silent, Sound.ENTITY_PLAYER_HURT);
 	}
-	@SuppressWarnings("removal")
-	public static boolean pureDamageEntity(LivingEntity entity, double damage, String meta, Entity source, @NotNull DamageCause cause) {
-		if (source != null)
-			return pureDamageEntity(entity, damage, meta, false, new EntityDamageByEntityEvent(source, entity, cause, damage));
-		return pureDamageEntity(entity, damage, meta, false, new EntityDamageEvent(entity, cause, damage));
+	public static boolean pureDamageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause, Entity source, boolean ignoreTotem) {
+		return pureDamageEntity(entity, damage, meta, cause, source, ignoreTotem, false);
 	}
-	@SuppressWarnings("removal")
-	public static boolean pureDamageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause, boolean ignoreTotem) {
-		return pureDamageEntity(entity, damage, meta, ignoreTotem, new EntityDamageEvent(entity, cause, damage));
+	public static boolean pureDamageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause, Entity source) {
+		return pureDamageEntity(entity, damage, meta, cause, source, false);
 	}
-	@SuppressWarnings("removal")
 	public static boolean pureDamageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause) {
-		return pureDamageEntity(entity, damage, meta, false, new EntityDamageEvent(entity, cause, damage));
+		return pureDamageEntity(entity, damage, meta, cause, null);
 	}
 	public static void damageArmor(LivingEntity entity, double damage) {
 		int dmg = Math.max((int) (damage + 4 / 4), 1);
@@ -109,35 +112,27 @@ public class EntityUtils {
 			armor.setItemMeta(meta);
 		}
 	}
-	private static <T extends EntityDamageEvent> boolean damageEntity(LivingEntity entity, double damage, String meta, boolean ignoreTotem, T event) {
-		double armor = entity.getAttribute(Attribute.GENERIC_ARMOR).getValue();
-		double toughness = entity.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS).getValue();
-		double actualDamage = damage * (1 - Math.min(20, Math.max(armor / 5, armor - damage / (2 + toughness / 4))) / 25);
-		if (pureDamageEntity(entity, actualDamage, meta, ignoreTotem, event)) {
+	public static boolean damageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause, Entity source, boolean ignoreTotem, boolean silent, Sound playerHurtSound) {
+		final double armor = entity.getAttribute(VersionUtils.getArmorAttribute()).getValue();
+		final double toughness = entity.getAttribute(VersionUtils.getArmorToughnessAttribute()).getValue();
+		final double actualDamage = damage * (1 - Math.min(20, Math.max(armor / 5, armor - damage / (2 + toughness / 4))) / 25);
+		if (pureDamageEntity(entity, actualDamage, meta, cause, source, ignoreTotem, silent, playerHurtSound)) {
 			damageArmor(entity, actualDamage);
 			return true;
 		}
 		return false;
 	}
-	@SuppressWarnings("removal")
-	public static boolean damageEntity(LivingEntity entity, double damage, String meta, Entity source, @NotNull DamageCause cause, boolean ignoreTotem) {
-		if (source != null)
-			return damageEntity(entity, damage, meta, ignoreTotem, new EntityDamageByEntityEvent(source, entity, cause, damage));
-		return damageEntity(entity, damage, meta, ignoreTotem, new EntityDamageEvent(entity, cause, damage));
+	public static boolean damageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause, Entity source, boolean ignoreTotem, boolean silent) {
+		return damageEntity(entity, damage, meta, cause, source, ignoreTotem, silent, Sound.ENTITY_PLAYER_HURT);
 	}
-	@SuppressWarnings("removal")
-	public static boolean damageEntity(LivingEntity entity, double damage, String meta, Entity source, @NotNull DamageCause cause) {
-		if (source != null)
-			return damageEntity(entity, damage, meta, false, new EntityDamageByEntityEvent(source, entity, cause, damage));
-		return damageEntity(entity, damage, meta, false, new EntityDamageEvent(entity, cause, damage));
+	public static boolean damageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause, Entity source, boolean ignoreTotem) {
+		return damageEntity(entity, damage, meta, cause, source, ignoreTotem, false);
 	}
-	@SuppressWarnings("removal")
-	public static boolean damageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause, boolean ignoreTotem) {
-		return damageEntity(entity, damage, meta, ignoreTotem, new EntityDamageEvent(entity, cause, damage));
+	public static boolean damageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause, Entity source) {
+		return damageEntity(entity, damage, meta, cause, source, false);
 	}
-	@SuppressWarnings("removal")
 	public static boolean damageEntity(LivingEntity entity, double damage, String meta, @NotNull DamageCause cause) {
-		return damageEntity(entity, damage, meta, false, new EntityDamageEvent(entity, cause, damage));
+		return damageEntity(entity, damage, meta, cause, null);
 	}
 	@SuppressWarnings("deprecation")
 	public static void playDamageEffect(LivingEntity entity) {
@@ -145,45 +140,6 @@ public class EntityUtils {
 			entity.playHurtAnimation(0);
 		else
 			entity.playEffect(EntityEffect.HURT);
-	}
-	public static Location findSmartYSpawn(Location pivot, Location spawn, double height, int maxDistance) {
-		if (pivot == null || spawn == null)
-			return null;
-		Block b = spawn.getBlock();
-		Location loc1 = null, loc2 = null;
-		down:
-			for (int i = spawn.getBlockY(); i > spawn.getBlockY()-maxDistance; i--) {
-				b = b.getRelative(BlockFace.DOWN);
-				if (!b.isPassable() && b.getRelative(BlockFace.UP).isPassable() && !b.getRelative(BlockFace.UP).isLiquid()) {
-					for (int c = 2; c <= height-1; c++)
-						if (!b.getRelative(BlockFace.UP, c).isPassable())
-							continue down;
-					loc1 = b.getRelative(BlockFace.UP).getLocation().add(0.5,0.01,0.5);
-					break down;
-				}
-			}
-		b = spawn.getBlock();
-		up:
-			for (int i = spawn.getBlockY(); i < spawn.getBlockY()+maxDistance; i++) {
-				b = b.getRelative(BlockFace.UP);
-				if (b.isPassable() && !b.getRelative(BlockFace.DOWN).isPassable() && !b.isLiquid()) {
-					for (int c = 1; c < height; c++)
-						if (!b.getRelative(BlockFace.UP, c).isPassable())
-							continue up;
-					loc2 = b.getLocation().add(0.5,0.01,0.5);
-					break up;
-				}
-			}
-		if (loc1 != null && loc2 == null)
-			return loc1;
-		else if (loc1 == null && loc2 != null)
-			return loc2;
-		else if (loc1 == null && loc2 == null)
-			return null;
-		if (Math.abs(pivot.getY()-loc2.getY()) < Math.abs(pivot.getY()-loc1.getY()))
-			return loc1;
-		else
-			return loc2;
 	}
 	public static void markFallingBlock(FallingBlock block) {
 		block.setMetadata("uc-fb", fallingBlockData);
@@ -199,11 +155,11 @@ public class EntityUtils {
 	public static boolean rayTraceEntityConeForSolid(Entity entity, Location initial) {
 		double height = entity.getHeight(), width = entity.getWidth();
 		Location target = entity.getLocation().add(0,height/2.0,0);
-		if (Utils.rayTraceForSolid(initial, target))
+		if (BlockUtils.rayTraceForSolid(initial, target))
 			return true;
-		if (Utils.rayTraceForSolid(initial, target.add(0,height/2.0,0)))
+		if (BlockUtils.rayTraceForSolid(initial, target.add(0,height/2.0,0)))
 			return true;
-		if (Utils.rayTraceForSolid(initial, target.clone().subtract(0,height/2.0,0)))
+		if (BlockUtils.rayTraceForSolid(initial, target.clone().subtract(0,height/2.0,0)))
 			return true;
 		Vector angle = Utils.getVectorTowards(initial, target);
 		try {
@@ -211,9 +167,9 @@ public class EntityUtils {
 		} catch (IllegalArgumentException err) {
 			return false;
 		}
-		if (Utils.rayTraceForSolid(initial, target.clone().add(new Vector(angle.getZ(), 0, -angle.getX()).normalize().multiply(width/2.0))))
+		if (BlockUtils.rayTraceForSolid(initial, target.clone().add(new Vector(angle.getZ(), 0, -angle.getX()).normalize().multiply(width/2.0))))
 			return true;
-		if (Utils.rayTraceForSolid(initial, target.clone().add(new Vector(-angle.getZ(), 0, angle.getX()).normalize().multiply(width/2.0))))
+		if (BlockUtils.rayTraceForSolid(initial, target.clone().add(new Vector(-angle.getZ(), 0, angle.getX()).normalize().multiply(width/2.0))))
 			return true;
 		return false;
 	}
@@ -252,6 +208,44 @@ public class EntityUtils {
 	public static boolean isEntityUnderHealth(LivingEntity entity, double value) {
 		if (entity == null)
 			return false;
-		return entity.getHealth() < entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() * value;
+		return entity.getHealth() < entity.getAttribute(VersionUtils.getMaxHealthAttribute()).getValue() * value;
+	}
+	public static void playEntityHarmSound(LivingEntity entity, Location location, float volume, float pitch, Sound playerHarmSound) {
+		if (entity instanceof Player) {
+			if (entity.isDead())
+				location.getWorld().playSound(location, Sound.ENTITY_PLAYER_DEATH, SoundCategory.PLAYERS, volume, pitch);
+			else
+				location.getWorld().playSound(location, playerHarmSound, SoundCategory.PLAYERS, volume, pitch);
+		}
+		if (!isVersion192OrAbove)
+			return;
+		if (entity.isDead())
+			location.getWorld().playSound(location, entity.getDeathSound(), entity instanceof Monster ? SoundCategory.HOSTILE : SoundCategory.NEUTRAL, volume, pitch);
+		else
+			location.getWorld().playSound(location, entity.getHurtSound(), entity instanceof Monster ? SoundCategory.HOSTILE : SoundCategory.NEUTRAL, volume, pitch);
+	}
+	public static void playEntityHarmSound(LivingEntity entity, float volume, float pitch) {
+		playEntityHarmSound(entity, entity.getLocation(), volume, pitch, Sound.ENTITY_PLAYER_HURT);
+	}
+	public static void playEntityHarmSound(LivingEntity entity, Location location, Sound playerHarmSound) {
+		playEntityHarmSound(entity, location, 1, Utils.getRandomGenerator().nextFloat(0.8f, 1.2f), playerHarmSound);
+	}
+	public static void playEntityHarmSound(LivingEntity entity, Location location) {
+		playEntityHarmSound(entity, location, 1, Utils.getRandomGenerator().nextFloat(0.8f, 1.2f), Sound.ENTITY_PLAYER_HURT);
+	}
+	public static void playEntityHarmSound(LivingEntity entity, Sound playerHarmSound) {
+		playEntityHarmSound(entity, entity.getLocation(), 1, Utils.getRandomGenerator().nextFloat(0.8f, 1.2f), playerHarmSound);
+	}
+	public static void playEntityHarmSound(LivingEntity entity) {
+		playEntityHarmSound(entity, entity.getLocation(), 1, Utils.getRandomGenerator().nextFloat(0.8f, 1.2f), Sound.ENTITY_PLAYER_HURT);
+	}
+	public static boolean isEntityOwner(Entity toCheck, UUID possibleOwner) {
+		return (toCheck instanceof Tameable tameable && Utils.isNotNullAndCondition(tameable.getOwner(), t -> t.getUniqueId().equals(possibleOwner)))
+				|| (UIEntityManager.getEntity(toCheck) instanceof TameableEntity tameableEntity && Utils.isNotNullAndCondition(tameableEntity.getOwner(), t -> t.equals(possibleOwner)));
+	}
+	public static boolean isEntityOwner(Entity toCheck, Entity possibleOwner) {
+		if (possibleOwner == null)
+			return false;
+		return isEntityOwner(toCheck, possibleOwner.getUniqueId());
 	}
 }

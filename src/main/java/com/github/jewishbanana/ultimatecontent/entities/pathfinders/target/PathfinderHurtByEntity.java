@@ -4,11 +4,8 @@ import java.util.UUID;
 
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
-import org.bukkit.entity.Tameable;
 import org.jetbrains.annotations.NotNull;
 
-import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
 import com.github.jewishbanana.ultimatecontent.listeners.PathfindersHandler;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 
@@ -36,9 +33,7 @@ public class PathfinderHurtByEntity extends CustomPathfinder {
 	public boolean canStart() {
 		if (signal == null)
 			return false;
-		if (signal.getUniqueId().equals(owner)
-				|| (signal instanceof Tameable tameable && tameable.getOwner() != null && tameable.getOwner().getUniqueId().equals(owner))
-				|| (UIEntityManager.getEntity(signal) instanceof TameableEntity tameable && tameable.getOwner() != null && tameable.getOwner().equals(owner))) {
+		if (signal.getUniqueId().equals(owner) || EntityUtils.isEntityOwner(signal, owner)) {
 			signal = null;
 			return false;
 		}

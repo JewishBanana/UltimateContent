@@ -2,7 +2,6 @@ package com.github.jewishbanana.ultimatecontent.entities.darkentities;
 
 import java.util.UUID;
 
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.EntityType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -12,6 +11,7 @@ import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.entities.ExplodingEntity;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
+import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class PrimedCreeper extends BaseEntity<Creeper> implements ExplodingEntity {
 	
@@ -43,7 +43,7 @@ public class PrimedCreeper extends BaseEntity<Creeper> implements ExplodingEntit
 	}
 	public void setAttributes(Creeper entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(30);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(30);
 		this.damageMultiplier = getSectionDouble("damageMultiplier", 1.0);
 	}
 	public double getExplosionDamageMultiplier() {

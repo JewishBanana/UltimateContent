@@ -1,6 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.entities.christmasentities;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -9,10 +10,10 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -35,11 +36,17 @@ import com.github.jewishbanana.ultimatecontent.entities.Variant;
 import com.github.jewishbanana.ultimatecontent.entities.pathfinders.PathfinderEncircleLeader;
 import com.github.jewishbanana.ultimatecontent.entities.pathfinders.PathfinderFollowEntity;
 import com.github.jewishbanana.ultimatecontent.entities.pathfinders.PathfinderRangedEntityAttack;
+import com.github.jewishbanana.ultimatecontent.entities.pathfinders.target.PathfinderAllyHurtByEntity;
+import com.github.jewishbanana.ultimatecontent.entities.pathfinders.target.PathfinderHurtByEntity;
+import com.github.jewishbanana.ultimatecontent.entities.pathfinders.target.PathfinderOwnerHurtByEntity;
+import com.github.jewishbanana.ultimatecontent.entities.pathfinders.target.PathfinderOwnerHurtEntity;
+import com.github.jewishbanana.ultimatecontent.entities.pathfinders.target.PathfinderOwnerTargetedByEntity;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
-import com.github.jewishbanana.ultimatecontent.listeners.PathfindersHandler;
 import com.github.jewishbanana.ultimatecontent.specialevents.ChristmasEvent;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
+import com.github.jewishbanana.ultimatecontent.utils.SpawnUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
+import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 import me.gamercoder215.mobchip.EntityBrain;
 import me.gamercoder215.mobchip.ai.EntityAI;
@@ -90,12 +97,14 @@ public class Elf extends BaseEntity<Zombie> implements TameableEntity {
 					public void run() {
 						if (!entity.isValid())
 							return;
-						for (Entity e : entity.getNearbyEntities(1, 1, 1))
-							if (!e.equals(entity) && !e.isInsideVehicle() && e.getPassengers().size() <= maxStack && e.hasMetadata("uc-elf") && !e.hasMetadata("uc-elfarcher"))
-								if (e.getPassengers().isEmpty())
+						for (Entity e : entity.getNearbyEntities(1, 1, 1)) {
+							List<Entity> passengers = e.getPassengers();
+							if (!e.equals(entity) && !e.isInsideVehicle() && passengers.size() <= maxStack && e.hasMetadata("uc-elf") && !e.hasMetadata("uc-elfarcher"))
+								if (passengers.isEmpty())
 									e.addPassenger(entity);
-								else if (!e.getPassengers().contains(entity) && e.getPassengers().get(0).isEmpty())
-									e.getPassengers().get(0).addPassenger(entity);
+								else if (!passengers.contains(entity) && passengers.get(0).isEmpty())
+									passengers.get(0).addPassenger(entity);
+						}
 					}
 				}.runTaskTimer(plugin, random.nextInt(1, 10) * 20, 60));
 		}
@@ -114,20 +123,19 @@ public class Elf extends BaseEntity<Zombie> implements TameableEntity {
 		EntityAI goals = brain.getTargetAI();
 		goals.clear();
 		goals.put(new PathfinderHurtByTarget(entity, new EntityType[0]), 1);
-		goals.put(new PathfinderNearestAttackableTarget<Player>(entity, Player.class, 10, true, false), 2);
-		goals.put(new PathfinderNearestAttackableTarget<Animals>(entity, Animals.class, 10, true, false), 3);
+		goals.put(new PathfinderNearestAttackableTarget<>(entity, Player.class, 10, true, false), 2);
+		goals.put(new PathfinderNearestAttackableTarget<>(entity, Animals.class, 10, true, false), 3);
 		
 		goals = brain.getGoalAI();
 		goals.clear();
-		goals.put(new PathfinderFloat(entity), 1);
+		goals.put(new PathfinderFloat(entity), 0);
 		if (variant == ElfVariant.ARCHER)
-			goals.put(new PathfinderRangedEntityAttack(entity, 40, 5.0, 10.0, 1.0, 2.0, null, shootArrow), 2);
+			goals.put(new PathfinderRangedEntityAttack(entity, 40, 5.0, 10.0, 1.0, 2.0, null, shootArrow), 4);
 		else
-			goals.put(new PathfinderMeleeAttack(entity), 2);
-		goals.put(new PathfinderRandomStrollLand(entity), 3);
-		goals.put(new PathfinderLookAtEntity<Player>(entity, Player.class), 4);
-		goals.put(new PathfinderLookAtEntity<LivingEntity>(entity, LivingEntity.class), 5);
-		goals.put(new PathfinderRandomLook(entity), 6);
+			goals.put(new PathfinderMeleeAttack(entity), 4);
+		goals.put(new PathfinderRandomStrollLand(entity), 5);
+		goals.put(new PathfinderLookAtEntity<>(entity, LivingEntity.class), 6);
+		goals.put(new PathfinderRandomLook(entity), 7);
 	}
 	public void onTargetLivingEntity(EntityTargetLivingEntityEvent event) {
 		if (event.getTarget() != null
@@ -141,19 +149,32 @@ public class Elf extends BaseEntity<Zombie> implements TameableEntity {
 	}
 	public void setAttributes(Zombie entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(25);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(25);
 	}
-	public void setOwner(TameableEntity tameable, Mob entity) {
-		if (entity == null)
+	public void setProtectiveGoals(TameableEntity tameable, Mob entity) {
+		UUID owner = tameable.getOwner();
+		if (owner == null)
 			return;
-		TameableEntity.setProtectiveGoals(tameable, entity);
-		PathfindersHandler.addTamedMob(entity.getUniqueId(), tameable);
-		if (variant == ElfVariant.ARCHER) {
-			EntityBrain brain = BukkitBrain.getBrain(entity);
-			EntityAI goals = brain.getGoalAI();
-			goals.removeIf(pathfinder -> pathfinder.getPathfinder() instanceof PathfinderMeleeAttack);
-			goals.put(new PathfinderRangedEntityAttack(entity, 40, 5.0, 10.0, 1.0, 2.0, null, shootArrow), 2);
-		}
+		EntityBrain brain = BukkitBrain.getBrain(entity);
+		EntityAI goals = brain.getTargetAI();
+		goals.clear();
+		goals.put(new PathfinderHurtByEntity(entity, owner), 0);
+		goals.put(new PathfinderOwnerHurtByEntity(entity, tameable), 0);
+		goals.put(new PathfinderOwnerHurtEntity(entity, tameable), 1);
+		goals.put(new PathfinderAllyHurtByEntity(entity, tameable), 2);
+		goals.put(new PathfinderOwnerTargetedByEntity(entity, tameable), 3);
+		
+		goals = brain.getGoalAI();
+		goals.clear();
+		goals.put(new PathfinderFloat(entity), 1);
+		if (variant != ElfVariant.ARCHER)
+			goals.put(new PathfinderMeleeAttack((Creature) entity), 4);
+		else
+			goals.put(new PathfinderRangedEntityAttack(entity, 40, 5.0, 10.0, 1.0, 2.0, null, shootArrow), 4);
+		goals.put(new PathfinderFollowEntity(entity, owner, 2, 12), 5);
+		goals.put(new PathfinderLookAtEntity<Player>(entity, Player.class), 6);
+		goals.put(new PathfinderLookAtEntity<LivingEntity>(entity, LivingEntity.class), 7);
+		goals.put(new PathfinderRandomLook(entity), 8);
 	}
 	public void setSquad(Set<UUID> squad, UUID leader) {
 		Zombie entity = getCastedEntity();
@@ -164,15 +185,15 @@ public class Elf extends BaseEntity<Zombie> implements TameableEntity {
 		goals.clear();
 		goals.put(new PathfinderFloat(entity), 1);
 		if (variant == ElfVariant.ARCHER)
-			goals.put(new PathfinderRangedEntityAttack(entity, 40, 5.0, 10.0, 1.0, 2.0, null, shootArrow), 2);
+			goals.put(new PathfinderRangedEntityAttack(entity, 40, 5.0, 10.0, 1.0, 2.0, null, shootArrow), 4);
 		else
-			goals.put(new PathfinderMeleeAttack(entity), 2);
-		goals.put(new PathfinderFollowEntity(entity, leader, 2, 12), 3);
-		goals.put(new PathfinderEncircleLeader(entity, leader, squad, 0.7), 4);
-		goals.put(new PathfinderRandomStrollLand(entity), 5);
-		goals.put(new PathfinderLookAtEntity<Player>(entity, Player.class), 6);
-		goals.put(new PathfinderLookAtEntity<LivingEntity>(entity, LivingEntity.class), 7);
-		goals.put(new PathfinderRandomLook(entity), 8);
+			goals.put(new PathfinderMeleeAttack(entity), 4);
+		goals.put(new PathfinderFollowEntity(entity, leader, 2, 12), 5);
+		goals.put(new PathfinderEncircleLeader(entity, leader, squad, 0.7), 6);
+		goals.put(new PathfinderRandomStrollLand(entity), 7);
+		goals.put(new PathfinderLookAtEntity<Player>(entity, Player.class), 8);
+		goals.put(new PathfinderLookAtEntity<LivingEntity>(entity, LivingEntity.class), 9);
+		goals.put(new PathfinderRandomLook(entity), 10);
 	}
 	private static final Consumer<Mob> shootArrow = mob -> {
 		LivingEntity target = mob.getTarget();
@@ -183,7 +204,7 @@ public class Elf extends BaseEntity<Zombie> implements TameableEntity {
 		arrow.addCustomEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 1), false);
 		arrow.setMetadata("uc-elfarrow", Main.getFixedMetadata());
 		if (UIEntityManager.getEntity(mob) instanceof Elf base) {
-			base.playSound(mob.getLocation(), Sound.ENTITY_SKELETON_SHOOT, 1, random.nextDouble(1.4, 1.8));
+			base.playSound(mob.getLocation(), Sound.ENTITY_SKELETON_SHOOT, 1f, random.nextFloat(1.4f, 1.8f));
 			EntitiesHandler.elfArrows.put(arrow.getUniqueId(), base);
 		} else
 			mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_SKELETON_SHOOT, 1f, random.nextFloat(0.8f, 1.2f));
@@ -202,7 +223,7 @@ public class Elf extends BaseEntity<Zombie> implements TameableEntity {
 			double increment = (Math.PI * 2) / 3;
 			for (int i=0; i < 3; i++) {
 				Location loc = spawn.clone().add(vec);
-				Location temp = EntityUtils.findSmartYSpawn(spawn, loc, 1, 3);
+				Location temp = SpawnUtils.findSmartYSpawn(spawn, loc, 1, 3);
 				if (temp == null)
 					loc = spawn;
 				else

@@ -50,8 +50,7 @@ public class DataUtils {
 			try {
 				dataFile.createNewFile();
 			} catch (IOException e) {
-				e.printStackTrace();
-				Utils.sendErrorMessage();
+				Utils.sendExceptionLog(e);
 			}
 		}
 		dataYaml = YamlConfiguration.loadConfiguration(dataFile);
@@ -59,6 +58,33 @@ public class DataUtils {
 	
 	public static void reload() {
 		config = plugin.getConfig();
+	}
+	public static void updateConfigChanges() {
+		String last = dataYaml.contains("stored_version") ? dataYaml.getString("stored_version") : null;
+		if (last != null && last.equals(plugin.getDescription().getVersion()))
+			return;
+		switch (last != null ? last : "default") {
+		default:
+		case "2.0.2":
+			try {
+				if (config.getDouble("entities.christmas_entities.elf.spawnRate") == 3.0)
+					config.set("entities.christmas_entities.elf.spawnRate", 1.0);
+				if (config.getDouble("entities.christmas_entities.frosty.spawnRate") == 2.0)
+					config.set("entities.christmas_entities.frosty.spawnRate", 0.25);
+				if (config.getDouble("entities.christmas_entities.grinch.spawnRate") == 2.5)
+					config.set("entities.christmas_entities.grinch.spawnRate", 0.5);
+				if (config.getDouble("entities.snow_entities.yeti.spawnRate") == 1.0)
+					config.set("entities.snow_entities.yeti.spawnRate", 0.6);
+				if (config.getDouble("entities.dark_entities.primed_creeper.spawnRate") == 3.0)
+					config.set("entities.dark_entities.primed_creeper.spawnRate", 2.0);
+			} catch (Exception e) {
+				Utils.sendExceptionLog(e);
+			}
+			break;
+		}
+		plugin.saveConfig();
+		plugin.reloadConfig();
+		writeToDataFile(file -> file.set("stored_version", plugin.getDescription().getVersion()));
 	}
 	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         List<Entry<K, V>> list = new ArrayList<>(map.entrySet());
@@ -251,9 +277,8 @@ public class DataUtils {
 		try {
 			return dataYaml.getInt(path);
 		} catch (Exception e) {
-			e.printStackTrace();
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dinteger &cvalue from data file path '"+path+"'!"));
-			Utils.sendErrorMessage();
+			Utils.sendExceptionLog(e);
 			return 0;
 		}
 	}
@@ -261,9 +286,8 @@ public class DataUtils {
 		try {
 			return dataYaml.getDouble(path);
 		} catch (Exception e) {
-			e.printStackTrace();
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &ddouble &cvalue from data file path '"+path+"'!"));
-			Utils.sendErrorMessage();
+			Utils.sendExceptionLog(e);
 			return 0.0;
 		}
 	}
@@ -271,9 +295,8 @@ public class DataUtils {
 		try {
 			return dataYaml.getBoolean(path);
 		} catch (Exception e) {
-			e.printStackTrace();
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dboolean &cvalue from data file path '"+path+"'!"));
-			Utils.sendErrorMessage();
+			Utils.sendExceptionLog(e);
 			return false;
 		}
 	}
@@ -281,9 +304,8 @@ public class DataUtils {
 		try {
 			return dataYaml.getString(path);
 		} catch (Exception e) {
-			e.printStackTrace();
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dstring &cvalue from data file path '"+path+"'!"));
-			Utils.sendErrorMessage();
+			Utils.sendExceptionLog(e);
 			return null;
 		}
 	}
@@ -291,9 +313,8 @@ public class DataUtils {
 		try {
 			return dataYaml.getStringList(path);
 		} catch (Exception e) {
-			e.printStackTrace();
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dstring list &cvalue from data file path '"+path+"'!"));
-			Utils.sendErrorMessage();
+			Utils.sendExceptionLog(e);
 			return null;
 		}
 	}
@@ -302,8 +323,7 @@ public class DataUtils {
 			writeable.accept(dataYaml);
 			dataYaml.save(dataFile);
 		} catch (Exception e) {
-			e.printStackTrace();
-			Utils.sendErrorMessage();
+			Utils.sendExceptionLog(e);
 		}
 	}
 	public static FileConfiguration getDataFile() {
@@ -313,8 +333,7 @@ public class DataUtils {
 		try {
 			dataYaml.save(dataFile);
 		} catch (Exception e) {
-			e.printStackTrace();
-			Utils.sendErrorMessage();
+			Utils.sendExceptionLog(e);
 		}
 	}
 }

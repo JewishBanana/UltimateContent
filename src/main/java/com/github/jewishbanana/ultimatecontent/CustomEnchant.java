@@ -1,8 +1,8 @@
 package com.github.jewishbanana.ultimatecontent;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -39,14 +39,14 @@ public class CustomEnchant extends UIEnchantment {
 	    }
 	}
 	
-	public Map<Integer, Queue<Pair<Ability, Queue<Ability.Action>>>> abilities = new HashMap<>();
+	public final Map<Integer, List<Pair<Ability, List<Ability.Action>>>> abilities = new LinkedHashMap<>();
 	
 	public void loadEnchant(GenericItem base) {
 		if (base.getItem().getType() == Material.ENCHANTED_BOOK)
 			return;
 		int level = this.getEnchantLevel(base.getItem());
 		if (abilities.containsKey(level))
-			for (Pair<Ability, Queue<Ability.Action>> pair : abilities.get(level))
+			for (Pair<Ability, List<Ability.Action>> pair : abilities.get(level))
 				base.addUniqueAbility(pair.getFirst(), pair.getSecond(), false);
 	}
 	public void unloadEnchant(GenericItem base) {
@@ -54,7 +54,7 @@ public class CustomEnchant extends UIEnchantment {
 			return;
 		int level = this.getEnchantLevel(base.getItem());
 		if (abilities.containsKey(level))
-			for (Pair<Ability, Queue<Ability.Action>> pair : abilities.get(level))
+			for (Pair<Ability, List<Ability.Action>> pair : abilities.get(level))
 				base.removeUniqueAbility(pair.getFirst());
 	}
 	public EnchantRarity getRarity() {

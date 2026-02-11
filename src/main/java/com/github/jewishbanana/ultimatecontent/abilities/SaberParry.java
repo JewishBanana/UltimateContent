@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -36,38 +38,34 @@ public class SaberParry extends AbilityAttributes {
 	public void wasHit(EntityDamageByEntityEvent event, GenericItem base) {
 		if (event.getCause() != DamageCause.ENTITY_ATTACK)
 			return;
-		UUID hit = parryMap.remove(event.getDamager().getUniqueId());
-		if (hit != null && event.getEntity().getUniqueId().equals(hit) && shouldActivate()) {
+		Entity damager = event.getDamager();
+		Entity entity = event.getEntity();
+		UUID hit = parryMap.remove(damager.getUniqueId());
+		if (hit != null && entity.getUniqueId().equals(hit) && shouldActivate()) {
 			event.setCancelled(true);
-			Vector vec = Utils.getUnormalizedVectorTowards(event.getEntity().getLocation(), event.getDamager().getLocation()).multiply(0.5);
-			event.getDamager().setVelocity(event.getDamager().getVelocity().add(vec.clone().normalize().multiply(0.2).setY(0.1).multiply(knockbackMultiplier)));
-			event.getEntity().getWorld().spawnParticle(Particle.END_ROD, event.getEntity().getLocation().add(0,1.3,0).add(vec), (int) (particleMultiplier * 5.0), 0, 0, 0, 0.1);
+			Location loc = entity.getLocation();
+			Vector vec = Utils.getNoneNormalizedVectorTowards(loc, damager.getLocation()).multiply(0.5);
+			damager.setVelocity(damager.getVelocity().add(vec.clone().normalize().multiply(0.2).setY(0.1).multiply(knockbackMultiplier)));
+			if (particleMultiplier > 0)
+				loc.getWorld().spawnParticle(Particle.END_ROD, loc.add(0, entity.getHeight() / 1.385, 0).add(vec), (int) Math.ceil(5.0 * particleMultiplier), 0, 0, 0, 0.1);
 		}
 	}
 	public void hitByProjectile(ProjectileHitEvent event, GenericItem base) {
 		if (projectileParry.remove(event.getHitEntity().getUniqueId()) && shouldActivate()) {
 			event.setCancelled(true);
-			event.getEntity().getWorld().spawnParticle(Particle.END_ROD, event.getEntity().getLocation(), (int) (particleMultiplier * 3.0), 0, 0, 0, 0.1);
-			event.getEntity().remove();
+			Entity entity = event.getEntity();
+			if (particleMultiplier > 0)
+				entity.getWorld().spawnParticle(Particle.END_ROD, entity.getLocation(), (int) Math.ceil(3.0 * particleMultiplier), 0, 0, 0, 0.1);
+			entity.remove();
 		}
-	}
-	public void initFields() {
-		this.knockbackMultiplier = getDoubleField("knockbackMultiplier", 1.0);
-		this.particleMultiplier = getDoubleField("particleMultiplier", 1.0);
 	}
 	public static void register() {
 		UIAbilityType.registerAbility(REGISTERED_KEY, SaberParry.class);
 	}
-	public Map<String, Object> serialize() {
-		Map<String, Object> map = super.serialize();
-		map.put("knockbackMultiplier", knockbackMultiplier);
-		map.put("particleMultiplier", particleMultiplier);
-		return map;
-	}
 	public void deserialize(Map<String, Object> map) {
 		super.deserialize(map);
-		knockbackMultiplier = (double) map.get("knockbackMultiplier");
-		particleMultiplier = (double) map.get("particleMultiplier");
+		knockbackMultiplier = registerSerializedDoubleField("knockbackMultiplier", map);
+		particleMultiplier = registerSerializedDoubleField("particleMultiplier", map);
 	}
 	public ActivatedSlot getActivatingSlot() {
 		return activatingSlot;

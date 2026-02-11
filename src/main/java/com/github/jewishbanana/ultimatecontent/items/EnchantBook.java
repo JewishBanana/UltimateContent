@@ -7,7 +7,10 @@ import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class EnchantBook extends BaseItem {
 	
-	protected static String displayHex = Utils.convertString("(hex:#a1a1a1)");
+	protected static final String displayHex;
+	static {
+		displayHex = Utils.convertString("(hex:#a1a1a1)");
+	}
 	
 	public EnchantBook(ItemStack item) {
 		super(item);

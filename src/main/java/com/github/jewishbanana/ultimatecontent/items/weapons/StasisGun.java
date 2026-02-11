@@ -22,13 +22,13 @@ public class StasisGun extends Weapon {
 	
 	public static final String REGISTERED_KEY = "uc:stasis_gun";
 
-	private double range;
-	private int cooldown;
+	private final double range;
+	private final int cooldown;
 	
 	public StasisGun(ItemStack item) {
 		super(item);
-		this.range = getDoubleField("range", 25.0);
-		this.cooldown = (int) (getDoubleField("shot_cooldown", 2.0) * 20.0);
+		this.range = getDoubleField("range");
+		this.cooldown = (int) Math.ceil(getDoubleField("shotCooldown") * 20.0);
 	}
 	public boolean interacted(PlayerInteractEvent event) {
 		event.setCancelled(true);

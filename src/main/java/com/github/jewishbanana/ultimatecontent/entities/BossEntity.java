@@ -3,7 +3,6 @@ package com.github.jewishbanana.ultimatecontent.entities;
 import java.util.function.Consumer;
 
 import org.bukkit.Bukkit;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarFlag;
 import org.bukkit.boss.BarStyle;
@@ -17,6 +16,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import com.github.jewishbanana.ultimatecontent.utils.SongPlayer;
 import com.github.jewishbanana.ultimatecontent.utils.SongPlayer.Song;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
+import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class BossEntity<T extends Entity> extends BaseEntity<T> {
 	
@@ -58,7 +58,7 @@ public class BossEntity<T extends Entity> extends BaseEntity<T> {
 	public void onDamaged(EntityDamageEvent event) {
 		super.onDamaged(event);
 		LivingEntity entity = (LivingEntity) event.getEntity();
-		bossBar.setProgress(Utils.clamp(1.0 / entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() * entity.getHealth(), 0.0, 1.0));
+		bossBar.setProgress(Utils.clamp(1.0 / entity.getAttribute(VersionUtils.getMaxHealthAttribute()).getValue() * entity.getHealth(), 0.0, 1.0));
 	}
 	public void unload() {
 		super.unload();

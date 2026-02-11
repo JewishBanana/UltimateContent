@@ -5,7 +5,6 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World.Environment;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Husk;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -43,13 +42,13 @@ public class AncientMummy extends BaseEntity<Husk> {
 					return;
 				if (cooldown > 0) {
 					if (cooldown-- == 9)
-						entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(entityVariant.movementSpeed);
+						entity.getAttribute(VersionUtils.getMovementSpeedAttribute()).setBaseValue(entityVariant.movementSpeed);
 					return;
 				}
 				if (isTargetInRange(entity, 0, 100)) {
 					cooldown = 12;
-					entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(Math.max(entityVariant.movementSpeed, 0.45));
-					playSound(entity.getLocation(), Sound.ENTITY_ENDERMAN_SCREAM, 1.5, .5);
+					entity.getAttribute(VersionUtils.getMovementSpeedAttribute()).setBaseValue(Math.max(entityVariant.movementSpeed, 0.45));
+					playSound(entity.getLocation(), Sound.ENTITY_ENDERMAN_SCREAM, 1.5f, .5f);
 				}
 			}
 		}.runTaskTimer(plugin, 0, 20));
@@ -62,11 +61,11 @@ public class AncientMummy extends BaseEntity<Husk> {
 	}
 	public void onDeath(EntityDeathEvent event) {
 		super.onDeath(event);
-		event.getEntity().getWorld().spawnParticle(Particle.SOUL, event.getEntity().getLocation().add(0,1.5,0), 5, .3, .3, .3, .0001);
+		event.getEntity().getWorld().spawnParticle(Particle.SOUL, event.getEntity().getLocation().add(0, 1.5, 0), 5, .3, .3, .3, .0001);
 	}
 	public void setAttributes(Husk entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(40);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(40);
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(AncientMummy.REGISTERED_KEY, AncientMummy.class);

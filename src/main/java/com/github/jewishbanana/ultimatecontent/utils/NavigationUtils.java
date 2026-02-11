@@ -1,9 +1,10 @@
 package com.github.jewishbanana.ultimatecontent.utils;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
@@ -18,7 +19,7 @@ import me.gamercoder215.mobchip.bukkit.BukkitBrain;
 public class NavigationUtils {
 	
 	private Mob mob;
-	private Queue<Location> locations = new ArrayDeque<>();
+	private List<Location> locations = new ArrayList<>();
 	private boolean isDone;
 	private boolean isAdvancing;
 
@@ -33,7 +34,7 @@ public class NavigationUtils {
 			throw new NullPointerException("There is no location to advance towards!");
 		if (isAdvancing)
 			return;
-		Location location = locations.peek();
+		Location location = locations.get(0);
 		EntityBrain brain = BukkitBrain.getBrain(mob);
 		brain.getController().moveTo(location);
 		new BukkitRunnable() {
@@ -66,31 +67,37 @@ public class NavigationUtils {
 	public boolean isDone() {
 		return this.isDone;
 	}
-	public static Location findPositionInDirection(Location initial, Vector direction, double minDistance, double maxDistance) {
-		Location path = initial.clone().add(direction.clone().multiply(minDistance));
-		Vector angled = new Vector(-direction.getX(), 0, direction.getZ());
-		for (int i=0; i < maxDistance - minDistance; i++) {
-			for (int j=-1; j < 2; j++) {
-				Location temp = EntityUtils.findSmartYSpawn(initial, path.clone().add(angled.clone().multiply(j)), 1, 3);
-				if (temp != null)
-					return temp;
-			}
-			path.add(direction);
-		}
-		return null;
+	public static Location findPositionInDirection(Location initial, Vector direction, float minDistance, float maxDistance, double height) {
+	    final World world = initial.getWorld();
+	    final float dirX = (float) direction.getX();
+	    final float dirY = (float) direction.getY();
+	    final float dirZ = (float) direction.getZ();
+	    final float angledX = -dirX;
+	    final float angledZ = dirZ;
+	    float pathX = (float) (initial.getX() + dirX * minDistance);
+	    float pathY = (float) (initial.getY() + dirY * minDistance);
+	    float pathZ = (float) (initial.getZ() + dirZ * minDistance);
+	    final int iterations = (int)(maxDistance - minDistance);
+	    for (int i = 0; i < iterations; i++) {
+	        for (int j = -1; j < 2; j++) {
+	            final float searchX = pathX + angledX * j;
+	            final float searchY = pathY;
+	            final float searchZ = pathZ + angledZ * j;
+	            final Location searchLoc = new Location(world, searchX, searchY, searchZ);
+	            final Location temp = SpawnUtils.findSmartYSpawn(initial, searchLoc, height, 3);
+	            if (temp != null)
+	                return temp;
+	        }
+	        pathX += dirX;
+	        pathY += dirY;
+	        pathZ += dirZ;
+	    }
+	    return null;
 	}
-	public static Location findPositionInDirection(Entity entity, Vector direction, double minDistance, double maxDistance) {
-		Location initial = entity.getLocation();
-		Location path = initial.clone().add(direction.clone().multiply(minDistance));
-		Vector angled = new Vector(-direction.getX(), 0, direction.getZ());
-		for (int i=0; i < maxDistance - minDistance; i++) {
-			for (int j=-1; j < 2; j++) {
-				Location temp = EntityUtils.findSmartYSpawn(initial, path.clone().add(angled.clone().multiply(j)), entity.getHeight(), 3);
-				if (temp != null)
-					return temp;
-			}
-			path.add(direction);
-		}
-		return null;
+	public static Location findPositionInDirection(Location initial, Vector direction, float minDistance, float maxDistance) {
+		return findPositionInDirection(initial, direction, minDistance, maxDistance, 1);
+	}
+	public static Location findPositionInDirection(Entity entity, Vector direction, float minDistance, float maxDistance) {
+	    return findPositionInDirection(entity.getLocation(), direction, minDistance, maxDistance, entity.getHeight());
 	}
 }

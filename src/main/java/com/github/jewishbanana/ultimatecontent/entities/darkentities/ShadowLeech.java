@@ -6,11 +6,14 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World.Environment;
-import org.bukkit.attribute.Attribute;
+import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Animals;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Silverfish;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -39,7 +42,11 @@ import me.gamercoder215.mobchip.EntityBrain;
 import me.gamercoder215.mobchip.ai.EntityAI;
 import me.gamercoder215.mobchip.ai.goal.PathfinderClimbPowderedSnow;
 import me.gamercoder215.mobchip.ai.goal.PathfinderFloat;
+import me.gamercoder215.mobchip.ai.goal.PathfinderLookAtEntity;
 import me.gamercoder215.mobchip.ai.goal.PathfinderMeleeAttack;
+import me.gamercoder215.mobchip.ai.goal.PathfinderRandomStrollLand;
+import me.gamercoder215.mobchip.ai.goal.target.PathfinderHurtByTarget;
+import me.gamercoder215.mobchip.ai.goal.target.PathfinderNearestAttackableTarget;
 import me.gamercoder215.mobchip.bukkit.BukkitBrain;
 
 public class ShadowLeech extends ComplexEntity<Silverfish> {
@@ -62,9 +69,9 @@ public class ShadowLeech extends ComplexEntity<Silverfish> {
 		}
 	}
 	
-	private static byte maxLightLevel = 11;
+	private static final byte maxLightLevel = 11;
 	
-	private ShadowLeechVariant variant;
+	private final ShadowLeechVariant variant;
 	private LivingEntity attached;
 	private Team team;
 
@@ -92,38 +99,42 @@ public class ShadowLeech extends ComplexEntity<Silverfish> {
 			public void run() {
 				if (!entity.isValid())
 					return;
-				int light = entity.getLocation().getBlock().getLightLevel();
+				Location loc = entity.getLocation();
+				final byte light = loc.getBlock().getLightLevel();
 				if (attached == null || attached.isDead()) {
 					if (isTargetInRange(entity, 2.25, 9)) {
-						entity.setVelocity(Utils.getVectorTowards(entity.getLocation(), entity.getTarget().getLocation().add(0, entity.getTarget().getHeight() / 2.0 + random.nextDouble(), 0)));
-						entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_ITEM_FRAME_BREAK, getSoundCategory(), 1f, .5f);
+						Location targetLoc = entity.getTarget().getLocation();
+						if (targetLoc.getBlock().getLightLevel() < maxLightLevel) {
+							entity.setVelocity(Utils.getVectorTowards(loc, targetLoc.add(0, entity.getTarget().getHeight() / 2.0 + random.nextFloat(), 0)));
+							entity.getWorld().playSound(loc, Sound.ENTITY_ITEM_FRAME_BREAK, getSoundCategory(), 1f, .5f);
+						}
 					}
-					if (Utils.isLocationsWithinDistance(entity.getLocation(), step, 0.8) && entity.isOnGround()) {
-						step = entity.getLocation();
-						playSound(entity.getLocation(), Sound.ENTITY_ENDERMITE_STEP, .15, .8);
+					if (Utils.isLocationsWithinDistance(loc, step, 0.8f) && entity.isOnGround()) {
+						step = loc;
+						playSound(loc, Sound.ENTITY_ENDERMITE_STEP, .15f, .8f);
 					}
 					if (light >= maxLightLevel) {
-						entity.getWorld().spawnParticle(Particle.CLOUD, entity.getLocation().add(0, .4, 0), 4, .15, .15, .15, 0.000001);
-						playSound(entity.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, .5, 2);
+						entity.getWorld().spawnParticle(Particle.CLOUD, loc.getX(), loc.getY() + 0.4, loc.getZ(), 4, .15, .15, .15, 0.000001);
+						playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, .5f, 2f);
 						entity.damage(1.0);
 					}
 					return;
 				}
 				if (light >= maxLightLevel) {
 					if (variant != ShadowLeechVariant.BLOODY) {
-						entity.setVelocity(Utils.getVectorTowards(attached.getLocation().add(0, attached.getHeight() / 2.0, 0), entity.getLocation()).multiply(0.5));
+						entity.setVelocity(Utils.getVectorTowards(attached.getLocation().add(0, attached.getHeight() / 2.0, 0), loc).multiply(0.5));
 						attached = null;
 					}
-					entity.getWorld().spawnParticle(Particle.CLOUD, entity.getLocation().add(0,.4,0), 4, .15, .15, .15, 0.000001);
-					playSound(entity.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, .5, 2);
+					entity.getWorld().spawnParticle(Particle.CLOUD, loc.getX(), loc.getY() + 0.4, loc.getZ(), 4, .15, .15, .15, 0.000001);
+					playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, .5f, 2f);
 					entity.damage(1.0);
 				}
 				if (variant == ShadowLeechVariant.BLOODY)
-					entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), entity.getLocation(), 8, .1, .1, .1, 1, blockData);
+					entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), loc, 8, .1, .1, .1, 1, blockData);
 				else
-					entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), entity.getLocation(), 3, .1, .1, .1, 1, blockData);
-				EntityUtils.pureDamageEntity(attached, entityVariant.damage, "shadowLeech", entity, DamageCause.ENTITY_ATTACK);
-				playSound(entity.getLocation(), Sound.ENTITY_ENDERMITE_DEATH, .5, .8);
+					entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), loc, 3, .1, .1, .1, 1, blockData);
+				EntityUtils.pureDamageEntity(attached, entityVariant.damage, "shadowLeech", DamageCause.ENTITY_ATTACK, entity);
+				playSound(loc, Sound.ENTITY_ENDERMITE_DEATH, .5f, .8f);
 			}
 		}.runTaskTimer(plugin, 0, 10));
 		
@@ -132,18 +143,28 @@ public class ShadowLeech extends ComplexEntity<Silverfish> {
 	}
 	public void setAIGoals(Silverfish entity) {
 		EntityBrain brain = BukkitBrain.getBrain(entity);
-		EntityAI goals = brain.getGoalAI();
+		EntityAI goals = brain.getTargetAI();
 		goals.clear();
-		goals.put(new PathfinderAvoidBrightAreas(entity, (byte) 11, 5.0), 1);
-		goals.put(new PathfinderFloat(entity), 2);
-		goals.put(new PathfinderClimbPowderedSnow(entity), 2);
-		goals.put(new PathfinderMeleeAttack(entity, 1.0, false), 3);
+		goals.put(new PathfinderHurtByTarget(entity, new EntityType[0]), 2);
+		goals.put(new PathfinderNearestAttackableTarget<>(entity, Player.class, 10, true, false), 3);
+		goals.put(new PathfinderNearestAttackableTarget<>(entity, Animals.class, 10, true, false), 4);
+		
+		goals = brain.getGoalAI();
+		goals.clear();
+		goals.put(new PathfinderAvoidBrightAreas(entity, maxLightLevel, 5f), 0);
+		goals.put(new PathfinderFloat(entity), 1);
+		goals.put(new PathfinderClimbPowderedSnow(entity), 1);
+		goals.put(new PathfinderMeleeAttack(entity, 1.0, false), 5);
+		goals.put(new PathfinderRandomStrollLand(entity), 6);
+		goals.put(new PathfinderLookAtEntity<>(entity, LivingEntity.class, 8f, 0.04f), 7);
 	}
 	public void hitEntity(EntityDamageByEntityEvent event) {
 		if (attached != null || !(event.getEntity() instanceof LivingEntity alive))
 			return;
 		Silverfish entity = getCastedEntity();
-		Vector offsetOfAttach = entity.getLocation().toVector().setY(0).subtract(alive.getLocation().toVector().setY(0)).normalize().multiply((entity.getLocation().getY()-alive.getLocation().getY())*0.25).setY(Math.min(entity.getLocation().toVector().subtract(alive.getLocation().toVector()).getY(), alive.getHeight()));
+		Location entityLoc = entity.getLocation();
+		Location targetLoc = alive.getLocation();
+		Vector offsetOfAttach = entityLoc.toVector().setY(0).subtract(targetLoc.toVector().setY(0)).normalize().multiply((entityLoc.getY() - targetLoc.getY()) * 0.25).setY(Math.min(entityLoc.toVector().subtract(targetLoc.toVector()).getY(), alive.getHeight()));
 		try {
 			offsetOfAttach.checkFinite();
 		} catch (IllegalArgumentException e) {
@@ -183,7 +204,7 @@ public class ShadowLeech extends ComplexEntity<Silverfish> {
 	}
 	public void onDeath(EntityDeathEvent event) {
 		super.onDeath(event);
-		event.getEntity().getWorld().spawnParticle(VersionUtils.getNormalSmoke(), event.getEntity().getLocation().add(0,.25,0), 30, .15, .15, .15, .000001);
+		event.getEntity().getWorld().spawnParticle(VersionUtils.getNormalSmoke(), event.getEntity().getLocation().add(0, .25, 0), 30, .15, .15, .15, .000001);
 	}
 	public void onChangeBlock(EntityChangeBlockEvent event) {
 		event.setCancelled(true);
@@ -196,8 +217,8 @@ public class ShadowLeech extends ComplexEntity<Silverfish> {
 	}
 	public void setAttributes(Silverfish entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(30);
-		entity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(0.0);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(30);
+		entity.getAttribute(VersionUtils.getAttackDamageAttribute()).setBaseValue(0.0);
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(ShadowLeech.REGISTERED_KEY, ShadowLeech.class);
@@ -206,8 +227,8 @@ public class ShadowLeech extends ComplexEntity<Silverfish> {
 		type.setSpawnConditions(event -> {
 			if (!(event.getEntity() instanceof Monster))
 				return false;
-			Location loc = event.getLocation();
-			if (loc.getBlock().getLightLevel() >= maxLightLevel || !Utils.isEnvironment(loc.getWorld(), Environment.NORMAL, Environment.THE_END))
+			Block block = event.getLocation().getBlock();
+			if (block == null || block.getLightLevel() >= maxLightLevel || !Utils.isEnvironment(block.getWorld(), Environment.NORMAL, Environment.THE_END))
 				return false;
 			return true;
 		});

@@ -17,15 +17,14 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.ArmorStand.LockType;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Zombie;
-import org.bukkit.entity.ArmorStand.LockType;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.EntityEquipment;
@@ -37,6 +36,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 import com.github.jewishbanana.uiframework.entities.CustomEntity;
 import com.github.jewishbanana.ultimatecontent.Main;
@@ -143,22 +143,22 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 			LivingEntity alive = (LivingEntity) entity;
 			AttributeInstance instance = null;
 			if (entityVariant.health > 0) {
-				instance = alive.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+				instance = alive.getAttribute(VersionUtils.getMaxHealthAttribute());
 				if (instance != null)
 					instance.setBaseValue(entityVariant.health);
 			}
 			if (entityVariant.damage >= 0) {
-				instance = alive.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
+				instance = alive.getAttribute(VersionUtils.getAttackDamageAttribute());
 				if (instance != null)
 					instance.setBaseValue(entityVariant.damage);
 			}
 			if (entityVariant.knockback >= 0) {
-				instance = alive.getAttribute(Attribute.GENERIC_ATTACK_KNOCKBACK);
+				instance = alive.getAttribute(VersionUtils.getAttackKnockbackAttribute());
 				if (instance != null)
 					instance.setBaseValue(entityVariant.knockback);
 			}
 			if (entityVariant.movementSpeed >= 0) {
-				instance = alive.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+				instance = alive.getAttribute(VersionUtils.getMovementSpeedAttribute());
 				if (instance != null)
 					instance.setBaseValue(entityVariant.movementSpeed);
 			}
@@ -195,8 +195,8 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 		if (effects != null)
 			playSoundEffect(effects[random.nextInt(effects.length)]);
 	}
-	public void playSound(Location location, Sound sound, double volume, double pitch) {
-		location.getWorld().playSound(location, sound, getSoundCategory(), (float) (volume * entityVariant.volume), (float) pitch);
+	public void playSound(Location location, Sound sound, float volume, float pitch) {
+		location.getWorld().playSound(location, sound, getSoundCategory(), volume * entityVariant.volume, pitch);
 	}
 	public void makeParticleTask(Entity entity, int ticks, Particle particle, Vector offset, int count, double dx, double dy, double dz, double speed) {
 		scheduleTask(new BukkitRunnable() {
@@ -241,7 +241,7 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 			}
 		}.runTaskTimerAsynchronously(plugin, 0, ticks));
 	}
-	public void makeStepSoundTask(Entity entity, double distanceSquared, Sound sound, double volume, double pitch) {
+	public void makeStepSoundTask(Entity entity, double distanceSquared, Sound sound, float volume, float pitch) {
 		scheduleTask(new BukkitRunnable() {
 			private Location step = entity.getLocation();
 			
@@ -261,14 +261,14 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 		if (IS_VERSION_19_OR_ABOVE)
 			entity.setCanBreakDoors(true);
 	}
-	public static boolean isTargetInRange(Mob mob, double minSquared, double maxSquared, boolean lineOfSight) {
+	public static boolean isTargetInRange(@NotNull Mob mob, double minSquared, double maxSquared, boolean lineOfSight) {
 		LivingEntity target = mob.getTarget();
 		if (target == null || target.isDead() || !target.getWorld().equals(mob.getWorld()) || (lineOfSight && !mob.hasLineOfSight(target)))
 			return false;
-		double distance = target.getLocation().distanceSquared(mob.getLocation());
+		final double distance = target.getLocation().distanceSquared(mob.getLocation());
 		return distance >= minSquared && distance <= maxSquared;
 	}
-	public static boolean isTargetInRange(Mob mob, double minSquared, double maxSquared) {
+	public static boolean isTargetInRange(@NotNull Mob mob, double minSquared, double maxSquared) {
 		return isTargetInRange(mob, minSquared, maxSquared, true);
 	}
 	public static void initStand(ArmorStand stand) {

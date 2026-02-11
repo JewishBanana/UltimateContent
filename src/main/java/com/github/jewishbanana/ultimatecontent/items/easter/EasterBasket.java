@@ -28,6 +28,7 @@ import com.github.jewishbanana.ultimatecontent.items.BossSpawnItem;
 import com.github.jewishbanana.ultimatecontent.items.CustomItemBuilder;
 import com.github.jewishbanana.ultimatecontent.items.Rarity;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.CustomHead;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
@@ -54,8 +55,8 @@ public class EasterBasket extends BossSpawnItem {
 		int count = 0;
 		Location location = block.getLocation().add(.5, .5, .5);
 		for (int i=0; i < 20; i++) {
-			Location temp = Utils.findRandomSpotInCircle(location, 1.0, 15.0);
-			Block tempBlock = Utils.getHighestExposedBlock(temp.getBlock(), 6);
+			Location temp = Utils.findRandomSpotInCircle(location, 1f, 15f);
+			Block tempBlock = BlockUtils.getHighestExposedBlock(temp.getBlock(), 6);
 			if (tempBlock == null || temp.getWorld().getHighestBlockAt(temp).getY() > tempBlock.getY())
 				count++;
 		}

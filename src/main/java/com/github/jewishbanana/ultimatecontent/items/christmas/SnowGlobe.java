@@ -32,6 +32,7 @@ import com.github.jewishbanana.ultimatecontent.items.BossSpawnItem;
 import com.github.jewishbanana.ultimatecontent.items.CustomItemBuilder;
 import com.github.jewishbanana.ultimatecontent.items.Rarity;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.CustomHead;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.SongPlayer;
@@ -49,7 +50,7 @@ public class SnowGlobe extends BossSpawnItem {
 		if (!super.placeBlock(event))
 			return false;
 		Block block = event.getBlock();
-		if (!Utils.isBlockColdBiome(block)) {
+		if (!BlockUtils.isBlockColdBiome(block)) {
 			event.getPlayer().sendMessage(Utils.convertString(DataUtils.getConfigString("language.items.snowGlobePlaceError")));
 			event.setCancelled(true);
 			return false;
@@ -57,8 +58,8 @@ public class SnowGlobe extends BossSpawnItem {
 		int count = 0;
 		Location location = block.getLocation().add(.5, .5, .5);
 		for (int i=0; i < 20; i++) {
-			Location temp = Utils.findRandomSpotInCircle(location, 1.0, 15.0);
-			Block tempBlock = Utils.getHighestExposedBlock(temp.getBlock(), 6);
+			Location temp = Utils.findRandomSpotInCircle(location, 1f, 15f);
+			Block tempBlock = BlockUtils.getHighestExposedBlock(temp.getBlock(), 6);
 			if (tempBlock == null || temp.getWorld().getHighestBlockAt(temp).getY() > tempBlock.getY())
 				count++;
 		}
@@ -68,7 +69,7 @@ public class SnowGlobe extends BossSpawnItem {
 			return false;
 		}
 		addToBossBlocks(block);
-		Vector vec = Utils.getRandomizedVector(1.0, 0, 1.0).multiply(100);
+		Vector vec = Utils.getRandomizedVector(1f, 0, 1f).multiply(100);
 		Location spawn = block.getLocation();
 		spawn.setY(Math.min(spawn.getBlockY() + 60, 340));
 		Location goalLoc = spawn.clone();

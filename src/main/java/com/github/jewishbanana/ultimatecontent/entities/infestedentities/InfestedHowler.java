@@ -6,7 +6,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Biome;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.ArmorStand;
@@ -27,8 +26,8 @@ import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.entities.pathfinders.PathfinderMaintainTargetDistance;
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.CustomHead;
-import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.SpawnUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
@@ -96,7 +95,7 @@ public class InfestedHowler extends ComplexEntity<Zombie> {
 //									cave.closeRoute(entity.getTarget(), 8, Utils.getVectorTowards(entity.getLocation(), entity.getTarget().getLocation().add(0,1,0)));
 //									return;
 //								}
-							if (IS_VERSION_19_OR_ABOVE && (aliveWarden == null || !aliveWarden.isValid()) && random.nextDouble() < spawnWardenChance)
+							if (IS_VERSION_19_OR_ABOVE && (aliveWarden == null || !aliveWarden.isValid()) && random.nextFloat() < spawnWardenChance)
 								spawnWarden(loc, target);
 						}
 					}
@@ -142,7 +141,7 @@ public class InfestedHowler extends ComplexEntity<Zombie> {
 						headStand.getEntity(loc).getEquipment().setHelmet(CustomHead.INFESTED_HOWLER_EYES.getHead());
 					}
 					if (IS_VERSION_19_OR_ABOVE)
-						playSound(loc, Sound.BLOCK_SCULK_SHRIEKER_SHRIEK, 10, .5);
+						playSound(loc, Sound.BLOCK_SCULK_SHRIEKER_SHRIEK, 10f, .5f);
 				} else
 					animation = false;
 			}
@@ -155,26 +154,25 @@ public class InfestedHowler extends ComplexEntity<Zombie> {
 		EntityAI goals = brain.getTargetAI();
 		goals.clear();
 		goals.put(new PathfinderHurtByTarget(entity, new EntityType[0]), 1);
-		goals.put(new PathfinderNearestAttackableTarget<Player>(entity, Player.class, 10, true, false), 2);
+		goals.put(new PathfinderNearestAttackableTarget<>(entity, Player.class, 10, true, false), 2);
 		
 		goals = brain.getGoalAI();
 		goals.clear();
-		goals.put(new PathfinderFloat(entity), 1);
-		goals.put(new PathfinderMaintainTargetDistance(entity, 5.5, 5.9), 2);
-		goals.put(new PathfinderRandomStrollLand(entity), 3);
-		goals.put(new PathfinderLookAtEntity<Player>(entity, Player.class), 4);
-		goals.put(new PathfinderLookAtEntity<LivingEntity>(entity, LivingEntity.class), 5);
-		goals.put(new PathfinderRandomLook(entity), 6);
+		goals.put(new PathfinderFloat(entity), 0);
+		goals.put(new PathfinderMaintainTargetDistance(entity, 5.5f, 5.9f), 3);
+		goals.put(new PathfinderRandomStrollLand(entity), 4);
+		goals.put(new PathfinderLookAtEntity<>(entity, LivingEntity.class), 6);
+		goals.put(new PathfinderRandomLook(entity), 7);
 	}
 	public void setAttributes(Zombie entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(30);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(30);
 		this.spawnWardenChance = getSectionDouble("spawnWardenChance", 25.0) / 100.0;
 	}
 	private void spawnWarden(Location location, LivingEntity target) {
 		for (int i=2; i < 30; i++) {
-			Location spawn = EntityUtils.findSmartYSpawn(location, location.clone().add(random.nextInt(-i-1, i), 0, random.nextInt(-i-1, i)), 3.0, 5);
-			if (spawn == null || !Utils.isAreaClear(Utils.getCenterOfBlock(spawn.getBlock()).add(0, 1, 0), 1.95) || spawn.getBlock().getRelative(BlockFace.DOWN).isPassable() || spawn.getBlock().getRelative(BlockFace.DOWN, 2).isPassable() || spawn.getBlock().getRelative(BlockFace.DOWN, 3).isPassable())
+			Location spawn = SpawnUtils.findSmartYSpawn(location, location.clone().add(random.nextInt(-i-1, i), 0, random.nextInt(-i-1, i)), 3.0, 5);
+			if (spawn == null || !Utils.isAreaClear(BlockUtils.getCenterOfBlock(spawn.getBlock()).add(0, 1, 0), 1.95f) || spawn.getBlock().getRelative(BlockFace.DOWN).isPassable() || spawn.getBlock().getRelative(BlockFace.DOWN, 2).isPassable() || spawn.getBlock().getRelative(BlockFace.DOWN, 3).isPassable())
 				continue;
 			aliveWarden = (LivingEntity) location.getWorld().spawnEntity(spawn, EntityType.WARDEN);
 			aliveWarden.setInvisible(true);
@@ -192,7 +190,7 @@ public class InfestedHowler extends ComplexEntity<Zombie> {
 		});
 	}
 	public static final Function<Location, BaseEntity<?>> attemptSpawn = area -> {
-		Location spawn = SpawnUtils.findSpawnLocation(area, 1);
+		Location spawn = SpawnUtils.findMonsterSpawnLocation(area, 1);
 		if (spawn == null || spawn.getBlock().getBiome() != Biome.DEEP_DARK)
 			return null;
 		return UIEntityManager.spawnEntity(spawn, InfestedHowler.class);

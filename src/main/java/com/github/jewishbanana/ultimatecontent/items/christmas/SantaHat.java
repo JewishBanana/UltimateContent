@@ -19,8 +19,8 @@ public class SantaHat extends Armor {
 
 	public SantaHat(ItemStack item) {
 		super(item);
-		this.elfSummonCount = getIntegerField("elf_summon_count", 3);
-		this.elfRespawnTimer = (int) (getDoubleField("elf_respawn_timer", 60.0) * 20.0);
+		this.elfSummonCount = getIntegerField("elfSummonCount");
+		this.elfRespawnTimer = (int) Math.ceil(getDoubleField("elfRespawnTimer") * 20.0);
 	}
 	@Override
 	public ItemBuilder createItem() {

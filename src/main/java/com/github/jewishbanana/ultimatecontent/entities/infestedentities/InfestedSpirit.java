@@ -6,7 +6,6 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Particle.DustOptions;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Vex;
@@ -48,7 +47,7 @@ public class InfestedSpirit extends ComplexEntity<Vex> {
 	}
 	public void setAttributes(Vex entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(20);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(20);
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(InfestedSpirit.REGISTERED_KEY, InfestedSpirit.class);
@@ -58,7 +57,7 @@ public class InfestedSpirit extends ComplexEntity<Vex> {
 		});
 	}
 	public static final Function<Location, BaseEntity<?>> attemptSpawn = area -> {
-		Location spawn = SpawnUtils.findSpawnLocation(area, 1);
+		Location spawn = SpawnUtils.findMonsterSpawnLocation(area, 1);
 		if (spawn == null || spawn.getBlock().getBiome() != Biome.DEEP_DARK)
 			return null;
 		return UIEntityManager.spawnEntity(spawn, InfestedSpirit.class);

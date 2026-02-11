@@ -1,12 +1,12 @@
 package com.github.jewishbanana.ultimatecontent.entities.darkentities;
 
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Zombie;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
+import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class DarkMage extends BaseEntity<Zombie> {
 	
@@ -17,13 +17,13 @@ public class DarkMage extends BaseEntity<Zombie> {
 	}
 	public void setAttributes(Zombie entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(30);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(30);
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(DarkMage.REGISTERED_KEY, DarkMage.class);
 		
 		type.setSpawnConditions(event -> {
-			return event.getEntityType() == EntityType.CREEPER;
+			return event.getEntityType() == EntityType.ZOMBIE;
 		});
 	}
 }

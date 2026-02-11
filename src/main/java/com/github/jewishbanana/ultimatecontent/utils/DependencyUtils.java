@@ -3,6 +3,7 @@ package com.github.jewishbanana.ultimatecontent.utils;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -20,12 +21,7 @@ public class DependencyUtils {
 	public static com.github.jewishbanana.deadlydisasters.Main DDHook;
 	private static boolean isDDPro;
 	
-	private static boolean worldGuard;
-	private static boolean kingdomsAPI;
-	
-	private static com.palmergames.bukkit.towny.TownyAPI townyapi;
-	private static me.ryanhamshire.GriefPrevention.DataStore grief;
-	private static me.angeschossen.lands.api.LandsIntegration landsclaims;
+	private static Predicate<Location> regionCheck;
 	
 	private static boolean affectEntities;
 	private static boolean damageBlocks;
@@ -35,24 +31,84 @@ public class DependencyUtils {
 	private static Set<Class<? extends CustomEntity<?>>> blacklistedCustomEntities;
 
 	public static void init(Main plugin) {
-		plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
-			@Override
-			public void run() {
-				PluginManager manager = plugin.getServer().getPluginManager();
-				if (manager.isPluginEnabled("DeadlyDisasters")) {
-					DDHook = com.github.jewishbanana.deadlydisasters.Main.getInstance();
-					isDDPro = DDHook.isPluginPro();
-				}
-				worldGuard = manager.isPluginEnabled("WorldGuard");
-				kingdomsAPI = manager.isPluginEnabled("Kingdoms");
-				if (manager.isPluginEnabled("Towny"))
-					townyapi = com.palmergames.bukkit.towny.TownyAPI.getInstance();
-				if (manager.isPluginEnabled("GriefPrevention"))
-					grief = me.ryanhamshire.GriefPrevention.GriefPrevention.instance.dataStore;
-				if (manager.isPluginEnabled("Lands"))
-					landsclaims = me.angeschossen.lands.api.LandsIntegration.of(plugin);
+		PluginManager pm = plugin.getServer().getPluginManager();
+		if (pm.isPluginEnabled("DeadlyDisasters")) {
+			DDHook = com.github.jewishbanana.deadlydisasters.Main.getInstance();
+			isDDPro = DDHook.isPluginPro();
+		}
+		Predicate<Location> check = null;
+		try {
+			if (pm.isPluginEnabled("WorldGuard")) {
+				if (DataUtils.getConfigBoolean("external.region_protection_plugins.world_guard")) {
+					check = (check == null) ? loc -> isWGRegion(loc) : check.and(loc -> isWGRegion(loc));
+					plugin.getLogger().info("Successfully hooked into World Guard");
+				} else
+					plugin.getLogger().info("World Guard was detected, but region protection for this plugin is disabled in the config.yml file. World Guard regions will NOT be protected!");
 			}
-		}, 1);
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eWorld Guard &cregions from this plugin will NOT be protected!");
+		}
+		try {
+			if (pm.isPluginEnabled("Towny")) {
+				if (DataUtils.getConfigBoolean("external.region_protection_plugins.towny")) {
+					com.palmergames.bukkit.towny.TownyAPI townyHook = com.palmergames.bukkit.towny.TownyAPI.getInstance();
+				    check = (check == null) ? 
+				            loc -> townyHook.getTownBlock(loc) != null : 
+				            check.and(loc -> townyHook.getTownBlock(loc) != null);
+					plugin.getLogger().info("Successfully hooked into Towny");
+				} else
+					plugin.getLogger().info("Towny was detected, but region protection for this plugin is disabled in the config.yml file. Towny regions will NOT be protected!");
+			}
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eTowny &cregions from this plugin will NOT be protected!");
+		}
+		try {
+			if (pm.isPluginEnabled("GriefPrevention")) {
+				if (DataUtils.getConfigBoolean("external.region_protection_plugins.grief_prevention")) {
+					me.ryanhamshire.GriefPrevention.DataStore api = me.ryanhamshire.GriefPrevention.GriefPrevention.instance.dataStore;
+					check = (check == null) ? 
+				            loc -> api.getClaimAt(loc, true, null) != null : 
+				            check.and(loc -> api.getClaimAt(loc, true, null) != null);
+					plugin.getLogger().info("Successfully hooked into Grief Prevention");
+				} else
+					plugin.getLogger().info("Grief Prevention was detected, but region protection for this plugin is disabled in the config.yml file. Grief Prevention regions will NOT be protected!");
+			}
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eGrief Prevention &cregions from this plugin will NOT be protected!");
+		}
+		try {
+			if (pm.isPluginEnabled("Lands")) {
+				if (DataUtils.getConfigBoolean("external.region_protection_plugins.lands")) {
+					me.angeschossen.lands.api.LandsIntegration api = me.angeschossen.lands.api.LandsIntegration.of(plugin);
+				    check = (check == null) ? 
+				            loc -> api.getArea(loc) != null : 
+				            check.and(loc -> api.getArea(loc) != null);
+					plugin.getLogger().info("Successfully hooked into Lands");
+				} else
+					plugin.getLogger().info("Lands was detected, but region protection for this plugin is disabled in the config.yml file. Lands regions will NOT be protected!");
+			}
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eLands &cregions from this plugin will NOT be protected!");
+		}
+		try {
+			if (pm.isPluginEnabled("Kingdoms")) {
+				if (DataUtils.getConfigBoolean("external.region_protection_plugins.kingdoms")) {
+					check = (check == null) ? 
+				            loc -> org.kingdoms.constants.land.Land.getLand(loc) != null : 
+				            check.and(loc -> org.kingdoms.constants.land.Land.getLand(loc) != null);
+					plugin.getLogger().info("Successfully hooked into Kingdoms");
+				} else
+					plugin.getLogger().info("Kingdoms was detected, but region protection for this plugin is disabled in the config.yml file. Kingdoms regions will NOT be protected!");
+			}
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eKingdoms &cregions from this plugin will NOT be protected!");
+		}
+		regionCheck = (check == null) ? loc -> false : check;
 	}
 	public static void reload() {
 		affectEntities = DataUtils.getConfigBoolean("general.protected_regions.affect_entities");
@@ -87,27 +143,23 @@ public class DependencyUtils {
 //		if (isDDPro)
 //			DDHook.achievementsHandler.awardProgress(uuid, achievement, amount, tier);
 	}
-	private static boolean isZoneProtected(Location loc) {
-		return (((worldGuard && isWGRegion(loc)) || (townyapi != null && townyapi.getTownBlock(loc) != null)
-				|| (grief != null && grief.getClaimAt(loc, true, null) != null) || (landsclaims != null && landsclaims.getArea(loc) != null) || (kingdomsAPI && org.kingdoms.constants.land.Land.getLand(loc) != null)));
-	}
-	public static boolean isLocationProtected(Location loc) {
-		return isZoneProtected(loc);
-	}
-	public static boolean isEntityProtected(Entity entity) {
-		CustomEntity<?> custom = UIEntityManager.getEntity(entity);
-		if (custom != null && blacklistedCustomEntities.contains(custom.getClass()))
-			return true;
-		return blacklistedEntities.contains(entity.getType()) || (!affectEntities && isZoneProtected(entity.getLocation()));
-	}
-	public static boolean isBlockProtected(Block block) {
-		return blacklistedMaterials.contains(block.getType()) || (!damageBlocks && isZoneProtected(block.getLocation()));
-	}
 	private static boolean isWGRegion(Location location) {
 		com.sk89q.worldedit.util.Location loc = com.sk89q.worldedit.bukkit.BukkitAdapter.adapt(location);
 		com.sk89q.worldguard.protection.regions.RegionContainer container = com.sk89q.worldguard.WorldGuard.getInstance().getPlatform().getRegionContainer();
 		com.sk89q.worldguard.protection.regions.RegionQuery query = container.createQuery();
 		com.sk89q.worldguard.protection.ApplicableRegionSet set = query.getApplicableRegions(loc);
 		return set.size() != 0;
+	}
+	public static boolean isLocationProtected(Location loc) {
+		return regionCheck.test(loc);
+	}
+	public static boolean isEntityProtected(Entity entity) {
+		CustomEntity<?> custom = UIEntityManager.getEntity(entity);
+		if (custom != null && blacklistedCustomEntities.contains(custom.getClass()))
+			return true;
+		return blacklistedEntities.contains(entity.getType()) || (!affectEntities && isLocationProtected(entity.getLocation()));
+	}
+	public static boolean isBlockProtected(Block block) {
+		return blacklistedMaterials.contains(block.getType()) || (!damageBlocks && isLocationProtected(block.getLocation()));
 	}
 }

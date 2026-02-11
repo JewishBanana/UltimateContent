@@ -1,8 +1,10 @@
 package com.github.jewishbanana.ultimatecontent.entities.darkentities;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -10,7 +12,6 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.World;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -27,6 +28,7 @@ import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.Main;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
@@ -76,36 +78,49 @@ public class SwampBeast extends BaseEntity<Zombie> {
 					Vector angle = new Vector(vec.getZ(), 0, -vec.getX());
 					Location spot = loc.clone().add(vec.clone().multiply(-1));
 					Map<Block, BlockState> patches = new HashMap<>();
+					List<Block> patchList = new ArrayList<>();
 					vec.multiply(0.5);
 					new BukkitRunnable() {
 						private int tick;
 						private double distance = mudRange + 1.0;
 						private BlockData mudData = mudType.createBlockData();
+						private int lastEntityCheck = 0;
+						private Location minBound = null;
+						private Location maxBound = null;
 						
 						@Override
 						public void run() {
 							if (tick % 2 == 0 && distance > 0) {
+								int start, end;
 								if (distance <= 1 || distance >= mudRange-1) {
-									for (int i=-2; i < 2; i++) {
-										Block b = Utils.getHighestExposedBlock(spot.clone().add(angle.clone().multiply(i)).getBlock(), 3);
-										if (b == null || patches.containsKey(b) || b.getState() instanceof TileState || DependencyUtils.isBlockProtected(b))
-											continue;
-										BlockState state = b.getState();
-										patches.put(b, state);
-										mudPatchStorage.put(b, state);
-										b.setType(mudType);
-										world.spawnParticle(VersionUtils.getBlockCrack(), b.getLocation().add(.5,1,.5), 5, .4, .3, .4, 1, mudData);
-									}
+									start = -2;
+									end = 2;
 								} else {
-									for (int i=-3; i < 3; i++) {
-										Block b = Utils.getHighestExposedBlock(spot.clone().add(angle.clone().multiply(i)).getBlock(), 3);
-										if (b == null || patches.containsKey(b) || b.getState() instanceof TileState || DependencyUtils.isBlockProtected(b))
-											continue;
-										BlockState state = b.getState();
-										patches.put(b, state);
-										mudPatchStorage.put(b, state);
-										b.setType(mudType);
-										world.spawnParticle(VersionUtils.getBlockCrack(), b.getLocation().add(.5,1,.5), 5, .4, .3, .4, 1, mudData);
+									start = -3;
+									end = 3;
+								}
+								for (int i = start; i < end; i++) {
+									Location tempLoc = spot.clone().add(angle.clone().multiply(i));
+									Block b = BlockUtils.getHighestExposedBlock(tempLoc.getBlock(), 3);
+									if (b == null || patches.containsKey(b) || b.getState() instanceof TileState || DependencyUtils.isBlockProtected(b))
+										continue;
+									BlockState state = b.getState();
+									patches.put(b, state);
+									patchList.add(b);
+									mudPatchStorage.put(b, state);
+									b.setType(mudType);
+									world.spawnParticle(VersionUtils.getBlockCrack(), b.getLocation().add(.5, 1, .5), 5, .4, .3, .4, 1, mudData);
+									Location bLoc = b.getLocation();
+									if (minBound == null) {
+										minBound = bLoc.clone();
+										maxBound = bLoc.clone();
+									} else {
+										minBound.setX(Math.min(minBound.getX(), bLoc.getX()));
+										minBound.setY(Math.min(minBound.getY(), bLoc.getY()));
+										minBound.setZ(Math.min(minBound.getZ(), bLoc.getZ()));
+										maxBound.setX(Math.max(maxBound.getX(), bLoc.getX()));
+										maxBound.setY(Math.max(maxBound.getY(), bLoc.getY()));
+										maxBound.setZ(Math.max(maxBound.getZ(), bLoc.getZ()));
 									}
 								}
 								if (usingMudBlock)
@@ -113,26 +128,46 @@ public class SwampBeast extends BaseEntity<Zombie> {
 								spot.add(vec);
 								distance -= 0.5;
 							}
-							for (Entry<Block, BlockState> entry : patches.entrySet())
-								if (entry.getKey().getType() == mudType) {
-									world.spawnParticle(Particle.FALLING_DUST, entry.getKey().getLocation().add(.5,1,.5), 1, .3, .1, .3, 1, mudData);
-									for (Entity e : world.getNearbyEntities(entry.getKey().getLocation().add(.5,1.5,.5), .5, .5, .5)) {
+							if (tick - lastEntityCheck >= 2 && minBound != null) {
+								lastEntityCheck = tick;
+								Location center = minBound.clone().add(maxBound).multiply(0.5);
+								double xRadius = (maxBound.getX() - minBound.getX()) / 2.0 + 1.5;
+								double yRadius = (maxBound.getY() - minBound.getY()) / 2.0 + 2.0;
+								double zRadius = (maxBound.getZ() - minBound.getZ()) / 2.0 + 1.5;
+								Collection<Entity> nearbyEntities = world.getNearbyEntities(center, xRadius, yRadius, zRadius);
+								for (int i = 0; i < patchList.size(); i++) {
+									Block block = patchList.get(i);
+									if (block.getType() != mudType)
+										continue;
+									world.spawnParticle(Particle.FALLING_DUST, block.getLocation().add(.5, 1, .5), 1, .3, .1, .3, 1, mudData);
+									Location blockCenter = block.getLocation().add(.5, 1.5, .5);
+									for (Entity e : nearbyEntities) {
 										if (e.hasMetadata("uc-swampentity"))
 											continue;
-										Vector vec = new Vector(e.getVelocity().getX()/8, e.getVelocity().getY(), e.getVelocity().getZ()/8);
-										if (vec.getY() > 0)
-											vec.setY(vec.getY()/8);
-										e.setVelocity(vec);
-										if (usingMudBlock && tick % 5 == 0 && e instanceof Player)
-											world.playSound(e.getLocation(), Sound.BLOCK_MUD_PLACE, SoundCategory.BLOCKS, 0.3f, .5f);
+										Location eLoc = e.getLocation();
+										double dx = Math.abs(eLoc.getX() - blockCenter.getX());
+										double dy = Math.abs(eLoc.getY() - blockCenter.getY());
+										double dz = Math.abs(eLoc.getZ() - blockCenter.getZ());
+										if (dx <= 0.5 && dy <= 0.5 && dz <= 0.5) {
+											Vector vel = e.getVelocity();
+											Vector vec = new Vector(vel.getX() / 8, vel.getY(), vel.getZ() / 8);
+											if (vec.getY() > 0)
+												vec.setY(vec.getY() / 8);
+											e.setVelocity(vec);
+											if (usingMudBlock && tick % 5 == 0 && e instanceof Player)
+												world.playSound(e.getLocation(), Sound.BLOCK_MUD_PLACE, SoundCategory.BLOCKS, 0.3f, .5f);
+										}
 									}
 								}
+							}
 							if (tick >= 200) {
-								patches.forEach((k, v) -> {
+								for (int i = 0; i < patchList.size(); i++) {
+									Block k = patchList.get(i);
+									BlockState v = patches.get(k);
 									if (k.getType() == mudType)
 										v.update(true);
 									mudPatchStorage.remove(k);
-								});
+								}
 								this.cancel();
 							}
 							tick++;
@@ -144,7 +179,7 @@ public class SwampBeast extends BaseEntity<Zombie> {
 				else if (isTargetInRange(entity, 100, 400, false) && entity.isOnGround()
 						&& entity.getLocation().getBlock().getRelative(BlockFace.DOWN).getType().isOccluding() && entity.getLocation().getBlock().getRelative(BlockFace.DOWN, 2).getType().isOccluding()) {
 					LivingEntity target = entity.getTarget();
-					Location loc = Utils.findRandomSpotInRadius(target.getLocation(), 4, 8, 2, 10, temp -> temp.getBlock().getRelative(BlockFace.DOWN).getType().isOccluding() && temp.getBlock().getRelative(BlockFace.DOWN, 2).getType().isOccluding());
+					Location loc = Utils.findRandomSpotInRadius(target.getLocation(), 4f, 8f, 2, 10, () -> Utils.getRandomizedVector(), temp -> temp.getBlock().getRelative(BlockFace.DOWN).getType().isOccluding() && temp.getBlock().getRelative(BlockFace.DOWN, 2).getType().isOccluding());
 					if (loc == null)
 						return;
 					tpCooldown = 15;
@@ -152,7 +187,7 @@ public class SwampBeast extends BaseEntity<Zombie> {
 					entity.setAI(false);
 					entity.setGravity(false);
 					Location entityLoc = entity.getLocation();
-					entity.teleport(entityLoc.getBlock().getLocation().add(0.5,0,0.5));
+					entity.teleport(entityLoc.getBlock().getLocation().add(0.5, 0, 0.5));
 					entity.setRotation(entityLoc.getYaw(), 70);
 					Block block = entityLoc.getBlock().getRelative(BlockFace.DOWN);
 					BlockState state = block.getState() instanceof TileState || DependencyUtils.isBlockProtected(block) ? null : block.getState();
@@ -179,10 +214,10 @@ public class SwampBeast extends BaseEntity<Zombie> {
 							}
 							tick++;
 							if (tick <= 30) {
-								entity.teleport(entity.getLocation().add(0,-0.07,0));
-								entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), block.getLocation().add(.5,1,.5), 7, .3, .2, .3, 1, mudData);
+								entity.teleport(entity.getLocation().add(0, -0.07, 0));
+								entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), block.getLocation().add(.5, 1, .5), 7, .3, .2, .3, 1, mudData);
 								if (usingMudBlock && tick % 5 == 0)
-									playSound(block.getLocation(), Sound.BLOCK_MUD_HIT, 1, .5);
+									playSound(block.getLocation(), Sound.BLOCK_MUD_HIT, 1f, .5f);
 								return;
 							}
 							if (tick == 40) {
@@ -192,14 +227,14 @@ public class SwampBeast extends BaseEntity<Zombie> {
 									mudPatchStorage.put(tempBlock, spotState);
 									tempBlock.setType(mudType);
 								}
-								entity.teleport(tempBlock.getRelative(BlockFace.DOWN).getLocation().add(0.5,0,0.5));
+								entity.teleport(tempBlock.getRelative(BlockFace.DOWN).getLocation().add(0.5, 0, 0.5));
 								return;
 							}
 							if (tick > 40 && tick <= 60) {
-								entity.teleport(entity.getLocation().add(0,0.1,0));
-								entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), spot.clone().add(.5,1,.5), 7, .3, .2, .3, 1, mudData);
+								entity.teleport(entity.getLocation().add(0, 0.1, 0));
+								entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), spot.clone().add(.5, 1, .5), 7, .3, .2, .3, 1, mudData);
 								if (usingMudBlock && tick % 5 == 0)
-									playSound(spot, Sound.BLOCK_MUD_HIT, 1, .5);
+									playSound(spot, Sound.BLOCK_MUD_HIT, 1f, .5f);
 								if (target != null && target.getWorld().equals(entity.getWorld()))
 									EntityUtils.makeEntityFaceLocation(entity, target.getLocation());
 								return;
@@ -243,7 +278,7 @@ public class SwampBeast extends BaseEntity<Zombie> {
 	}
 	public void setAttributes(Zombie entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(40);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(40);
 		this.mudRange = getSectionDouble("mudRange", 8.0);
 	}
 	public static void register() {

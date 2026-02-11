@@ -1,6 +1,8 @@
 package com.github.jewishbanana.ultimatecontent.abilities;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
@@ -22,6 +24,7 @@ import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.UIAbilityType;
 import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
 import com.github.jewishbanana.ultimatecontent.listeners.RegionHandler;
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 
 public class TidalWave extends AbilityAttributes {
@@ -49,18 +52,19 @@ public class TidalWave extends AbilityAttributes {
 		Vector angle = new Vector(direction.getZ(), 0, -direction.getX());
 		Location spot = loc.clone().add(direction.clone().multiply(2)).add(angle.clone().multiply(-2));
 		Block[] water = new Block[15];
-		Queue<Block> allWaters = new ArrayDeque<>();
+		List<Block> allWaters = new ArrayList<>();
 		Queue<Block> puddles = new ArrayDeque<>();
-		int waterParticles = (int) (30.0 * particleMultiplier);
-		int bubbleParticles = (int) (10.0 * particleMultiplier);
+		final int waterParticles = (int) Math.ceil(30.0 * particleMultiplier);
+		final int bubbleParticles = (int) Math.ceil(10.0 * particleMultiplier);
 		new BukkitRunnable() {
-			private int tick = (int) range;
+			private int tick = (int) Math.ceil(range);
 			
 			@Override
 			public void run() {
 				for (Block b : water)
 					if (b != null && b.getType() == Material.WATER) {
-						world.spawnParticle(Particle.FALLING_WATER, b.getLocation().add(.5,.5,.5), waterParticles, .5, .5, .5, 0.0001);
+						if (waterParticles > 0)
+							world.spawnParticle(Particle.FALLING_WATER, BlockUtils.getCenterOfBlock(b), waterParticles, .5, .5, .5, 0.0001);
 						if (random.nextInt(4) == 0 && b.getRelative(BlockFace.DOWN).getType().isSolid()) {
 							puddles.add(b);
 							allWaters.remove(b);
@@ -94,50 +98,40 @@ public class TidalWave extends AbilityAttributes {
 				}
 				tick--;
 				for (int cycle=0; cycle < 3; cycle++) {
-					Location line = spot.clone().add(direction.clone().multiply(cycle)).add(0,cycle,0);
+					Location line = spot.clone().add(direction.clone().multiply(cycle)).add(0, cycle, 0);
 					for (int i=0; i < 5; i++) {
 						Block b = line.clone().add(angle.clone().multiply(i)).getBlock();
 						if (!b.isPassable() || !canBlockBeDamaged(b))
 							continue;
 						allWaters.add(b);
-						world.spawnParticle(Particle.BUBBLE_POP, b.getLocation().add(.5,.5,.5), bubbleParticles, .5, .5, .5, 0.0001);
+						Location center = BlockUtils.getCenterOfBlock(b);
+						if (bubbleParticles > 0)
+							world.spawnParticle(Particle.BUBBLE_POP, center, bubbleParticles, .5, .5, .5, 0.0001);
 						b.setType(Material.WATER);
 						water[i+(cycle*5)] = b;
-						for (Entity e : world.getNearbyEntities(b.getLocation(), 0.5, 0.5, 0.5)) {
+						for (Entity e : world.getNearbyEntities(center, 0.5, 0.5, 0.5)) {
 							if (e.equals(activator) || !canEntityBeHarmed(e, activator))
 								continue;
 							if (e instanceof LivingEntity alive)
-								if (!EntityUtils.damageEntity(alive, damage, activator != null ? "deaths.tidalWaveSource" : "deaths.tidalWave", activator, DamageCause.DROWNING))
+								if (!EntityUtils.damageEntity(alive, damage, activator != null ? "deaths.tidalWaveSource" : "deaths.tidalWave", DamageCause.DROWNING, activator))
 									continue;
 							e.setVelocity(direction);
 						}
 					}
 				}
 				spot.add(direction);
-				playSound(loc, Sound.WEATHER_RAIN, 1, .75);
+				playSound(loc, Sound.WEATHER_RAIN, 1f, .75f);
 			}
 		}.runTaskTimer(plugin, 0, 2);
-	}
-	public void initFields() {
-		this.damage = getDoubleField("damage", 4.0);
-		this.range = getDoubleField("range", 15.0);
-		this.particleMultiplier = getDoubleField("particleMultiplier", 1.0);
 	}
 	public static void register() {
 		UIAbilityType.registerAbility(REGISTERED_KEY, TidalWave.class);
 	}
-	public Map<String, Object> serialize() {
-		Map<String, Object> map = super.serialize();
-		map.put("damage", damage);
-		map.put("range", range);
-		map.put("particleMultiplier", particleMultiplier);
-		return map;
-	}
 	public void deserialize(Map<String, Object> map) {
 		super.deserialize(map);
-		damage = (double) map.get("damage");
-		range = (double) map.get("range");
-		particleMultiplier = (double) map.get("particleMultiplier");
+		damage = registerSerializedDoubleField("damage", map);
+		range = registerSerializedDoubleField("range", map);
+		particleMultiplier = registerSerializedDoubleField("particleMultiplier", map);
 	}
 	public Target getTarget() {
 		return target;

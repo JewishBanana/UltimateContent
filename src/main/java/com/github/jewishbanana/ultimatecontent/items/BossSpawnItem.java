@@ -16,7 +16,10 @@ import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 
 public class BossSpawnItem extends BaseItem {
 	
-	private static Map<BossSpawnItem, Block> placedBlocks = new HashMap<>();
+	private static final Map<BossSpawnItem, Block> placedBlocks;
+	static {
+		placedBlocks = new HashMap<>();
+	}
 	
 	protected Entity[] entities;
 	

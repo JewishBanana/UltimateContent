@@ -3,13 +3,12 @@ package com.github.jewishbanana.ultimatecontent.entities.pathfinders.target;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
-import org.bukkit.entity.Tameable;
 import org.jetbrains.annotations.NotNull;
 
-import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
 import com.github.jewishbanana.ultimatecontent.listeners.PathfindersHandler;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
@@ -35,9 +34,7 @@ public class PathfinderAllyHurtByEntity extends CustomPathfinder {
 	public boolean canStart() {
 		if (signal == null)
 			return false;
-		if (signal.getUniqueId().equals(owner)
-				|| (signal instanceof Tameable tameable && tameable.getOwner() != null && tameable.getOwner().getUniqueId().equals(owner))
-				|| (UIEntityManager.getEntity(signal) instanceof TameableEntity tameable && tameable.getOwner() != null && tameable.getOwner().equals(owner))) {
+		if (signal.getUniqueId().equals(owner) || EntityUtils.isEntityOwner(signal, owner)) {
 			signal = null;
 			return false;
 		}
@@ -58,9 +55,12 @@ public class PathfinderAllyHurtByEntity extends CustomPathfinder {
 		LivingEntity target = entity.getTarget();
 		if (target == null || target.isDead())
 			return false;
-		if (!target.getWorld().equals(entity.getWorld()) || target.getLocation().distanceSquared(entity.getLocation()) > 400) {
+		if (!target.getWorld().equals(entity.getWorld()))
+			return false;
+		Location targetLoc = target.getLocation();
+		if (targetLoc.distanceSquared(entity.getLocation()) > 400) {
 			Entity leader = Bukkit.getEntity(owner);
-			if (leader == null || !leader.getWorld().equals(target.getWorld()) || target.getLocation().distanceSquared(leader.getLocation()) > 225)
+			if (leader == null || !leader.getWorld().equals(target.getWorld()) || targetLoc.distanceSquared(leader.getLocation()) > 225)
 				return false;
 		}
 		return true;

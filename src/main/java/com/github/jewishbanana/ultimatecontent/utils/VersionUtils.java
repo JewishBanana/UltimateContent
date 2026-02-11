@@ -5,18 +5,21 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Registry;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Biome;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.potion.PotionEffectType;
 
+@SuppressWarnings("deprecation")
 public class VersionUtils {
 	
-	private static Integer[] mcVersion;
+	private static final Integer[] mcVersion;
 	
 	private static final Enchantment sharpness;
 	private static final Enchantment smite;
@@ -48,6 +51,17 @@ public class VersionUtils {
 	private static final Set<Biome> swampBiomes;
 	
 	private static final Material short_grass;
+	
+	private static final boolean legacyDragonParticles;
+	
+	private static final Attribute maxHealthAttribute;
+	private static final Attribute attackDamageAttribute;
+	private static final Attribute attackSpeedAttribute;
+	private static final Attribute attackKnockbackAttribute;
+	private static final Attribute movementSpeedAttribute;
+	private static final Attribute followRangeAttribute;
+	private static final Attribute armorAttribute;
+	private static final Attribute armorToughnessAttribute;
 	
 	static {
 		sharpness = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("sharpness"));
@@ -103,6 +117,28 @@ public class VersionUtils {
 			swampBiomes = new HashSet<>(Arrays.asList(Biome.SWAMP, Biome.MANGROVE_SWAMP));
 		else
 			swampBiomes = new HashSet<>(Arrays.asList(Biome.SWAMP));
+		
+		legacyDragonParticles = !isMCVersionOrAbove("1.21.9");
+		
+		if (isMCVersionOrAbove("1.21.3")) {
+			maxHealthAttribute = Attribute.MAX_HEALTH;
+		    attackDamageAttribute = Attribute.ATTACK_DAMAGE;
+		    attackSpeedAttribute = Attribute.ATTACK_SPEED;
+		    attackKnockbackAttribute = Attribute.ATTACK_KNOCKBACK;
+		    movementSpeedAttribute = Attribute.MOVEMENT_SPEED;
+		    followRangeAttribute = Attribute.FOLLOW_RANGE;
+		    armorAttribute = Attribute.ARMOR;
+		    armorToughnessAttribute = Attribute.ARMOR_TOUGHNESS;
+		} else {
+		    maxHealthAttribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.max_health"));
+		    attackDamageAttribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.attack_damage"));
+		    attackSpeedAttribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.attack_speed"));
+		    attackKnockbackAttribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.attack_knockback"));
+		    movementSpeedAttribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.movement_speed"));
+		    followRangeAttribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.follow_range"));
+		    armorAttribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.armor"));
+		    armorToughnessAttribute = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("generic.armor_toughness"));
+		}
 	}
 	public static boolean isMCVersionOrAbove(String version) {
 		try {
@@ -121,6 +157,10 @@ public class VersionUtils {
 			throw new NumberFormatException("The version string you supplied '"+version+"' is not a valid version string! Format must be as follows: '1.2.3' or '1.2' or '1'!");
 		}
 	}
+	public static void spawnDragonBreathParticle(Location location, int count, double offX, double offY, double offZ, double speed, float data) {
+		location.getWorld().spawnParticle(Particle.DRAGON_BREATH, location, count, offX, offY, offZ, speed, legacyDragonParticles ? null : data);
+	}
+	
 	public static Enchantment getSharpness() {
 		return sharpness;
 	}
@@ -186,5 +226,29 @@ public class VersionUtils {
 	}
 	public static Material getShortGrass() {
 		return short_grass;
+	}
+	public static Attribute getMaxHealthAttribute() {
+		return maxHealthAttribute;
+	}
+	public static Attribute getAttackDamageAttribute() {
+		return attackDamageAttribute;
+	}
+	public static Attribute getAttackSpeedAttribute() {
+		return attackSpeedAttribute;
+	}
+	public static Attribute getAttackKnockbackAttribute() {
+		return attackKnockbackAttribute;
+	}
+	public static Attribute getMovementSpeedAttribute() {
+		return movementSpeedAttribute;
+	}
+	public static Attribute getFollowRangeAttribute() {
+		return followRangeAttribute;
+	}
+	public static Attribute getArmorAttribute() {
+		return armorAttribute;
+	}
+	public static Attribute getArmorToughnessAttribute() {
+		return armorToughnessAttribute;
 	}
 }

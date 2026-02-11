@@ -1,10 +1,10 @@
 package com.github.jewishbanana.ultimatecontent.listeners;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.UUID;
 
 import org.bukkit.entity.Entity;
@@ -30,13 +30,13 @@ import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 public class PathfindersHandler implements Listener {
 
 	private static Map<UUID, PathfinderHurtByEntity> pathfinderHurtByTarget = new HashMap<>();
-	private static Map<UUID, Queue<PathfinderOwnerHurtByEntity>> pathfinderOwnerDamageSignal = new HashMap<>();
+	private static Map<UUID, List<PathfinderOwnerHurtByEntity>> pathfinderOwnerDamageSignal = new HashMap<>();
 	private static Map<TameableEntity, PathfinderOwnerHurtByEntity> pathfinderOwnerDamageSignalMobs = new HashMap<>();
-	private static Map<UUID, Queue<PathfinderOwnerHurtEntity>> pathfinderOwnerHurtEntity = new HashMap<>();
+	private static Map<UUID, List<PathfinderOwnerHurtEntity>> pathfinderOwnerHurtEntity = new HashMap<>();
 	private static Map<TameableEntity, PathfinderOwnerHurtEntity> pathfinderOwnerHurtEntityMobs = new HashMap<>();
 	private static Map<UUID, TameableEntity> customTamedMobs = new HashMap<>();
 	private static Map<TameableEntity, PathfinderAllyHurtByEntity> pathfinderAllyHurtByEntityMobs = new HashMap<>();
-	private static Map<UUID, Queue<PathfinderOwnerTargetedByEntity>> pathfinderOwnerTargeted = new HashMap<>();
+	private static Map<UUID, List<PathfinderOwnerTargetedByEntity>> pathfinderOwnerTargeted = new HashMap<>();
 	private static Map<TameableEntity, PathfinderOwnerTargetedByEntity> pathfinderOwnerTargetedMobs = new HashMap<>();
 	
 	public PathfindersHandler(Main plugin) {
@@ -45,11 +45,11 @@ public class PathfindersHandler implements Listener {
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onEntityDamage(EntityDamageByEntityEvent event) {
 		UUID uuid = event.getEntity().getUniqueId();
-		LivingEntity damager = event.getDamager() instanceof LivingEntity ? (LivingEntity) event.getDamager() : (event.getEntity() instanceof Projectile ? ((Projectile) event.getEntity()).getShooter() instanceof LivingEntity ? (LivingEntity) ((Projectile) event.getEntity()).getShooter() : null : null);
+		LivingEntity damager = event.getDamager() instanceof LivingEntity living ? living : (event.getEntity() instanceof Projectile projectile ? (projectile.getShooter() instanceof LivingEntity shooter ? shooter : null) : null);
 		if (damager == null)
 			return;
 		if (event.getEntity() instanceof LivingEntity damaged) {
-			Queue<PathfinderOwnerHurtEntity> pathfinderOwnerHurt = pathfinderOwnerHurtEntity.get(damager.getUniqueId());
+			List<PathfinderOwnerHurtEntity> pathfinderOwnerHurt = pathfinderOwnerHurtEntity.get(damager.getUniqueId());
 			if (pathfinderOwnerHurt != null)
 				pathfinderOwnerHurt.forEach(e -> e.signal = damaged);
 		}
@@ -58,7 +58,7 @@ public class PathfindersHandler implements Listener {
 		PathfinderHurtByEntity pathfinderHurtBy = pathfinderHurtByTarget.get(uuid);
 		if (pathfinderHurtBy != null)
 			pathfinderHurtBy.signal = damager;
-		Queue<PathfinderOwnerHurtByEntity> pathfinderOwnerHurtBy = pathfinderOwnerDamageSignal.get(uuid);
+		List<PathfinderOwnerHurtByEntity> pathfinderOwnerHurtBy = pathfinderOwnerDamageSignal.get(uuid);
 		if (pathfinderOwnerHurtBy != null)
 			pathfinderOwnerHurtBy.forEach(e -> e.signal = damager);
 		TameableEntity tameable = customTamedMobs.get(uuid);
@@ -74,7 +74,7 @@ public class PathfindersHandler implements Listener {
 	public void onTargetOwner(EntityTargetLivingEntityEvent event) {
 		if (event.getTarget() == null || !(event.getEntity() instanceof LivingEntity targeter))
 			return;
-		Queue<PathfinderOwnerTargetedByEntity> pathfinderOwnerTarget = pathfinderOwnerTargeted.get(event.getTarget().getUniqueId());
+		List<PathfinderOwnerTargetedByEntity> pathfinderOwnerTarget = pathfinderOwnerTargeted.get(event.getTarget().getUniqueId());
 		if (pathfinderOwnerTarget != null)
 			pathfinderOwnerTarget.forEach(e -> e.signal = targeter);
 	}
@@ -90,11 +90,11 @@ public class PathfindersHandler implements Listener {
 		UUID owner = entity.getOwner();
 		if (owner == null)
 			return;
-		Queue<PathfinderOwnerHurtByEntity> pathfinders = pathfinderOwnerDamageSignal.get(owner);
+		List<PathfinderOwnerHurtByEntity> pathfinders = pathfinderOwnerDamageSignal.get(owner);
 		if (pathfinders != null)
 			pathfinders.add(pathfinder);
 		else
-			pathfinderOwnerDamageSignal.put(owner, new ArrayDeque<>(Arrays.asList(pathfinder)));
+			pathfinderOwnerDamageSignal.put(owner, new ArrayList<>(Arrays.asList(pathfinder)));
 		pathfinderOwnerDamageSignalMobs.put(entity, pathfinder);
 	}
 	public static void addPathfinder(UUID entity, PathfinderHurtByEntity pathfinder) {
@@ -104,11 +104,11 @@ public class PathfindersHandler implements Listener {
 		UUID owner = entity.getOwner();
 		if (owner == null)
 			return;
-		Queue<PathfinderOwnerHurtEntity> set = pathfinderOwnerHurtEntity.get(owner);
+		List<PathfinderOwnerHurtEntity> set = pathfinderOwnerHurtEntity.get(owner);
 		if (set != null)
 			set.add(pathfinder);
 		else
-			pathfinderOwnerHurtEntity.put(owner, new ArrayDeque<>(Arrays.asList(pathfinder)));
+			pathfinderOwnerHurtEntity.put(owner, new ArrayList<>(Arrays.asList(pathfinder)));
 		pathfinderOwnerHurtEntityMobs.put(entity, pathfinder);
 	}
 	public static void addPathfinder(TameableEntity entity, PathfinderAllyHurtByEntity pathfinder) {
@@ -121,11 +121,11 @@ public class PathfindersHandler implements Listener {
 		UUID owner = entity.getOwner();
 		if (owner == null)
 			return;
-		Queue<PathfinderOwnerTargetedByEntity> set = pathfinderOwnerTargeted.get(owner);
+		List<PathfinderOwnerTargetedByEntity> set = pathfinderOwnerTargeted.get(owner);
 		if (set != null)
 			set.add(pathfinder);
 		else
-			pathfinderOwnerTargeted.put(owner, new ArrayDeque<>(Arrays.asList(pathfinder)));
+			pathfinderOwnerTargeted.put(owner, new ArrayList<>(Arrays.asList(pathfinder)));
 		pathfinderOwnerTargetedMobs.put(entity, pathfinder);
 	}
 	public static void removePathfinders(BaseEntity<? extends Entity> entity) {
@@ -133,7 +133,7 @@ public class PathfindersHandler implements Listener {
 			UUID owner = tameable.getOwner();
 			PathfinderOwnerHurtByEntity pathfinderHurtOwner = pathfinderOwnerDamageSignalMobs.remove(tameable);
 			if (pathfinderHurtOwner != null) {
-				Queue<PathfinderOwnerHurtByEntity> set = pathfinderOwnerDamageSignal.get(owner);
+				List<PathfinderOwnerHurtByEntity> set = pathfinderOwnerDamageSignal.get(owner);
 				if (set != null) {
 					set.remove(pathfinderHurtOwner);
 					if (set.isEmpty())
@@ -142,7 +142,7 @@ public class PathfindersHandler implements Listener {
 			}
 			PathfinderOwnerHurtEntity pathfinderOwnerHurt = pathfinderOwnerHurtEntityMobs.remove(tameable);
 			if (pathfinderOwnerHurt != null) {
-				Queue<PathfinderOwnerHurtEntity> set = pathfinderOwnerHurtEntity.get(owner);
+				List<PathfinderOwnerHurtEntity> set = pathfinderOwnerHurtEntity.get(owner);
 				if (set != null) {
 					set.remove(pathfinderOwnerHurt);
 					if (set.isEmpty())
@@ -153,7 +153,7 @@ public class PathfindersHandler implements Listener {
 			customTamedMobs.remove(entity.getUniqueId());
 			PathfinderOwnerTargetedByEntity pathfinderOwnerTarget = pathfinderOwnerTargetedMobs.remove(tameable);
 			if (pathfinderOwnerTarget != null) {
-				Queue<PathfinderOwnerTargetedByEntity> set = pathfinderOwnerTargeted.get(owner);
+				List<PathfinderOwnerTargetedByEntity> set = pathfinderOwnerTargeted.get(owner);
 				if (set != null) {
 					set.remove(pathfinderOwnerTarget);
 					if (set.isEmpty())

@@ -1,8 +1,10 @@
 package com.github.jewishbanana.ultimatecontent.entities.christmasentities;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -10,7 +12,6 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.World;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
@@ -32,11 +33,11 @@ import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.CustomHead;
 import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.SongPlayer;
 import com.github.jewishbanana.ultimatecontent.utils.SongPlayer.Song;
-import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class Santa extends BossEntity<Zombie> {
@@ -66,12 +67,14 @@ public class Santa extends BossEntity<Zombie> {
 					abilityCooldown = 15;
 					entity.addPotionEffect(new PotionEffect(VersionUtils.getSlowness(), 40, 10, true, false));
 					entity.swingMainHand();
-					playSound(entity.getLocation(), Sound.ENTITY_SNOW_GOLEM_SHOOT, 2, .5);
-					int count = entity.getNearbyEntities(30, 30, 30).stream().filter(temp -> temp.hasMetadata("uc-christmasmobs")).count() < 10 ? 5 : 2;
+					playSound(entity.getLocation(), Sound.ENTITY_SNOW_GOLEM_SHOOT, 2f, .5f);
+					long nearbyCount = entity.getNearbyEntities(30, 30, 30).stream().filter(temp -> temp.hasMetadata("uc-christmasmobs")).count();
+					int count = nearbyCount < 10 ? 5 : 2;
 					Location entityLoc = entity.getLocation();
-					spawnPresent(entityLoc, random.nextInt(count), new Vector(0.5, 0.8, 0.0), entity, entity.getTarget());
-					spawnPresent(entityLoc, random.nextInt(count), new Vector(-0.5, 0.8, 0.5), entity, entity.getTarget());
-					spawnPresent(entityLoc, random.nextInt(count), new Vector(-0.5, 0.8, -0.5), entity, entity.getTarget());
+					LivingEntity target = entity.getTarget();
+					spawnPresent(entityLoc, random.nextInt(count), new Vector(0.5, 0.8, 0.0), entity, target);
+					spawnPresent(entityLoc, random.nextInt(count), new Vector(-0.5, 0.8, 0.5), entity, target);
+					spawnPresent(entityLoc, random.nextInt(count), new Vector(-0.5, 0.8, -0.5), entity, target);
 				}
 			}
 		}.runTaskTimer(plugin, 0, 20));
@@ -81,12 +84,16 @@ public class Santa extends BossEntity<Zombie> {
 		makeParticleTask(entity, 1, () -> {
 			if (random.nextInt(4) != 0)
 				return;
-			entity.getWorld().spawnParticle(Particle.FALLING_DUST, entity.getLocation().add(0, 1.2, 0), 1, .3, .5, .3, 1, snowData);
-			entity.getWorld().spawnParticle(Particle.FALLING_DUST, entity.getLocation().add(0, 1.2, 0), 1, .3, .5, .3, 1, redWool);
+			Location particleLoc = entity.getLocation().add(0, 1.2, 0);
+			World world = entity.getWorld();
+			world.spawnParticle(Particle.FALLING_DUST, particleLoc, 1, .3, .5, .3, 1, snowData);
+			world.spawnParticle(Particle.FALLING_DUST, particleLoc, 1, .3, .5, .3, 1, redWool);
 		});
 	}
 	public void spawnPresent(Location location, int type, Vector direction, Entity source, LivingEntity target) {
-		ArmorStand stand = location.getWorld().spawn(location.clone().add(0, 100, 0), ArmorStand.class, temp -> {
+		World world = location.getWorld();
+		Location spawnLoc = location.clone().add(0, 100, 0);
+		ArmorStand stand = world.spawn(spawnLoc, ArmorStand.class, temp -> {
 			ComplexEntity.initStand(temp);
 		});
 		BlockData trail;
@@ -113,18 +120,19 @@ public class Santa extends BossEntity<Zombie> {
 			trail = Material.RED_WOOL.createBlockData();
 			break;
 		}
-		Slime slime = location.getWorld().spawn(location.clone().add(0, 100, 0), Slime.class, temp -> {
+		Slime slime = world.spawn(spawnLoc, Slime.class, temp -> {
 			temp.setSize(0);
 			temp.setSilent(true);
-			temp.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(100.0);
+			temp.getAttribute(VersionUtils.getMaxHealthAttribute()).setBaseValue(100.0);
 			temp.setHealth(100.0);
-			temp.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(0.0);
+			temp.getAttribute(VersionUtils.getAttackDamageAttribute()).setBaseValue(0.0);
 			temp.setInvisible(true);
 			temp.teleport(location);
 			temp.teleport(temp.getLocation().add(0, 1, 0));
 			temp.setVelocity(direction);
 			EntitiesHandler.attachRemoveKey(temp);
 		});
+		Particle blockCrack = VersionUtils.getBlockCrack();
 		new BukkitRunnable() {
 			private int tick;
 			
@@ -139,9 +147,9 @@ public class Santa extends BossEntity<Zombie> {
 					return;
 				}
 				stand.teleport(slime.getLocation().add(0, -2, 0));
-				stand.getWorld().spawnParticle(VersionUtils.getBlockCrack(), stand.getLocation().add(0,2,0), 2, .1, .1, .1, 1, trail);
+				world.spawnParticle(blockCrack, stand.getLocation().add(0, 2, 0), 2, .1, .1, .1, 1, trail);
 				if (slime.isOnGround()) {
-					stand.getWorld().spawnParticle(VersionUtils.getBlockCrack(), stand.getLocation().add(0,2,0), 30, .7, .7, .7, 1, trail);
+					world.spawnParticle(blockCrack, stand.getLocation().add(0, 2, 0), 30, .7, .7, .7, 1, trail);
 					switch (type) {
 					case 4:
 						Grinch grinch = UIEntityManager.spawnEntity(slime.getLocation(), Grinch.class);
@@ -162,49 +170,84 @@ public class Santa extends BossEntity<Zombie> {
 						break;
 					case 1:
 						Location loc = slime.getLocation();
-						World world = loc.getWorld();
 						Map<Block, BlockState> patches = new HashMap<>();
+						List<Block> patchList = new ArrayList<>();
 						new BukkitRunnable() {
 							private int tick;
 							private int distance;
 							private BlockData ice_data = Material.PACKED_ICE.createBlockData();
+							private int lastEntityCheck = 0;
+							private Location minBound = null;
+							private Location maxBound = null;
 							
 							@Override
 							public void run() {
 								if (distance % 2 == 0 && tick <= 5) {
-									for (Block temp : Utils.getBlocksInCircleCircumference(loc, tick)) {
-										Block b = Utils.getHighestExposedBlock(temp, 3);
+									for (Block temp : BlockUtils.getBlocksInCircleCircumference(loc, tick)) {
+										Block b = BlockUtils.getHighestExposedBlock(temp, 3);
 										if (b == null || patches.containsKey(b) || DependencyUtils.isBlockProtected(b))
 											continue;
-										patches.put(b, b.getState());
+										BlockState state = b.getState();
+										patches.put(b, state);
+										patchList.add(b);
 										b.setType(Material.PACKED_ICE);
-										world.spawnParticle(VersionUtils.getBlockCrack(), b.getLocation().add(.5,1,.5), 5, .4, .3, .4, 1, ice_data);
+										world.spawnParticle(blockCrack, b.getLocation().add(.5, 1, .5), 5, .4, .3, .4, 1, ice_data);
+										Location bLoc = b.getLocation();
+										if (minBound == null) {
+											minBound = bLoc.clone();
+											maxBound = bLoc.clone();
+										} else {
+											minBound.setX(Math.min(minBound.getX(), bLoc.getX()));
+											minBound.setY(Math.min(minBound.getY(), bLoc.getY()));
+											minBound.setZ(Math.min(minBound.getZ(), bLoc.getZ()));
+											maxBound.setX(Math.max(maxBound.getX(), bLoc.getX()));
+											maxBound.setY(Math.max(maxBound.getY(), bLoc.getY()));
+											maxBound.setZ(Math.max(maxBound.getZ(), bLoc.getZ()));
+										}
 									}
 									world.playSound(loc, Sound.ENTITY_PLAYER_HURT_FREEZE, SoundCategory.BLOCKS, 0.6f, .5f);
 									tick++;
 								}
-								for (Entry<Block, BlockState> entry : patches.entrySet()) {
-									Block b = entry.getKey();
-									if (b.getType() == Material.PACKED_ICE) {
+								if (distance - lastEntityCheck >= 2 && minBound != null) {
+									lastEntityCheck = distance;
+									Location center = minBound.clone().add(maxBound).multiply(0.5);
+									double xRadius = (maxBound.getX() - minBound.getX()) / 2.0 + 1.5;
+									double yRadius = (maxBound.getY() - minBound.getY()) / 2.0 + 2.0;
+									double zRadius = (maxBound.getZ() - minBound.getZ()) / 2.0 + 1.5;
+									Collection<Entity> nearbyEntities = world.getNearbyEntities(center, xRadius, yRadius, zRadius);
+									for (int i = 0; i < patchList.size(); i++) {
+										Block block = patchList.get(i);
+										if (block.getType() != Material.PACKED_ICE)
+											continue;
 										if (random.nextInt(5) == 0)
-											world.spawnParticle(Particle.FALLING_DUST, b.getLocation().add(.5,1,.5), 1, .3, .1, .3, 1, ice_data);
-										for (Entity e : world.getNearbyEntities(b.getLocation().add(.5,1.5,.5), .5, .5, .5)) {
+											world.spawnParticle(Particle.FALLING_DUST, block.getLocation().add(.5, 1, .5), 1, .3, .1, .3, 1, ice_data);
+										Location blockCenter = block.getLocation().add(.5, 1.5, .5);
+										for (Entity e : nearbyEntities) {
 											if (e.hasMetadata("uc-christmasmobs"))
 												continue;
-											Vector vec = new Vector(e.getVelocity().getX()/8, e.getVelocity().getY(), e.getVelocity().getZ()/8);
-											if (vec.getY() > 0)
-												vec.setY(vec.getY()/8);
-											e.setVelocity(vec);
-											e.setFreezeTicks(220);
-											if (e instanceof Player && distance % 5 == 0)
-												world.playSound(e.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, SoundCategory.BLOCKS, 0.2f, .5f);
+											Location eLoc = e.getLocation();
+											double dx = Math.abs(eLoc.getX() - blockCenter.getX());
+											double dy = Math.abs(eLoc.getY() - blockCenter.getY());
+											double dz = Math.abs(eLoc.getZ() - blockCenter.getZ());
+											if (dx <= 0.5 && dy <= 0.5 && dz <= 0.5) {
+												Vector vel = e.getVelocity();
+												Vector vec = new Vector(vel.getX() / 8, vel.getY(), vel.getZ() / 8);
+												if (vec.getY() > 0)
+													vec.setY(vec.getY() / 8);
+												e.setVelocity(vec);
+												e.setFreezeTicks(220);
+												if (e instanceof Player && distance % 5 == 0)
+													world.playSound(e.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, SoundCategory.BLOCKS, 0.2f, .5f);
+											}
 										}
 									}
 								}
 								if (distance >= 200) {
-									for (Entry<Block, BlockState> entry : patches.entrySet())
-										if (entry.getKey().getType() == Material.PACKED_ICE)
-											entry.getValue().update(true);
+									for (int i = 0; i < patchList.size(); i++) {
+										Block k = patchList.get(i);
+										if (k.getType() == Material.PACKED_ICE)
+											patches.get(k).update(true);
+									}
 									this.cancel();
 								}
 								distance++;
@@ -213,7 +256,7 @@ public class Santa extends BossEntity<Zombie> {
 						break;
 					default:
 					case 0:
-						slime.getWorld().createExplosion(slime.getLocation(), 3.5f, true, true, source);
+						world.createExplosion(slime.getLocation(), 3.5f, true, true, source);
 						break;
 					}
 					stand.remove();

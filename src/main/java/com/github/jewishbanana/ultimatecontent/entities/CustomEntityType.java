@@ -1,9 +1,9 @@
 package com.github.jewishbanana.ultimatecontent.entities;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Queue;
 import java.util.random.RandomGenerator;
 
 import org.bukkit.Color;
@@ -123,7 +123,10 @@ public enum CustomEntityType {
 		HALLOWEEN_ENTITIES
 	}
 	
-	private static RandomGenerator random = Utils.random();
+	private static final RandomGenerator random;
+	static {
+		random = Utils.getRandomGenerator();
+	}
 	
 	public final String registeredName;
 	public final Category category;
@@ -371,7 +374,7 @@ public enum CustomEntityType {
 		if (entityType != null)
 			entityType.setSpawnRate(DataUtils.getConfigDouble(type.configPath+"spawnRate", 0.0) / 100.0);
 		type.variants.clear();
-		Queue<Variant> typeVariants = Variant.variants.get(type);
+		List<Variant> typeVariants = Variant.variants.get(type);
 		if (typeVariants != null)
 			typeVariants.forEach(var -> {
 				ConfigurationSection section = plugin.getConfig().getConfigurationSection(type.configPath+"variants."+var.getKey());

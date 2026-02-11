@@ -2,6 +2,7 @@ package com.github.jewishbanana.ultimatecontent.abilities;
 
 import java.util.Map;
 
+import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
@@ -36,8 +37,10 @@ public class Blinding extends AbilityAttributes implements Listener {
 	public void activate(Entity entity, GenericItem base) {
 		if (!canEntityBeHarmed(entity))
 			return;
-		playSound(entity.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 1, .5);
-		entity.getWorld().spawnParticle(Particle.SQUID_INK, entity.getLocation().add(0,entity.getHeight()/2.0,0), (int) (particleMultiplier * 8.0), .25, .5, .25, 0.0001);
+		Location entityLoc = entity.getLocation().add(0, entity.getHeight() / 2.0, 0);
+		playSound(entityLoc, Sound.ENTITY_ELDER_GUARDIAN_CURSE, 1f, .5f);
+		if (particleMultiplier > 0)
+			entity.getWorld().spawnParticle(Particle.SQUID_INK, entityLoc, (int) (particleMultiplier * 8.0), .25, .5, .25, 0.0001);
 		final int length = (int) (time * 20.0);
 		if (entity instanceof LivingEntity alive)
 			alive.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, length, 0));
@@ -68,23 +71,13 @@ public class Blinding extends AbilityAttributes implements Listener {
 			return;
 		e.setCancelled(true);
 	}
-	public void initFields() {
-		this.time = getDoubleField("time", 10.0);
-		this.particleMultiplier = getDoubleField("particleMultiplier", 1.0);
-	}
 	public static void register() {
 		UIAbilityType.registerAbility(REGISTERED_KEY, Blinding.class);
 	}
-	public Map<String, Object> serialize() {
-		Map<String, Object> map = super.serialize();
-		map.put("time", time);
-		map.put("particleMultiplier", particleMultiplier);
-		return map;
-	}
 	public void deserialize(Map<String, Object> map) {
 		super.deserialize(map);
-		time = (double) map.get("time");
-		particleMultiplier = (double) map.get("particleMultiplier");
+		this.time = registerSerializedDoubleField("time", map);
+		this.particleMultiplier = registerSerializedDoubleField("particleMultiplier", map);
 	}
 	public Target getTarget() {
 		return target;

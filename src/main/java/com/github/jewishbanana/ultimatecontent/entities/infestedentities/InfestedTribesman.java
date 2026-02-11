@@ -8,7 +8,6 @@ import java.util.function.Function;
 
 import org.bukkit.Location;
 import org.bukkit.Sound;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Arrow;
@@ -37,6 +36,7 @@ import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.SpawnUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
+import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 import me.gamercoder215.mobchip.EntityBrain;
 import me.gamercoder215.mobchip.ai.EntityAI;
@@ -75,7 +75,7 @@ public class InfestedTribesman extends BaseEntity<Zombie> {
 		entity.setMetadata("uc-tribesman", Main.getFixedMetadata());
 		
 		final int green = random.nextInt(25, 85);
-		EntityUtils.modifyLoadoutArmorColor(this, 1, green, green-20, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
+		EntityUtils.modifyLoadoutArmorColor(this, 1, green, green - 20, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
 		
 		if (variant == TribesmanVariant.ARCHER) {
 			entity.setMetadata("uc-tribesmanarcher", Main.getFixedMetadata());
@@ -102,20 +102,19 @@ public class InfestedTribesman extends BaseEntity<Zombie> {
 		EntityAI goals = brain.getTargetAI();
 		goals.clear();
 		goals.put(new PathfinderHurtByTarget(entity, new EntityType[0]), 1);
-		goals.put(new PathfinderNearestAttackableTarget<Player>(entity, Player.class, 10, true, false), 2);
-		goals.put(new PathfinderNearestAttackableTarget<Animals>(entity, Animals.class, 10, true, false), 3);
+		goals.put(new PathfinderNearestAttackableTarget<>(entity, Player.class, 10, true, false), 2);
+		goals.put(new PathfinderNearestAttackableTarget<>(entity, Animals.class, 10, true, false), 3);
 		
 		goals = brain.getGoalAI();
 		goals.clear();
-		goals.put(new PathfinderFloat(entity), 1);
+		goals.put(new PathfinderFloat(entity), 0);
 		if (variant == TribesmanVariant.ARCHER)
-			goals.put(new PathfinderRangedEntityAttack(entity, 40, 5.0, 10.0, 1.0, 2.0, null, shootArrow), 2);
+			goals.put(new PathfinderRangedEntityAttack(entity, 40, 5.0, 10.0, 1.0, 2.0, null, shootArrow), 4);
 		else
-			goals.put(new PathfinderMeleeAttack(entity), 2);
-		goals.put(new PathfinderRandomStrollLand(entity), 3);
-		goals.put(new PathfinderLookAtEntity<Player>(entity, Player.class), 4);
-		goals.put(new PathfinderLookAtEntity<LivingEntity>(entity, LivingEntity.class), 5);
-		goals.put(new PathfinderRandomLook(entity), 6);
+			goals.put(new PathfinderMeleeAttack(entity), 4);
+		goals.put(new PathfinderRandomStrollLand(entity), 5);
+		goals.put(new PathfinderLookAtEntity<>(entity, LivingEntity.class), 6);
+		goals.put(new PathfinderRandomLook(entity), 7);
 	}
 	public void onTargetLivingEntity(EntityTargetLivingEntityEvent event) {
 		if (event.getTarget() != null && event.getTarget().hasMetadata("uc-tribesman"))
@@ -127,7 +126,7 @@ public class InfestedTribesman extends BaseEntity<Zombie> {
 	}
 	public void setAttributes(Zombie entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(25);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(25);
 	}
 	public void setSquad(Set<UUID> squad, UUID leader) {
 		Zombie entity = getCastedEntity();
@@ -156,7 +155,7 @@ public class InfestedTribesman extends BaseEntity<Zombie> {
 		arrow.setVelocity(Utils.getParabolicVelocity(mob.getEyeLocation(), target.getLocation().add(0, target.getHeight() / 2.0, 0), 2.5, 0.05));
 		arrow.addCustomEffect(new PotionEffect(PotionEffectType.POISON, 120, 1), false);
 		if (UIEntityManager.getEntity(mob) instanceof BaseEntity<?> base)
-			base.playSound(mob.getLocation(), Sound.ENTITY_SKELETON_SHOOT, 1, random.nextDouble(1.4, 1.8));
+			base.playSound(mob.getLocation(), Sound.ENTITY_SKELETON_SHOOT, 1f, random.nextFloat(1.4f, 1.8f));
 		else
 			mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_SKELETON_SHOOT, 1f, random.nextFloat(0.8f, 1.2f));
 	};
@@ -169,7 +168,7 @@ public class InfestedTribesman extends BaseEntity<Zombie> {
 		});
 	}
 	public static final Function<Location, BaseEntity<?>> attemptSpawn = area -> {
-		Location spawn = SpawnUtils.findSpawnLocation(area, 1);
+		Location spawn = SpawnUtils.findMonsterSpawnLocation(area, 1);
 		if (spawn == null || spawn.getBlock().getBiome() != Biome.DEEP_DARK)
 			return null;
 		InfestedTribesman leader = UIEntityManager.spawnEntity(spawn, InfestedTribesman.class);
@@ -178,7 +177,7 @@ public class InfestedTribesman extends BaseEntity<Zombie> {
 		double increment = (Math.PI * 2) / 3;
 		for (int i=0; i < 3; i++) {
 			Location loc = spawn.clone().add(vec);
-			Location temp = EntityUtils.findSmartYSpawn(spawn, loc, 1, 3);
+			Location temp = SpawnUtils.findSmartYSpawn(spawn, loc, 1, 3);
 			if (temp == null)
 				loc = spawn;
 			else

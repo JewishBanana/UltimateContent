@@ -2,6 +2,7 @@ package com.github.jewishbanana.ultimatecontent.items;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.bukkit.Material;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.attribute.AttributeModifier.Operation;
 import org.bukkit.inventory.EquipmentSlot;
@@ -51,7 +51,7 @@ public class CustomItemBuilder extends ItemBuilder {
 	public static CustomItemBuilder create(UIItemType type, Material material) {
 		return create(type, new ItemStack(material));
 	}
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings("removal")
 	public ItemStack assembleLore(ItemStack tempItem, ItemMeta tempMeta, UIItemType id, GenericItem givenBase) {
 		if (givenBase == null)
 			return assembleLore(tempItem, tempMeta, id);
@@ -72,12 +72,13 @@ public class CustomItemBuilder extends ItemBuilder {
 			for (String s : id.getLore())
 				lore.add(s);
 		}
-		if (!base.getFields().isEmpty() && base.getFields().values().stream().anyMatch(e -> e.getLore() != null)) {
+		Collection<String> specialLore = base.getSpecialLore();
+		if (specialLore != null) {
 			if (firstSpace)
 				lore.add(" ");
 			else
 				firstSpace = true;
-			base.getFields().values().stream().filter(e -> e.getLore() != null).forEach(e -> lore.add(e.getLore()));
+			specialLore.forEach(line -> lore.add(line));
 		}
 		if (!id.getAbilities().isEmpty() || !base.getUniqueAbilities().isEmpty()) {
 			if (firstSpace)
@@ -169,9 +170,9 @@ public class CustomItemBuilder extends ItemBuilder {
 			if (id.getAttackSpeed() == 0.0)
 				id.setAttackSpeed(1.0);
 			lore.add(UIFUtils.convertString(UIFramework.getLangString("attributes.attack_speed").replaceAll("%value%", UIFDataUtils.getDecimalFormatted(id.getAttackSpeed()))));
-			if (tempMeta.hasAttributeModifiers() && tempMeta.getAttributeModifiers().containsKey(Attribute.GENERIC_ATTACK_SPEED))
-				tempMeta.removeAttributeModifier(Attribute.GENERIC_ATTACK_SPEED);
-			tempMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, new AttributeModifier(attributesUUID, "generic.attackSpeed", id.getAttackSpeed()-4.01, Operation.ADD_NUMBER, EquipmentSlot.HAND));
+			if (tempMeta.hasAttributeModifiers() && tempMeta.getAttributeModifiers().containsKey(VersionUtils.getAttackSpeedAttribute()))
+				tempMeta.removeAttributeModifier(VersionUtils.getAttackSpeedAttribute());
+			tempMeta.addAttributeModifier(VersionUtils.getAttackSpeedAttribute(), new AttributeModifier(attributesUUID, "generic.attackSpeed", id.getAttackSpeed()-4.01, Operation.ADD_NUMBER, EquipmentSlot.HAND));
 		}
 		if (id.getProjectileDamage() != 0.0) {
 			if (firstSpace && !attributeSpacing) {
@@ -196,7 +197,7 @@ public class CustomItemBuilder extends ItemBuilder {
 		if (!tempMeta.hasDisplayName() && id.getDisplayName() != null)
 			tempMeta.setDisplayName(id.getDisplayName());
 		// Debug Item ID's
-		if (base != null) lore.addAll(Arrays.asList(" ", UIFUtils.convertString("&8ID: &a["+base.getUniqueId()+"]")));
+//		if (base != null) lore.addAll(Arrays.asList(" ", UIFUtils.convertString("&8ID: &a["+base.getUniqueId()+"]")));
 		if (base.isDeprecated())
 			lore.addAll(Arrays.asList(" ", deprecatedString));
 		tempMeta.setLore(UIFUtils.chopLore(lore));

@@ -20,6 +20,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.UIAbilityType;
 import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
@@ -27,10 +28,11 @@ public class CursedWinds extends AbilityAttributes {
 	
 	public static final String REGISTERED_KEY = "uc:cursed_winds";
 	
-	private double damage = 4.0;
-	private double range = 10.0;
-	private double particleMultiplier = 1.0;
-	private int fireTicks = 80;
+	public double damage;
+	public double range;
+	public int fireTicks;
+	public double sizeMultiplier;
+	private double particleMultiplier;
 	
 	private Target target = Target.ACTIVATOR;
 	
@@ -42,17 +44,21 @@ public class CursedWinds extends AbilityAttributes {
 		activate(loc, entity, Set.of(entity.getUniqueId()), base);
 	}
 	public void activate(Location loc, GenericItem base) {
-		activate(loc, null, new HashSet<UUID>(), base);
+		activate(loc, null, Set.of(), base);
 	}
 	public void activate(Location loc, Entity activator, Set<UUID> immuneEntities, GenericItem base) {
 		Vector motion = loc.getDirection().multiply(3.0);
-		playSound(loc, Sound.ITEM_FIRECHARGE_USE, 1, .6);
+		playSound(loc, Sound.ITEM_FIRECHARGE_USE, 1f, .6f);
 		World tempW = loc.getWorld();
 		BlockData bd = Material.SAND.createBlockData();
-		final int particleCount = (int) Math.ceil(10.0 * particleMultiplier);
 		Set<UUID> hitEntities = new HashSet<>();
 		new BukkitRunnable() {
 			private double distance;
+			private final double size = 1.5 * sizeMultiplier;
+			private final double particleRange = Math.max(size - 0.5, 0);
+			final int particleCount = (int) Math.ceil(6.67 * particleRange * particleMultiplier);
+			private World world = loc.getWorld();
+			private Vector force = motion.clone().multiply(0.5);
 			
 			@Override
 			public void run() {
@@ -62,42 +68,39 @@ public class CursedWinds extends AbilityAttributes {
 					distance = range - 1.5;
 				}
 				loc.add(motion);
-				tempW.spawnParticle(Particle.FLAME, loc, particleCount, 1, 1, 1, .05);
-				tempW.spawnParticle(VersionUtils.getBlockDust(), loc, particleCount, 1, 1, 1, .1, bd);
-				for (Entity e : loc.getWorld().getNearbyEntities(loc, 1.5, 1.5, 1.5))
-					if (!hitEntities.contains(e.getUniqueId()) && !immuneEntities.contains(e.getUniqueId()) && e instanceof LivingEntity alive && canEntityBeHarmed(e, activator)) {
-						if (EntityUtils.damageEntity(alive, damage, "deaths.cursedWinds", activator, DamageCause.MAGIC)) {
+				if (BlockUtils.isBlockType(loc.getBlock(), Material.WATER)) {
+					this.cancel();
+					return;
+				}
+				if (particleCount > 0) {
+					tempW.spawnParticle(Particle.FLAME, loc, particleCount, particleRange, particleRange, particleRange, .05);
+					tempW.spawnParticle(VersionUtils.getBlockDust(), loc, particleCount, particleRange, particleRange, particleRange, .1, bd);
+				}
+				for (Entity e : world.getNearbyEntities(loc, size, size, size))
+					if (!hitEntities.contains(e.getUniqueId()) 
+							&& !immuneEntities.contains(e.getUniqueId()) 
+							&& e instanceof LivingEntity alive 
+							&& !BlockUtils.isBlockType(e.getLocation().getBlock(), Material.WATER)
+							&& canEntityBeHarmed(e, activator)) {
+						if (EntityUtils.damageEntity(alive, damage, "deaths.cursedWinds", DamageCause.MAGIC, activator)) {
 							e.setFireTicks(fireTicks);
-							e.setVelocity(motion.clone().multiply(0.5));
+							e.setVelocity(force);
 						}
 						hitEntities.add(e.getUniqueId());
 					}
 			}
 		}.runTaskTimer(plugin, 0, 1);
 	}
-	public void initFields() {
-		this.damage = getDoubleField("damage", 4.0);
-		this.range = getDoubleField("range", 10.0);
-		this.particleMultiplier = getDoubleField("particleMultiplier", 1.0);
-		this.fireTicks = getIntegerField("fireTicks", 80);
-	}
 	public static void register() {
 		UIAbilityType.registerAbility(REGISTERED_KEY, CursedWinds.class);
 	}
-	public Map<String, Object> serialize() {
-		Map<String, Object> map = super.serialize();
-		map.put("damage", damage);
-		map.put("range", range);
-		map.put("particleMultiplier", particleMultiplier);
-		map.put("fireTicks", fireTicks);
-		return map;
-	}
 	public void deserialize(Map<String, Object> map) {
 		super.deserialize(map);
-		damage = (double) map.get("damage");
-		range = (double) map.get("range");
-		particleMultiplier = (double) map.get("particleMultiplier");
-		fireTicks = (int) map.get("fireTicks");
+		damage = registerSerializedDoubleField("damage", map);
+		range = registerSerializedDoubleField("range", map);
+		fireTicks = registerSerializedIntegerField("fireTicks", map);
+		sizeMultiplier = registerSerializedDoubleField("sizeMultiplier", map);
+		particleMultiplier = registerSerializedDoubleField("particleMultiplier", map);
 	}
 	public Target getTarget() {
 		return target;

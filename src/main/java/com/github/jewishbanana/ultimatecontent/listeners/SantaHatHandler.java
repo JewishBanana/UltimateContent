@@ -29,7 +29,7 @@ import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.ultimatecontent.Main;
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Elf;
 import com.github.jewishbanana.ultimatecontent.items.christmas.SantaHat;
-import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
+import com.github.jewishbanana.ultimatecontent.utils.SpawnUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class SantaHatHandler implements Listener {
@@ -48,9 +48,9 @@ public class SantaHatHandler implements Listener {
 			public void run() {
 				plugin.getServer().getOnlinePlayers().forEach((player) -> {
 					GenericItem base = GenericItem.getItemBase(player.getEquipment().getHelmet());
-					if (base == null || !(base instanceof SantaHat))
+					if (base == null || !(base instanceof SantaHat santaHat))
 						return;
-					int amount = ((SantaHat) base).elfSummonCount - deadElfTracker.getOrDefault(player.getUniqueId(), 0);
+					int amount = santaHat.elfSummonCount - deadElfTracker.getOrDefault(player.getUniqueId(), 0);
 					if (amount > 0)
 						summonElves(player, amount);
 				});
@@ -80,12 +80,13 @@ public class SantaHatHandler implements Listener {
 	}
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
-		GenericItem base = GenericItem.getItemBase(event.getPlayer().getEquipment().getHelmet());
-		if (base == null || !(base instanceof SantaHat))
+		Player player = event.getPlayer();
+		GenericItem base = GenericItem.getItemBase(player.getEquipment().getHelmet());
+		if (base == null || !(base instanceof SantaHat santaHat))
 			return;
-		int amount = ((SantaHat) base).elfSummonCount - deadElfTracker.getOrDefault(event.getPlayer().getUniqueId(), 0);
+		int amount = santaHat.elfSummonCount - deadElfTracker.getOrDefault(player.getUniqueId(), 0);
 		if (amount > 0)
-			summonElves(event.getPlayer(), amount);
+			summonElves(player, amount);
 	}
 	@EventHandler
 	public void onLeave(PlayerQuitEvent event) {
@@ -95,17 +96,18 @@ public class SantaHatHandler implements Listener {
 	public void onArmorChange(PlayerArmorChangeEvent event) {
 		if (event.getSlot() != EquipmentSlot.HEAD)
 			return;
+		Player player = event.getPlayer();
 		if (event.getNewItem().getType() != Material.AIR) {
 			GenericItem base = GenericItem.getItemBase(event.getNewItem());
 			if (base == null || !(base instanceof SantaHat))
 				return;
-			int amount = ((SantaHat) base).elfSummonCount - deadElfTracker.getOrDefault(event.getPlayer().getUniqueId(), 0);
+			int amount = ((SantaHat) base).elfSummonCount - deadElfTracker.getOrDefault(player.getUniqueId(), 0);
 			if (amount > 0) {
-				removeElves(event.getPlayer().getUniqueId());
-				summonElves(event.getPlayer(), amount);
+				removeElves(player.getUniqueId());
+				summonElves(player, amount);
 			}
 		} else
-			removeElves(event.getPlayer().getUniqueId());
+			removeElves(player.getUniqueId());
 	}
 	@EventHandler
 	public void onDeath(EntityDeathEvent event) {
@@ -114,10 +116,10 @@ public class SantaHatHandler implements Listener {
 			if (entry.getValue().remove(entity)) {
 				UUID uuid = entry.getKey();
 				Entity owner = Bukkit.getEntity(uuid);
-				if (owner == null || !(owner instanceof LivingEntity))
+				if (owner == null || !(owner instanceof LivingEntity livingOwner))
 					return;
-				GenericItem base = GenericItem.getItemBase(((LivingEntity) owner).getEquipment().getHelmet());
-				if (base == null || !(base instanceof SantaHat))
+				GenericItem base = GenericItem.getItemBase(livingOwner.getEquipment().getHelmet());
+				if (base == null || !(base instanceof SantaHat santaHat))
 					return;
 				Integer value = deadElfTracker.getOrDefault(uuid, 0);
 				deadElfTracker.put(uuid, value + 1);
@@ -131,11 +133,11 @@ public class SantaHatHandler implements Listener {
 							else
 								deadElfTracker.replace(uuid, value - 1);
 						Entity owner = Bukkit.getEntity(uuid);
-						if (owner == null || owner.isDead() || !activePlayers.containsKey(uuid) || (owner instanceof Player && !((Player) owner).isOnline()))
+						if (owner == null || owner.isDead() || !activePlayers.containsKey(uuid) || (owner instanceof Player player && !player.isOnline()))
 							return;
 						summonElves(owner, 1);
 					}
-				}.runTaskLater(plugin, ((SantaHat) base).elfRespawnTimer);
+				}.runTaskLater(plugin, santaHat.elfRespawnTimer);
 				return;
 			}
 	}
@@ -146,7 +148,7 @@ public class SantaHatHandler implements Listener {
 		double increment = (Math.PI * 2) / amount;
 		for (int i=0; i < amount; i++) {
 			Location loc = ownerLoc.clone().add(vec);
-			Location temp = EntityUtils.findSmartYSpawn(ownerLoc, loc, 1, 3);
+			Location temp = SpawnUtils.findSmartYSpawn(ownerLoc, loc, 1, 3);
 			if (temp == null)
 				loc = ownerLoc;
 			else

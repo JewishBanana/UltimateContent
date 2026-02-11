@@ -21,67 +21,63 @@ import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class BaseItem extends GenericItem {
 
-	protected static JavaPlugin plugin;
-	protected static RandomGenerator random;
-	protected static Enchantment powerEnchant;
-	protected static Enchantment protectionEnchant;
+	protected static final JavaPlugin plugin;
+	protected static final RandomGenerator random;
+	protected static final Enchantment powerEnchant;
+	protected static final Enchantment protectionEnchant;
+	
+	public static final String PARTICLE_LORE_IDENTIFIER = "particles";
+	
+	private static final Map<Class<?>, String> configMap;
+	
 	static {
 		plugin = Main.getInstance();
 		random = RandomGenerator.of("SplittableRandom");
 		powerEnchant = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("power"));
 		protectionEnchant = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("protection"));
+		
+		configMap = new HashMap<>();
 	}
-	
-	private static Map<Class<?>, String> configMap = new HashMap<>();
 	
 	private boolean onCooldown;
 	
 	public BaseItem(ItemStack item) {
 		super(item);
 	}
-	public int getIntegerField(String field, int defaultValue) {
-		if (!plugin.getConfig().contains(getConfigPath()+'.'+field))
-			return defaultValue;
+	public void activatedAbility(Ability ability, Event event, Entity activator, Entity target) {}
+	
+	public int getIntegerField(String field) {
 		try {
 			return plugin.getConfig().getInt(getConfigPath()+'.'+field);
 		} catch (NumberFormatException e) {
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
-			return defaultValue;
+			return 0;
 		}
 	}
-	public double getDoubleField(String field, double defaultValue) {
-		if (!plugin.getConfig().contains(getConfigPath()+'.'+field))
-			return defaultValue;
+	public double getDoubleField(String field) {
 		try {
 			return plugin.getConfig().getDouble(getConfigPath()+'.'+field);
 		} catch (NumberFormatException e) {
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
-			return defaultValue;
+			return 0.0;
 		}
 	}
-	public boolean getBooleanField(String field, boolean defaultValue) {
-		if (!plugin.getConfig().contains(getConfigPath()+'.'+field))
-			return defaultValue;
+	public boolean getBooleanField(String field) {
 		try {
 			return plugin.getConfig().getBoolean(getConfigPath()+'.'+field);
 		} catch (NumberFormatException e) {
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
-			return defaultValue;
+			return false;
 		}
 	}
-	public String getStringField(String field, String defaultValue) {
-		if (!plugin.getConfig().contains(getConfigPath()+'.'+field))
-			return defaultValue;
+	public String getStringField(String field) {
 		try {
 			return plugin.getConfig().getString(getConfigPath()+'.'+field);
 		} catch (NumberFormatException e) {
 			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
-			return defaultValue;
+			return null;
 		}
 	}
-	
-	public void activatedAbility(Ability ability, Event event, Entity activator, Entity target) {}
-	
 	public boolean isOnCooldown() {
 		return onCooldown;
 	}

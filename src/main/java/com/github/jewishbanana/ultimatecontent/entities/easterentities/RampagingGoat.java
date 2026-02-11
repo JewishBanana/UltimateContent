@@ -2,12 +2,11 @@ package com.github.jewishbanana.ultimatecontent.entities.easterentities;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.random.RandomGenerator;
 
 import org.bukkit.Color;
-import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Particle.DustTransition;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Goat;
@@ -48,8 +47,6 @@ public class RampagingGoat extends BaseEntity<Goat> {
 		entity.setScreaming(true);
 		
 		scheduleTask(new BukkitRunnable() {
-			private RandomGenerator random = RandomGenerator.of("SplittableRandom");
-			
 			@Override
 			public void run() {
 				if (!entity.isValid())
@@ -57,8 +54,8 @@ public class RampagingGoat extends BaseEntity<Goat> {
 				for (int i=0; i < 8; i++) {
 					DustTransition dust = new DustTransition(Color.fromRGB(random.nextInt(125)+25, 255, random.nextInt(55)+25), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat());
 					if (random.nextInt(2) == 0)
-						dust = new DustTransition(Color.fromRGB(random.nextInt(105)+150, 25, 255), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat()/2f);
-					entity.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, entity.getLocation().add(random.nextDouble()*1.5-.75,0.7+(random.nextDouble()*1.5-.75),random.nextDouble()*1.5-.75), 1, 0, 0, 0, 0.001, dust);
+						dust = new DustTransition(Color.fromRGB(random.nextInt(105)+150, 25, 255), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat() / 2f);
+					entity.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, entity.getLocation().add(random.nextFloat(-.75f, .75f), 0.7 + random.nextFloat(-.75f, .75f), random.nextFloat(-.75f, .75f)), 1, 0, 0, 0, 0.001, dust);
 				}
 			}
 		}.runTaskTimerAsynchronously(plugin, 0, 1));
@@ -68,14 +65,14 @@ public class RampagingGoat extends BaseEntity<Goat> {
 		EntityAI goals = brain.getTargetAI();
 		goals.clear();
 		goals.put(new PathfinderHurtByTarget(entity, EntityType.RABBIT), 1);
-		goals.put(new PathfinderNearestAttackableTarget<Player>(entity, Player.class), 2);
+		goals.put(new PathfinderNearestAttackableTarget<>(entity, Player.class), 2);
 		
 		goals = brain.getGoalAI();
 		goals.clear();
-		goals.put(new PathfinderFloat(entity), 1);
-		goals.put(new PathfinderGoatRampage(entity, entityVariant.damage, 9.0, 80), 2);
-		goals.put(new PathfinderRandomStrollLand(entity), 3);
-		goals.put(new PathfinderLookAtEntity<>(entity, LivingEntity.class), 4);
+		goals.put(new PathfinderFloat(entity), 0);
+		goals.put(new PathfinderGoatRampage(entity, entityVariant.damage, 9f, 80), 3);
+		goals.put(new PathfinderRandomStrollLand(entity), 4);
+		goals.put(new PathfinderLookAtEntity<>(entity, LivingEntity.class), 5);
 	}
 	public void onDeath(EntityDeathEvent event) {
 		List<ItemStack> dropList = event.getDrops();
@@ -102,8 +99,8 @@ public class RampagingGoat extends BaseEntity<Goat> {
 		type.setSpawnConditions(event -> {
 			if (!EasterEvent.isEventActive)
 				return false;
-			Location loc = event.getLocation();
-			return !loc.getBlock().getRelative(BlockFace.DOWN).isPassable() && loc.getBlockY() > 150;
+			Block block = event.getLocation().getBlock();
+			return !block.getRelative(BlockFace.DOWN).isPassable() && block.getY() > 150;
 		});
 	}
 }

@@ -52,6 +52,25 @@ general:
 
 ###############################################################################################################################################################################
 #
+# Third-Party Plugin Settings
+#
+# This section is for settings related to third-party plugin hooks into UltimateContent. This section is for settings like specific region protection toggling and other important ones.
+#
+# CHANGING THESE SETTINGS REQUIRES A SERVER RESTART TO TAKE EFFECT!
+#
+###############################################################################################################################################################################
+
+external:
+    # This section is to enable or disable region protection from specific plugins. This is for if you are using multiple of them and want finer control. To disable region protection entirely, you can do so in the general section above.
+    region_protection_plugins:
+        world_guard: true
+        towny: true
+        grief_prevention: true
+        lands: true
+        kingdoms: true
+
+###############################################################################################################################################################################
+#
 # ITEMS:
 #
 # This section is designated for all the custom items in UltimateContent. The items are sorted by their category such as weapons, armor, crafting, seasonal, etc. All of the
@@ -110,10 +129,10 @@ general:
 #
 # ABILITY SETTINGS:
 #
-# Within each item you can add a section "abilities" which is listed above this section for more information, and you can add as many abilities you want to the item within
+# Within each item you can add a section "abilities" which is listed above this section for more information, and you can add as many abilities as you want to the item within
 # this section. The following settings listed here are global settings that all abilities can use, keep in mind that there are two sub-sections to this section, one which has
 # global settings for all abilities even external of UltimateContent, and the other sub-section has global settings that are unique specifically to UltimateContent abilities.
-# If an external plugin which adds more abilities is a fork of UltimateContent, these settings may be applicable to those abilities to, if not will just have no affect.
+# If an external plugin which adds more abilities is a fork of UltimateContent, these settings may be applicable to those abilities to, if not, than will have no affect.
 #
 # UNIVERSAL SETTINGS:
 #
@@ -162,15 +181,11 @@ items:
             abilities:
                 saber_parry:
                     chance: 60.0
-                    knockbackStrength: 1.0
                     usage:
                     - "was-hit"
                     - "hit-by-projectile"
                 saber_throw:
                     cooldown: 8.0
-                    damage: 9.0
-                    range: 11.0
-                    knockbackStrength: 1.0
                     usage:
                     - "right-click"
         stasis_gun:
@@ -183,12 +198,10 @@ items:
             # The range in blocks that the stasis bullets will travel before disappearing
             range: 25.0
             # The cooldown on the guns shooting
-            shot_cooldown: 2.0
+            shotCooldown: 2.0
             abilities:
                 stasis_zone:
                     cooldown: 2.0
-                    damage: 15.0
-                    range: 2.5
                     target: "projectile"
                     usage:
                     - "projectile-hit"
@@ -215,13 +228,6 @@ items:
             abilities:
                 black_rift:
                     cooldown: 10.0
-                    damage: 1.0
-                    range: 4.0
-                    portalTicks: 80
-                    # If item entities that get dragged in the rift should be destroyed or not
-                    destroyItems: true
-                    # If the projectile should be immediately removed when this ability activates
-                    destroyProjectile: true
                     target: "projectile"
                     usage:
                     - "projectile-hit"
@@ -232,21 +238,34 @@ items:
         tritons_fang:
             name: "(hex:#365ad1)Triton's Fang"
             lore:
-            - "(hex:#0061a6)The mighty trident of the seas which can call upon the powers of the leviathon..."
+            - "(hex:#0061a6)The mighty trident of the seas which can call upon the powers of the leviathan..."
             damage: 13.0
             attackSpeed: 0.9
             projectileDamage: 20.0
             abilities:
                 tidal_wave:
                     cooldown: 10.0
-                    damage: 4.0
-                    range: 15.0
                     target: "shooter"
                     usage:
                     - "was-thrown"
             enchants:
                 loyalty: 3
                 impaling: 5
+        soul_ripper:
+            name: "(hex:#781a91)Soul Ripper"
+            lore:
+            - "(hex:#e324dd)Scythe of a soul reaper. Can summon lost souls upon hitting enemies, but at the cost of durability."
+            damage: 10.5
+            attackSpeed: 0.9
+            durability: 832.0
+            # The chance out of 100 of a lost soul spawning to attack the hit entity.
+            soulSummonChance: 5.0
+            # The durability lost when a lost soul is successfully summoned.
+            soulDurabilityCost: 10.0
+            # The max number of souls that can be summoned at a time.
+            maxSoulCount: 3
+            # The time in seconds until a summoned lost soul despawns.
+            soulDespawnTime: 30.0
         # This item is deprecated meaning that in future updates it may be changed/removed in ways where it could break existing items of this type! Use of this item is not recommended.
         blood_pact:
             name: "(hex:#e32727)Blood Pact"
@@ -282,9 +301,6 @@ items:
             abilities:
                 jump_boost:
                     cooldown: 8.0
-                    jumpHeight: 20.0
-                    slowFall: true
-                    noFall: true
                     usage:
                     - "right-click"
         safety_net:
@@ -294,7 +310,6 @@ items:
             abilities:
                 spawn_platform:
                     cooldown: 10.0
-                    range: 2.5
                     usage:
                     - "right-click"
         heart_crystal:
@@ -308,7 +323,7 @@ items:
             abilities:
                 restore_health:
                     cooldown: 10.0
-                    heal_amount: 16.0
+                    healAmount: 16.0
                     usage:
                     - "right-click"
         energy_drink:
@@ -321,10 +336,6 @@ items:
             - "&eVery unstable ball, be careful while holding it. Throw this to create a propulsion blast where it lands."
             abilities:
                 propulsion_blast:
-                    # The radius of the explosion
-                    radius: 10.0
-                    # If the projectile should be immediately removed when this ability activates
-                    destroyProjectile: true
                     usage:
                     - "projectile-hit"
         matter_swap:
@@ -334,7 +345,6 @@ items:
             abilities:
                 teleport_ray:
                     cooldown: 4.0
-                    range: 30.0
                     usage:
                     - "right-click"
         blinding_trap:
@@ -344,7 +354,6 @@ items:
             abilities:
                 blinding:
                     cooldown: 12.0
-                    time: 10.0
                     usage:
                     - "interact-entity"
         void_tear:
@@ -354,11 +363,11 @@ items:
             - "&b[Right-Click] &8- &7Opens a rift in front of you."
     enchant_books:
         ancient_curse_book:
-            # The chance for this item to spawn in a wild chest
+            # The chance for this item to spawn in a wild chest.
             loot_spawn_chance: 0.05
-            # The max height the chest can be for this item to spawn in it
+            # The max height the chest can be for this item to spawn in it.
             max_height: 40
-            # The chance of a librarian acquiring this item as a trade offer
+            # The chance of a librarian acquiring this item as a trade offer.
             librarian_trade_chance: 0.0
             enchants:
                 ancient_curse: 1
@@ -422,14 +431,17 @@ items:
             name: "(hex:#ff3838)Santa's Hat"
             lore:
             - "&eSanta's hat imbued with the Christmas spirit. Obtained from defeating Santa in the seasonal Christmas event."
-            # The max amount of elves that can spawn to protect the wearer
-            elf_summon_count: 3
-            # The time in seconds it takes for an elf to respawn after death
-            elf_respawn_timer: 180.0
+            # The max amount of elves that can spawn to protect the wearer.
+            elfSummonCount: 3
+            # The time in seconds it takes for an elf to respawn after death.
+            elfRespawnTimer: 180.0
 
 ###############################################################################################################################################################################
 #
 # ABILITIES:
+#
+# This section controls the default settings for abilities. All settings except for the name and description can be overridden in individual ability sections for items or enchants. 
+# If a setting is not overridden, it will use this sections setting as its default value. If you wish to modify the name or description for an ability, look into the displays section.
 #
 # * "name" : [STRING] - The name of the ability in game within items lore. This supports color codes (e.g. '&c' or '&5') and also hex codes formatted as '(hex:#ffffff)'
 #                       if using spigot or a fork of spigot (e.g. paper, purpur, etc.). If you are on vanilla or bukkit then hex codes will auto convert to the closest
@@ -443,51 +455,134 @@ abilities:
     saber_parry:
         name: "(hex:#d5dbf7)[Saber Parry]"
         description: "&8- &7Chance to parry enemy attacks and projectiles."
+        # The strength of knockback that is done to entities which are parried.
+        knockbackMultiplier: 1.0
+        # Multiplier for particle effects.
+        particleMultiplier: 1.0
     saber_throw:
         name: "(hex:#ecf00e)[Saber Throw]"
         description: "&8- &7The wielder throws the saber dealing lots of damage. The saber will return."
+        # Damage dealt to entities hit by the thrown item.
+        damage: 9.0
+        # The range in blocks the thrown item will travel before returning.
+        range: 11.0
+        # The strength of knockback that is done to entities which are hit by the thrown item.
+        knockbackMultiplier: 1.0
         blacklist:
             entities:
             - dropped_item
     stasis_zone:
         name: "(hex:#ecf00e)[Stasis Zone]"
         description: "&8- &7Creates a zone where time does not pass."
+        # The radius of the zone in blocks.
+        range: 2.5
+        # Multiplier for particle effects.
+        particleMultiplier: 1.0
     jump_boost:
         name: "(hex:#e3ffff)[Jump Boost]"
         description: "&8- &7Launches you high into the air and temporarily prevents you from taking fall damage."
+        # The height in blocks the boost launches you.
+        jumpHeight: 20.0
+        # If the user should slowly fall to the ground after jumping.
+        slowFall: true
+        # If the user should not take fall damage when hitting the ground after jumping.
+        noFall: true
+        # Multiplier for particle effects.
+        particleMultiplier: 1.0
     spawn_platform:
         name: "&f[Platform]"
         description: "&8- &7Spawns a temporary platform below your feet. Fall damage will be reset."
+        # The radius size of the spawned platform in blocks.
+        range: 2.5
+        # Multiplier for particle effects.
+        particleMultiplier: 1.0
     restore_health:
         name: "(hex:#f52222)[Restore Health]"
         description: "&8- &7Immediatly restores a certain amount of health."
+        # The amount of health that is restored to the entity.
+        healAmount: 10.0
+        # Multiplier for particle effects.
+        particleMultiplier: 1.0
     propulsion_blast:
         name: "(hex:#6b96fa)[Propulsion Blast]"
         description: "&8- &7Creates a blast that repels all nearby entities."
+        # The radius of the blast in blocks.
+        radius: 10.0
+        # If applicable, if the related projectile should be immediately removed when this ability activates or not.
+        destroyProjectile: true
+        # Multiplier for particle effects.
+        particleMultiplier: 1.0
     teleport_ray:
         name: "(hex:#43fa77)[Teleport Ray]"
         description: "&8- &7Shoots a beam that swaps your place with the closest living entity in the beam."
+        # The range in blocks that the beam reaches before vanishing if no target is found.
+        range: 30.0
+        # Multiplier for particle effects.
+        particleMultiplier: 1.0
     blinding:
         name: "(hex:#3b3b3b)[Blinding]"
         description: "&8- &7Temporarily blinds and disorients any living creature."
+        # How long in seconds the blinded entity is effected for.
+        time: 10.0
+        # Multiplier for particle effects.
+        particleMultiplier: 1.0
     cursed_winds:
         name: "(hex:#d60000)[Cursed Winds]"
         description: "&8- &7Unleashes a raging gust of fire and dust burning all in its path."
+        # Damage dealt to entities caught up in the spell.
+        damage: 4.0
+        # The range in blocks that the spell travels before vanishing.
+        range: 10.0
+        # How many ticks the entities caught in the spell will be set on fire for.
+        fireTicks: 80
+        # The width of the spell
+        sizeMultiplier: 1.0
+        # Multiplier for particle effects.
+        particleMultiplier: 1.0
     black_rift:
         name: "(hex:#82249e)[Black Rift]"
         description: "&8- &7Tears a hole into the void that pulls in everything around it."
+        # How much damage is dealt to entities inside the rift every 5 ticks.
+        damage: 1.0
+        # The range that the rift will pull entities and blocks from.
+        range: 4.0
+        # How many game ticks the portal exists for.
+        portalTicks: 80
+        # If the rift should destroy some blocks within its range or not.
+        destroyBlocks: true
+        # If dropped items that get dragged in the rift should be destroyed or not.
+        destroyItems: true
+        # If applicable, if the related projectile should be immediately removed when this ability activates or not.
+        destroyProjectile: true
+        # Multiplier for particle effects with the rift.
+        particleMultiplier: 1.0
         blacklist:
             entities:
+            - ender_crystal
             - uc:void_stalker
     tidal_wave:
         name: "(hex:#2e77ff)[Tidal Wave]"
         description: "&8- &7Calls upon a strong current of water to wash away all in its path."
+        # Damage dealt to entities caught in the wave.
+        damage: 4.0
+        # The range in blocks the wave will travel before vanishing.
+        range: 15.0
+        # Multiplier for particle effects.
+        particleMultiplier: 1.0
     yeti_roar:
         name: "(hex:#67c0f0)[Yeti Roar]"
         description: "&8- &7Unleashes a raging roar of the wild tundra beast knocking away everything around you."
     double_jump:
         name: "(hex:#e3e9ff)[Double Jump]"
         description: "&8- &7Allows the wearer to double jump."
+        # Controls how high the double jump is.
+        jumpHeightMultiplier: 1.0
+        # Controls the forward thrust of the double jump.
+        forwardVelocity: 0.2
+        # Controls how much fall damage is negated from the wearer upon landing in decimal percentage meaning that 1.0 is the full damage negated and 0.0 means no damage is negated.
+        fallDamageNegation: 0.15
+        # This is the amount of ticks the player has to activate the double jump from the time they did their first jump.
+        activationPeriod: 2
 
 ###############################################################################################################################################################################
 #
@@ -536,12 +631,6 @@ enchants:
                 abilities:
                     cursed_winds:
                         cooldown: 8.0
-                        damage: 4.0
-                        range: 10.0
-                        sizeMultiplier: 1.0
-                        particleMultiplier: 1.0
-                        # How many ticks the players caught in the spell will be set on fire for
-                        fireTicks: 80
                         usage:
                         - "right-click"
     yetis_blessing:
@@ -593,42 +682,28 @@ enchants:
                 abilities:
                     double_jump:
                         cooldown: 0.0
-                        # Controls how high the double jump is
                         jumpHeightMultiplier: 1.2
-                        # Controls the forward thrust of the double jump
-                        forwardVelocity: 0.2
-                        # Controls how much fall damage is negated from the wearer with 1.0 meaning the full damage is negated and 0.0 meaning no damage is negated
-                        fallDamageNegation: 0.15
-                        # This is the amount of ticks the player has to activate the double jump from the time they did their first jump
-                        activationPeriod: 2
+                        # Multiplier for particle effects.
                         particleMultiplier: 1.0
                         abilityDisplay: "bunny_hop"
             2:
                 abilities:
                     double_jump:
                         cooldown: 0.0
-                        # Controls how high the double jump is
                         jumpHeightMultiplier: 1.5
-                        # Controls the forward thrust of the double jump
                         forwardVelocity: 0.35
-                        # Controls how much fall damage is negated from the wearer with 1.0 meaning the full damage is negated and 0.0 meaning no damage is negated
                         fallDamageNegation: 0.2
-                        # This is the amount of ticks the player has to activate the double jump from the time they did their first jump
-                        activationPeriod: 2
+                        # Multiplier for particle effects.
                         particleMultiplier: 1.0
                         abilityDisplay: "bunny_hop"
             3:
                 abilities:
                     double_jump:
                         cooldown: 0.0
-                        # Controls how high the double jump is
                         jumpHeightMultiplier: 1.8
-                        # Controls the forward thrust of the double jump
                         forwardVelocity: 0.5
-                        # Controls how much fall damage is negated from the wearer with 1.0 meaning the full damage is negated and 0.0 meaning no damage is negated
                         fallDamageNegation: 0.3
-                        # This is the amount of ticks the player has to activate the double jump from the time they did their first jump
-                        activationPeriod: 2
+                        # Multiplier for particle effects.
                         particleMultiplier: 1.0
                         abilityDisplay: "bunny_hop"
 
@@ -690,12 +765,15 @@ enchants:
 #                                                        off_hand: 15.0
 #                                                        chest: 100.0
 #
+#   "variants" : [SECTION] - Some entities have variants such as the shadow leech, or elf. The variants section represents different settings that override the entities settings 
+#                            and also may contain some special settings for the variants behavior itself.
+#
 ###############################################################################################################################################################################
 
 entities:
     dark_entities:
         primed_creeper:
-            spawnRate: 3.0
+            spawnRate: 2.0
             health: 22.0
             # The damage multiplier on the explosion damage with 1.0 being vanilla creeper explosion damage
             damageMultiplier: 1.2
@@ -839,7 +917,7 @@ entities:
             - rotten_flesh | 60.0 | 0-3
     snow_entities:
         yeti:
-            spawnRate: 1.0
+            spawnRate: 0.6
             health: 60.0
             damage: 12.0
             name: "&9Yeti"
@@ -1037,17 +1115,17 @@ entities:
             - bone | 50.0 | 1-2
             - arrow | 25.0 | 0-2
         void_stalker:
+            spawnRate: 2.5
             health: 20.0
             damage: 8.0
             name: "&dVoid Stalker"
             volume: 1.0
-            spawnRate: 2.5
             drops:
             - ender_eye | 20.0
     # Christmas entities can only spawn naturally in cold biomes and only during the seasonal Christmas event during December
     christmas_entities:
         elf:
-            spawnRate: 3.0
+            spawnRate: 0.75
             health: 12.0
             damage: 4.0
             name: "&cElf"
@@ -1074,7 +1152,7 @@ entities:
                           - item: "bow"
                             drop_rate: 5.0
         frosty:
-            spawnRate: 2.0
+            spawnRate: 0.25
             health: 30.0
             damage: 8.0
             name: "&cFrosty"
@@ -1084,7 +1162,7 @@ entities:
             - snowball | 40.0 | 2-6
             - stick | 30.0 | 0-2
         grinch:
-            spawnRate: 2.5
+            spawnRate: 0.5
             health: 40.0
             damage: 12.0
             name: "&cGrinch"

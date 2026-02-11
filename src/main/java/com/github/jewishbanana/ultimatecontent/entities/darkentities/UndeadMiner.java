@@ -1,19 +1,19 @@
 package com.github.jewishbanana.ultimatecontent.entities.darkentities;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Queue;
 import java.util.Stack;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundGroup;
 import org.bukkit.Tag;
+import org.bukkit.World;
 import org.bukkit.World.Environment;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
@@ -30,6 +30,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
@@ -37,14 +38,13 @@ import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 public class UndeadMiner extends BaseEntity<Zombie> {
 	
 	public static final String REGISTERED_KEY = "uc:undead_miner";
-	private static Queue<UndeadMiner> miners = new ArrayDeque<>();
+	private static final List<UndeadMiner> miners = new ArrayList<>();
 	
 	private Stack<Block> placed = new Stack<>();
 	private Material placingMaterial;
 
 	public UndeadMiner(Zombie entity) {
 		super(entity, CustomEntityType.UNDEAD_MINER);
-		
 		if (entityVariant.getOffHandItem() == null) {
 			List<Material> blocks = new ArrayList<>();
 			Environment environment = entity.getWorld().getEnvironment();
@@ -73,12 +73,10 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 			entity.getEquipment().setItemInOffHand(new ItemStack(blocks.get(random.nextInt(blocks.size()))));
 			entity.getEquipment().setItemInOffHandDropChance(60f);
 		}
-		
 		ItemStack offhand = entity.getEquipment().getItemInOffHand();
 		if (offhand != null && offhand.getType().isBlock())
 			placingMaterial = offhand.getType();
 		final Sound placeSound = placingMaterial != null ? placingMaterial.createBlockData().getSoundGroup().getPlaceSound() : null;
-		
 		scheduleTask(new BukkitRunnable() {
 			private boolean clutching;
 			
@@ -108,7 +106,8 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 		scheduleTask(new BukkitRunnable() {
 			private LivingEntity target;
 			private boolean breaking;
-			private double maxDist = entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).getValue() * entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).getValue();
+			private final double followRangeAttributeValue = entity.getAttribute(VersionUtils.getFollowRangeAttribute()).getValue();
+			private final double maxDist = followRangeAttributeValue * followRangeAttributeValue;
 			
 			@Override
 			public void run() {
@@ -185,35 +184,39 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 					breaking = true;
 					final Location startPos = entity.getLocation();
 					final Block block = toBreak;
-					final SoundGroup soundGroup = block.getType().createBlockData().getSoundGroup();
-					final Location blockLoc = block.getLocation().add(.5, .5, .5);
+					final BlockData blockData = block.getType().createBlockData();
+					final SoundGroup soundGroup = blockData.getSoundGroup();
+					final Location blockLoc = BlockUtils.getCenterOfBlock(block);
+					final ItemStack tool = entity.getEquipment().getItemInMainHand();
+					final World world = startPos.getWorld();
+					final Collection<Player> players = world.getPlayers();
 					new BukkitRunnable() {
-						final double damage = Utils.getDamageOnBlock(block, entity.getEquipment().getItemInMainHand());
+						final double damage = BlockUtils.getDamageOnBlock(block, tool);
 						int ticks = (int) Math.ceil(1.0 / damage);
 						float damageTrack;
 
 						@Override
 						public void run() {
-							if (block.getType().isAir() || !entity.isValid() || !entity.getWorld().equals(startPos.getWorld()) || entity.getLocation().distanceSquared(startPos) > 1) {
+							if (block.getType().isAir() || !entity.isValid() || !entity.getWorld().equals(world) || entity.getLocation().distanceSquared(startPos) > 1) {
 								this.cancel();
 								breaking = false;
-								for (Player player : startPos.getWorld().getPlayers())
-									player.sendBlockDamage(block.getLocation(), 0);
+								for (Player player : players)
+									player.sendBlockDamage(blockLoc, 0);
 								return;
 							}
 							if (ticks-- <= 0) {
-								block.breakNaturally(entity.getEquipment().getItemInMainHand());
+								block.breakNaturally(tool);
 								playSound(blockLoc, soundGroup.getBreakSound(), 1, 1);
 								this.cancel();
 								breaking = false;
 								entity.swingMainHand();
-								for (Player player : startPos.getWorld().getPlayers())
-									player.sendBlockDamage(block.getLocation(), 0);
+								for (Player player : players)
+									player.sendBlockDamage(blockLoc, 0);
 								return;
 							}
 							damageTrack = Utils.clamp((float) (damageTrack + damage), 0f, 1f);
-							for (Player player : startPos.getWorld().getPlayers())
-								player.sendBlockDamage(block.getLocation(), damageTrack);
+							for (Player player : players)
+								player.sendBlockDamage(blockLoc, damageTrack);
 							if (ticks % 5 == 0)
 								playSound(blockLoc, soundGroup.getHitSound(), 1, 1);
 						}
@@ -253,36 +256,40 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 					if (block != null) {
 						breaking = true;
 						final Location startPos = entity.getLocation();
-						final SoundGroup soundGroup = block.getType().createBlockData().getSoundGroup();
-						final Location blockLoc = block.getLocation().add(.5, .5, .5);
-						final double damage = Utils.getDamageOnBlock(block, entity.getEquipment().getItemInMainHand());
+						final BlockData blockData = block.getType().createBlockData();
+						final SoundGroup soundGroup = blockData.getSoundGroup();
+						final Location blockLoc = BlockUtils.getCenterOfBlock(block);
+						final ItemStack tool = entity.getEquipment().getItemInMainHand();
+						final double damage = BlockUtils.getDamageOnBlock(block, tool);
 						final Block breakingBlock = block;
+						final World world = startPos.getWorld();
+						final Collection<Player> players = world.getPlayers();
 						new BukkitRunnable() {
 							int ticks = (int) Math.ceil(1.0 / damage);
 							float damageTrack;
 
 							@Override
 							public void run() {
-								if (breakingBlock.getType().isAir() || !entity.isValid() || !entity.getWorld().equals(startPos.getWorld()) || entity.getLocation().distanceSquared(startPos) > 1) {
+								if (breakingBlock.getType().isAir() || !entity.isValid() || !entity.getWorld().equals(world) || entity.getLocation().distanceSquared(startPos) > 1) {
 									this.cancel();
 									breaking = false;
-									for (Player player : startPos.getWorld().getPlayers())
-										player.sendBlockDamage(breakingBlock.getLocation(), 0);
+									for (Player player : players)
+										player.sendBlockDamage(blockLoc, 0);
 									return;
 								}
 								if (ticks-- <= 0) {
-									breakingBlock.breakNaturally(entity.getEquipment().getItemInMainHand());
+									breakingBlock.breakNaturally(tool);
 									playSound(blockLoc, soundGroup.getBreakSound(), 1, 1);
 									this.cancel();
 									breaking = false;
 									entity.swingMainHand();
-									for (Player player : startPos.getWorld().getPlayers())
-										player.sendBlockDamage(breakingBlock.getLocation(), 0);
+									for (Player player : players)
+										player.sendBlockDamage(blockLoc, 0);
 									return;
 								}
 								damageTrack = Utils.clamp((float) (damageTrack + damage), 0f, 1f);
-								for (Player player : startPos.getWorld().getPlayers())
-									player.sendBlockDamage(breakingBlock.getLocation(), damageTrack);
+								for (Player player : players)
+									player.sendBlockDamage(blockLoc, damageTrack);
 								if (ticks % 5 == 0)
 									playSound(blockLoc, soundGroup.getHitSound(), 1, 1);
 							}
@@ -303,7 +310,7 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 				entityLoc.add(dir);
 				Block temp = entityLoc.getBlock().getRelative(BlockFace.DOWN);
 				if (temp.isPassable() && !DependencyUtils.isBlockProtected(temp)) {
-					playSound(temp.getLocation().add(.5, .5, .5), placeSound, 1, 1);
+					playSound(BlockUtils.getCenterOfBlock(temp), placeSound, 1, 1);
 					entity.swingOffHand();
 					temp.setType(placingMaterial);
 					placed.push(temp);
@@ -329,6 +336,7 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 			new BukkitRunnable() {
 				private BlockData data = placingMaterial.createBlockData();
 				private Sound breakSound = data.getSoundGroup().getBreakSound();
+				private Particle blockCrack = VersionUtils.getBlockCrack();
 			
 				@Override
 				public void run() {
@@ -339,8 +347,8 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 					Block block = placed.remove(0);
 					if (block.getType() == placingMaterial) {
 						block.setType(Material.AIR);
-						Location temp = block.getLocation().add(.5, .5, .5);
-						block.getWorld().spawnParticle(VersionUtils.getBlockCrack(), temp, 7, 0, 0, 0, 1, data);
+						Location temp = BlockUtils.getCenterOfBlock(block);
+						block.getWorld().spawnParticle(blockCrack, temp, 7, 0, 0, 0, 1, data);
 						playSound(temp, breakSound, 1, 1);
 					}
 				}
@@ -349,16 +357,15 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 	}
 	public void setAttributes(Zombie entity) {
 		if (entity.isAdult())
-			entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.35);
+			entity.getAttribute(VersionUtils.getMovementSpeedAttribute()).setBaseValue(0.35);
 		else
-			entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.2);
+			entity.getAttribute(VersionUtils.getMovementSpeedAttribute()).setBaseValue(0.2);
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(40);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(40);
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(UndeadMiner.REGISTERED_KEY, UndeadMiner.class);
 		type.setRandomizeData(true);
-		
 		type.setSpawnConditions(event -> {
 			if (event.getEntityType() != EntityType.ZOMBIE)
 				return false;

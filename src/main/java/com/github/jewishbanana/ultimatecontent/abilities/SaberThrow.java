@@ -1,11 +1,12 @@
 package com.github.jewishbanana.ultimatecontent.abilities;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
@@ -29,7 +30,7 @@ import com.mojang.datafixers.util.Pair;
 public class SaberThrow extends AbilityAttributes {
 	
 	public static final String REGISTERED_KEY = "uc:saber_throw";
-	private static Queue<SaberThrow> list = new ArrayDeque<>();
+	private static final List<SaberThrow> list = new ArrayList<>();
 	
 	private double damage;
 	private double range;
@@ -46,16 +47,16 @@ public class SaberThrow extends AbilityAttributes {
 	public void activate(Entity entity, GenericItem base) {
 		SaberThrow instance = UIAbilityType.createAbilityInstance(this.getClass());
 		list.add(instance);
-		instance.stand = entity.getWorld().spawn(entity.getLocation().add(0,100,0), ArmorStand.class, temp -> {
+		instance.stand = entity.getWorld().spawn(entity.getLocation().add(0, 100, 0), ArmorStand.class, temp -> {
 			ComplexEntity.initStand(temp);
 			temp.getEquipment().setItemInMainHand(base.getItem());
 			temp.setRightArmPose(new EulerAngle(0, 0, 0));
 		});
 		instance.stand.teleport(entity);
-		instance.stand.teleport(instance.stand.getLocation().add(0,entity.getHeight()/2-0.3,0));
+		instance.stand.teleport(instance.stand.getLocation().add(0, entity.getHeight() / 2 - 0.3,0));
 		final double travelSpeed = 0.8;
-		Vector dir = entity instanceof LivingEntity alive ? alive.getEyeLocation().getDirection().normalize().multiply(travelSpeed).add(new Vector(0,0.02,0))
-				: entity.getLocation().getDirection().normalize().multiply(travelSpeed).add(new Vector(0,0.02,0));
+		Vector dir = entity instanceof LivingEntity alive ? alive.getEyeLocation().getDirection().normalize().multiply(travelSpeed).add(new Vector(0, 0.02, 0))
+				: entity.getLocation().getDirection().normalize().multiply(travelSpeed).add(new Vector(0, 0.02, 0));
 		if (entity instanceof LivingEntity alive) {
 			instance.returnItem = Pair.of(entity.getUniqueId(), Pair.of(base.getItem().clone(), EntityUtils.getEquipmentSlot(alive.getEquipment(), base.getItem())));
 			if (alive instanceof Player player)
@@ -72,23 +73,29 @@ public class SaberThrow extends AbilityAttributes {
 					this.cancel();
 					return;
 				}
+				Location standLoc = instance.stand.getLocation();
 				if (distance <= 0) {
 					tick--;
-					instance.stand.teleport(instance.stand.getLocation().add(Utils.getVectorTowards(instance.stand.getLocation().add(0,1,0), entity.getLocation().add(0,entity.getHeight()/2,0)).multiply(travelSpeed)));
-					if (instance.stand.getLocation().distanceSquared(entity.getLocation()) <= 0.8)
+					Location entityLoc = entity.getLocation();
+					instance.stand.teleport(standLoc.clone().add(Utils.getVectorTowards(standLoc.add(0, 1, 0), entityLoc.clone().add(0, entity.getHeight() / 2, 0)).multiply(travelSpeed)));
+					standLoc.subtract(0, 1, 0);
+					if (standLoc.distanceSquared(entityLoc) <= 0.8)
 						tick = 0;
 				} else {
 					distance -= travelSpeed;
-					instance.stand.teleport(instance.stand.getLocation().add(dir));
-					if (!instance.stand.getLocation().add(0,0.7,0).getBlock().isPassable())
+					instance.stand.teleport(standLoc.add(dir));
+					standLoc.subtract(dir);
+					if (!standLoc.add(0, 0.7, 0).getBlock().isPassable())
 						distance = 0;
+					standLoc.subtract(0, 0.7, 0);
 				}
-				instance.stand.setRotation(instance.stand.getLocation().getYaw()+40, 0);
-				for (Entity e : instance.stand.getWorld().getNearbyEntities(instance.stand.getLocation().add(0,1,0), 0.7, 0.7, 0.7,
-						i -> !i.equals(entity) && i instanceof LivingEntity && canEntityBeHarmed(i, entity))) {
+				instance.stand.setRotation(standLoc.getYaw() + 40, 0);
+				for (Entity e : instance.stand.getWorld().getNearbyEntities(standLoc.add(0, 1, 0), 0.7, 0.7, 0.7)) {
+					if (e.equals(entity) || !(e instanceof LivingEntity living) || !canEntityBeHarmed(e, entity))
+						continue;
 					distance = 0;
-					if (EntityUtils.damageEntity((LivingEntity) e, damage, "deaths.saberThrow", entity, DamageCause.PROJECTILE))
-						e.setVelocity(e.getVelocity().add(Utils.getVectorTowards(instance.stand.getLocation().add(0,1,0), e.getLocation().add(0,e.getHeight()/2,0)).setY(0.1).multiply(0.1*knockbackMultiplier)));
+					if (EntityUtils.damageEntity(living, damage, "deaths.saberThrow", DamageCause.PROJECTILE, entity))
+						e.setVelocity(e.getVelocity().add(Utils.getVectorTowards(standLoc, e.getLocation().add(0, e.getHeight() / 2,0)).setY(0.1).multiply(0.1 * knockbackMultiplier)));
 				}
 			}
 		}.runTaskTimer(plugin, 0, 1);
@@ -96,15 +103,17 @@ public class SaberThrow extends AbilityAttributes {
 	private void sweep() {
 		if (returnItem != null) {
 			Player p = Bukkit.getPlayer(returnItem.getFirst());
+			ItemStack item = returnItem.getSecond().getFirst();
+			EquipmentSlot slot = returnItem.getSecond().getSecond();
 			if (p != null && p.isOnline()) {
 				if (p.getInventory().firstEmpty() == -1)
-					p.getWorld().dropItemNaturally(p.getLocation(), returnItem.getSecond().getFirst());
-				else if (returnItem.getSecond().getSecond() != null && p.getEquipment().getItem(returnItem.getSecond().getSecond()).getType() == Material.AIR)
-					p.getInventory().setItem(returnItem.getSecond().getSecond(), returnItem.getSecond().getFirst());
+					p.getWorld().dropItemNaturally(p.getLocation(), item);
+				else if (slot != null && p.getEquipment().getItem(slot).getType() == Material.AIR)
+					p.getInventory().setItem(slot, item);
 				else
-					p.getInventory().addItem(returnItem.getSecond().getFirst());
+					p.getInventory().addItem(item);
 			} else if (stand != null)
-				stand.getWorld().dropItemNaturally(stand.getLocation(), returnItem.getSecond().getFirst());
+				stand.getWorld().dropItemNaturally(stand.getLocation(), item);
 			returnItem = null;
 		}
 		if (stand != null)
@@ -114,26 +123,14 @@ public class SaberThrow extends AbilityAttributes {
 	public void clean() {
 		list.forEach(e -> e.sweep());
 	}
-	public void initFields() {
-		this.damage = getDoubleField("damage", 9.0);
-		this.range = getDoubleField("range", 11.0);
-		this.knockbackMultiplier = getDoubleField("knockbackMultiplier", 1.0);
-	}
 	public static void register() {
 		UIAbilityType.registerAbility(REGISTERED_KEY, SaberThrow.class);
 	}
-	public Map<String, Object> serialize() {
-		Map<String, Object> map = super.serialize();
-		map.put("damage", damage);
-		map.put("range", range);
-		map.put("knockbackMultiplier", knockbackMultiplier);
-		return map;
-	}
 	public void deserialize(Map<String, Object> map) {
 		super.deserialize(map);
-		damage = (double) map.get("damage");
-		range = (double) map.get("range");
-		knockbackMultiplier = (double) map.get("knockbackMultiplier");
+		damage = registerSerializedDoubleField("damage", map);
+		range = registerSerializedDoubleField("range", map);
+		knockbackMultiplier = registerSerializedDoubleField("knockbackMultiplier", map);
 	}
 	public Target getTarget() {
 		return target;

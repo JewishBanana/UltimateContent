@@ -27,35 +27,19 @@ public class DoubleJump extends AbilityAttributes {
 	}
 	public void activate(Entity entity, GenericItem base) {
 		entity.setVelocity(entity.getVelocity().multiply(2.5).add(entity.getLocation().getDirection().multiply(forwardVelocity)).setY(0.4 * jumpHeightMultiplier));
-        playSound(entity.getLocation(), Sound.ENTITY_RABBIT_JUMP, 20, .8);
+        playSound(entity.getLocation(), Sound.ENTITY_RABBIT_JUMP, 20f, .8f);
         entity.setFallDistance(0f);
-	}
-	public void initFields() {
-		this.jumpHeightMultiplier = getDoubleField("jumpHeightMultiplier", 1.0);
-		this.forwardVelocity = getDoubleField("forwardVelocity", 0.0);
-		this.fallDamageNegation = getDoubleField("fallDamageNegation", 0.0);
-		this.activationPeriod = getIntegerField("activationPeriod", 0);
-		this.particleMultiplier = getDoubleField("particleMultiplier", 1.0);
 	}
 	public static void register() {
 		UIAbilityType.registerAbility(REGISTERED_KEY, DoubleJump.class);
 	}
-	public Map<String, Object> serialize() {
-		Map<String, Object> map = super.serialize();
-		map.put("jumpHeightMultiplier", jumpHeightMultiplier);
-		map.put("forwardVelocity", forwardVelocity);
-		map.put("fallDamageNegation", fallDamageNegation);
-		map.put("activationPeriod", activationPeriod);
-		map.put("particleMultiplier", particleMultiplier);
-		return map;
-	}
 	public void deserialize(Map<String, Object> map) {
 		super.deserialize(map);
-		jumpHeightMultiplier = (double) map.get("jumpHeightMultiplier");
-		forwardVelocity = (double) map.get("forwardVelocity");
-		fallDamageNegation = (double) map.get("fallDamageNegation");
-		activationPeriod = (int) map.get("activationPeriod");
-		particleMultiplier = (double) map.get("particleMultiplier");
+		jumpHeightMultiplier = registerSerializedDoubleField("jumpHeightMultiplier", map);
+		forwardVelocity = registerSerializedDoubleField("forwardVelocity", map);
+		fallDamageNegation = registerSerializedDoubleField("fallDamageNegation", map);
+		activationPeriod = registerSerializedIntegerField("activationPeriod", map);
+		particleMultiplier = registerSerializedDoubleField("particleMultiplier", map, 1.0);
 	}
 	public Target getTarget() {
 		return target;

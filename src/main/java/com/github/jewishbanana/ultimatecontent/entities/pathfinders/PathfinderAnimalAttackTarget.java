@@ -16,19 +16,20 @@ public class PathfinderAnimalAttackTarget extends CustomPathfinder {
 	
 	private Location goal;
 	private LivingEntity target;
-	private double attackDamage;
-	private double attackRange;
-	private int attackCooldownTicks;
+	private final double attackDamage;
+	private final float attackRangeSquared;
+	private final int attackCooldownTicks;
+	private final float leapDistanceSquared;
 	
 	private int cooldown;
 	private boolean leap;
-	private double leapDistance;
-
-	public PathfinderAnimalAttackTarget(@NotNull Mob m, double attackDamage, double attackRange, int attackCooldownTicks) {
+	
+	public PathfinderAnimalAttackTarget(@NotNull Mob m, double attackDamage, float attackRange, int attackCooldownTicks) {
 		super(m);
 		this.attackDamage = attackDamage;
-		this.attackRange = attackRange * attackRange;
-		this.leapDistance = (attackRange + 0.5) * (attackRange + 0.5);
+		this.attackRangeSquared = attackRange * attackRange;
+		float leapDistance = attackRange + 0.5f;
+		this.leapDistanceSquared = leapDistance * leapDistance;
 		this.attackCooldownTicks = attackCooldownTicks;
 	}
 	@Override
@@ -37,7 +38,8 @@ public class PathfinderAnimalAttackTarget extends CustomPathfinder {
 	}
 	@Override
 	public boolean canStart() {
-		return entity.getTarget() != null && entity.getTarget().isValid();
+		LivingEntity target = entity.getTarget();
+		return target != null && target.isValid();
 	}
 	@Override
 	public void start() {
@@ -59,12 +61,14 @@ public class PathfinderAnimalAttackTarget extends CustomPathfinder {
 		}
 		if (!target.getWorld().equals(entity.getWorld()))
 			return;
-		double dist = target.getLocation().distanceSquared(entity.getLocation());
-		if (!leap && dist <= leapDistance) {
+		Location entityLoc = entity.getLocation();
+		Location targetLoc = target.getLocation();
+		double distSquared = targetLoc.distanceSquared(entityLoc);
+		if (!leap && distSquared <= leapDistanceSquared) {
 			leap = true;
-			entity.setVelocity(Utils.getVectorTowards(entity.getLocation(), target.getLocation().add(0, target.getHeight() / 2.0, 0)).multiply(0.3));
+			entity.setVelocity(Utils.getVectorTowards(entityLoc, targetLoc.add(0, target.getHeight() / 2.0, 0)).multiply(0.3));
 		}
-		if (dist <= attackRange) {
+		if (distSquared <= attackRangeSquared) {
 			target.damage(attackDamage, entity);
 			cooldown = attackCooldownTicks;
 			entity.swingMainHand();
@@ -77,9 +81,9 @@ public class PathfinderAnimalAttackTarget extends CustomPathfinder {
 		if (target == null || !target.equals(this.target) || !target.isValid())
 			return false;
 		Location targetLoc = target.getLocation();
-		if (!Utils.isLocationsWithinDistance(targetLoc, goal, 0.0625))
+		if (EntityUtils.isEntityImmunePlayer(target) || !Utils.isLocationsWithinDistance(targetLoc, goal, 0.0625f))
 			return false;
-		if (!Utils.isLocationsWithinDistance(entity.getLocation(), goal, 0.25) && !Utils.isLocationsWithinDistance(targetLoc, entity.getLocation(), attackRange))
+		if (!Utils.isLocationsWithinDistance(entity.getLocation(), goal, 0.25f) && !Utils.isLocationsWithinDistance(targetLoc, entity.getLocation(), attackRangeSquared))
 			return false;
 		return true;
 	}

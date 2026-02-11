@@ -1,12 +1,10 @@
 package com.github.jewishbanana.ultimatecontent.entities;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.random.RandomGenerator;
 
@@ -27,8 +25,12 @@ import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class EntityVariant {
 	
-	private static JavaPlugin plugin = Main.getInstance();
-	private static RandomGenerator random = Utils.random();
+	private static final JavaPlugin plugin;
+	private static final RandomGenerator random;
+	static {
+		plugin = Main.getInstance();
+		random = Utils.getRandomGenerator();
+	}
 	
 	public String configPath;
 	
@@ -42,10 +44,10 @@ public class EntityVariant {
 	public int ambientSoundFrequency = 4;
 	public SoundEffect[] hurtSounds;
 	public SoundEffect[] deathSounds;
-	public double volume = 1.0;
+	public float volume = 1f;
 	public CustomLoadout loadout = new CustomLoadout();
 	
-	public Queue<CustomDrop> drops = new ArrayDeque<>();
+	public List<CustomDrop> drops = new ArrayList<>();
 	public CustomLoadout defaultLoadout = new CustomLoadout();
 	
 	public EntityVariant(String path) {
@@ -62,7 +64,7 @@ public class EntityVariant {
 		if (section.contains("name", true))
 			displayName = Utils.convertString(DataUtils.getConfigString(path+".name"));
 		if (section.contains("volume", true))
-			volume = DataUtils.getConfigDouble(path+".volume", 1.0);
+			volume = (float) DataUtils.getConfigDouble(path+".volume", 1f);
 		if (section.contains("health", true))
 			health = DataUtils.getConfigDouble(path+".health", -1.0);
 		if (section.contains("damage", true))

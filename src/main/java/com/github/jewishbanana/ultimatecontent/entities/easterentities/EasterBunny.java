@@ -1,12 +1,12 @@
 package com.github.jewishbanana.ultimatecontent.entities.easterentities;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.Queue;
+import java.util.List;
 import java.util.Set;
-import java.util.random.RandomGenerator;
 
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -17,7 +17,7 @@ import org.bukkit.Particle.DustTransition;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.Tag;
-import org.bukkit.attribute.Attribute;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
@@ -47,6 +47,7 @@ import com.github.jewishbanana.ultimatecontent.entities.BossEntity;
 import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.SongPlayer;
@@ -64,11 +65,11 @@ public class EasterBunny extends BossEntity<Rabbit> {
 		flowers = EnumSet.copyOf(Tag.FLOWERS.getValues());
 		flowers.addAll(Tag.SMALL_FLOWERS.getValues());
 		if (!VersionUtils.isMCVersionOrAbove("1.21.4"))
-			flowers.addAll(Tag.TALL_FLOWERS.getValues());
+			flowers.addAll(BlockUtils.getMaterialTagByName("TALL_FLOWERS").getValues());
 		flowers.addAll(Arrays.asList(VersionUtils.getShortGrass(), Material.TALL_GRASS));
 	}
 	
-	private Queue<Chicken> chickens = new ArrayDeque<>();
+	private final List<Chicken> chickens = new ArrayList<>();
 
 	public EasterBunny(Rabbit entity) {
 		super(entity, CustomEntityType.EASTER_BUNNY);
@@ -125,8 +126,11 @@ public class EasterBunny extends BossEntity<Rabbit> {
 						eggLayCooldown = 10;
 					else {
 						eggLayCooldown = 20;
-						final int eggCount = entity.getHealth() >= entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() / 2.0 ? 3 : 5;
+						final int eggCount = entity.getHealth() >= entity.getAttribute(VersionUtils.getMaxHealthAttribute()).getValue() / 2.0 ? 3 : 5;
 						playSound(entity.getLocation(), Sound.ENTITY_CHICKEN_EGG, 1, 0);
+						World world = entity.getWorld();
+						Particle itemCrack = VersionUtils.getItemCrack();
+						ItemStack eggItem = new ItemStack(Material.EGG);
 						new BukkitRunnable() {
 							private int tick;
 							private int totalEggs = 10 - eggCount < chickens.size() ? 10 - chickens.size() : eggCount;
@@ -137,7 +141,7 @@ public class EasterBunny extends BossEntity<Rabbit> {
 									this.cancel();
 									return;
 								}
-								Item egg = entity.getWorld().dropItemNaturally(entity.getLocation(), new ItemStack(Material.EGG), temp -> {
+								Item egg = world.dropItemNaturally(entity.getLocation(), eggItem, temp -> {
 									temp.setPickupDelay(10000);
 									EntitiesHandler.attachRemoveKey(temp);
 								});
@@ -147,13 +151,13 @@ public class EasterBunny extends BossEntity<Rabbit> {
 										if (egg == null || !egg.isValid())
 											return;
 										Location loc = egg.getLocation();
-										egg.getWorld().spawnParticle(VersionUtils.getItemCrack(), loc, 8, .5, .5, .5, 0.001, new ItemStack(Material.EGG));
-										egg.getWorld().playSound(loc, Sound.ENTITY_TURTLE_EGG_HATCH, SoundCategory.HOSTILE, 1f, 0.7f);
+										world.spawnParticle(itemCrack, loc, 8, .5, .5, .5, 0.001, eggItem);
+										world.playSound(loc, Sound.ENTITY_TURTLE_EGG_HATCH, SoundCategory.HOSTILE, 1f, 0.7f);
 										for (int i=0; i < 8; i++) {
 											DustTransition dust = random.nextInt(2) == 0 ?
 													new DustTransition(Color.fromRGB(random.nextInt(125)+25, 255, random.nextInt(55)+25), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat())
-													: new DustTransition(Color.fromRGB(random.nextInt(105)+150, 25, 255), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat()/2f);
-											egg.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, loc.clone().add(0,.2,0).add(random.nextDouble()-.5, random.nextDouble()-.5, random.nextDouble()-.5), 1, 0, 0, 0, 0.001, dust);
+													: new DustTransition(Color.fromRGB(random.nextInt(105)+150, 25, 255), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat() / 2f);
+											world.spawnParticle(Particle.DUST_COLOR_TRANSITION, loc.clone().add(0, .2, 0).add(random.nextFloat(-.5f, .5f), random.nextFloat(-.5f, .5f), random.nextFloat(-.5f, .5f)), 1, 0, 0, 0, 0.001, dust);
 										}
 										KillerChicken chicken = UIEntityManager.spawnEntity(loc, KillerChicken.class);
 										Chicken temp = chicken.getCastedEntity();
@@ -168,8 +172,12 @@ public class EasterBunny extends BossEntity<Rabbit> {
 				}
 				if (leapCooldown == 0) {
 					leapCooldown = 12;
-					playSound(entity.getLocation(), Sound.ENTITY_RABBIT_JUMP, 20, 0);
-					entity.setVelocity(Utils.getVectorTowards(entity.getLocation(), entity.getTarget().getLocation()).multiply(entity.getLocation().distance(target.getLocation())/10).setY(2));
+					Location entityLoc = entity.getLocation();
+					Location targetLoc = target.getLocation();
+					playSound(entityLoc, Sound.ENTITY_RABBIT_JUMP, 20f, 0f);
+					entity.setVelocity(Utils.getVectorTowards(entityLoc, targetLoc).multiply(entityLoc.distance(targetLoc) / 10).setY(2));
+					World world = entity.getWorld();
+					Particle blockCrack = VersionUtils.getBlockCrack();
 					new BukkitRunnable() {
 						private BlockData dirtData = Material.COARSE_DIRT.createBlockData();
 						private ItemStack air = new ItemStack(Material.AIR);
@@ -182,20 +190,23 @@ public class EasterBunny extends BossEntity<Rabbit> {
 							}
 							if (entity.isOnGround()) {
 								this.cancel();
-								playSound(entity.getLocation(), Sound.BLOCK_GRASS_BREAK, 2, 0);
-								for (Block b : Utils.getBlocksInCircleRadius(entity.getLocation(), 4.0)) {
-									b = Utils.getHighestExposedBlock(b, 3);
+								Location entityLoc = entity.getLocation();
+								playSound(entityLoc, Sound.BLOCK_GRASS_BREAK, 2f, 0f);
+								List<Block> blocks = BlockUtils.getBlocksInCircleRadius(entityLoc, 4.0f);
+								for (int i = 0; i < blocks.size(); i++) {
+									Block b = BlockUtils.getHighestExposedBlock(blocks.get(i), 3);
 									if (b == null)
 										continue;
 									b = b.getRelative(BlockFace.UP);
-									Location temp = b.getLocation().add(0.5, 0.5, 0.5);
-									b.getWorld().spawnParticle(VersionUtils.getBlockCrack(), temp, 6, .3, .5, .3, 0.001, dirtData);
+									Location temp = BlockUtils.getCenterOfBlock(b);
+									world.spawnParticle(blockCrack, temp, 6, .3, .5, .3, 0.001, dirtData);
 									if (flowers.contains(b.getType()) && !DependencyUtils.isBlockProtected(b))
 										b.breakNaturally(air);
-									for (Entity e : temp.getWorld().getNearbyEntities(temp.add(0, 1, 0), .5, 1.5, .5)) {
+									Collection<Entity> nearbyEntities = world.getNearbyEntities(temp.add(0, 1, 0), .5, 1.5, .5);
+									for (Entity e : nearbyEntities) {
 										if (e.equals(entity) || EntityUtils.isEntityImmunePlayer(e))
 											continue;
-										e.setVelocity(Utils.getVectorTowards(entity.getLocation(), e.getLocation()).multiply(0.7).setY(1.5));
+										e.setVelocity(Utils.getVectorTowards(entityLoc, e.getLocation()).multiply(0.7).setY(1.5));
 										if (e instanceof LivingEntity alive)
 											alive.damage(15.0, entity);
 									}
@@ -207,9 +218,10 @@ public class EasterBunny extends BossEntity<Rabbit> {
 				if (shootingCooldown == 0) {
 					if (isTargetInRange(entity, 25, 325)) {
 						shootingCooldown = 10;
-						final int shotCount = entity.getHealth() >= entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() / 2.0 ? 2 : 4;
+						final int shotCount = entity.getHealth() >= entity.getAttribute(VersionUtils.getMaxHealthAttribute()).getValue() / 2.0 ? 2 : 4;
 						entity.addPotionEffect(new PotionEffect(VersionUtils.getSlowness(), shotCount * 15, 10, true, false));
-						final Queue<Pair<Slime, ArmorStand>> projectiles = new ArrayDeque<>();
+						final List<Pair<Slime, ArmorStand>> projectiles = new ArrayList<>();
+						World world = entity.getWorld();
 						new BukkitRunnable() {
 							private int tick;
 							
@@ -221,22 +233,22 @@ public class EasterBunny extends BossEntity<Rabbit> {
 								}
 								Location loc = entity.getLocation();
 								projectiles.add(Pair.of(
-										entity.getWorld().spawn(loc, Slime.class, false, temp -> {
+										world.spawn(loc, Slime.class, false, temp -> {
 											temp.setSize(0);
 											temp.setSilent(true);
-											temp.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(100.0);
+											temp.getAttribute(VersionUtils.getMaxHealthAttribute()).setBaseValue(100.0);
 											temp.setHealth(100.0);
-											temp.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(0.0);
+											temp.getAttribute(VersionUtils.getAttackDamageAttribute()).setBaseValue(0.0);
 											setInvisible(temp);
 											temp.setVelocity(new Vector(0, 1, 0));
 											EntitiesHandler.attachRemoveKey(temp);
-										}), entity.getWorld().spawn(loc, ArmorStand.class, false, temp -> {
+										}), world.spawn(loc, ArmorStand.class, false, temp -> {
 											ComplexEntity.initStand(temp);
 											temp.getEquipment().setItemInMainHand(new ItemStack(Material.CARROT));
 											temp.setRightArmPose(new EulerAngle(Math.toRadians(270), 0, 0));
 											EntitiesHandler.attachRemoveKey(temp);
 										})));
-								Firework fire = loc.getWorld().spawn(loc, Firework.class);
+								Firework fire = world.spawn(loc, Firework.class);
 								FireworkMeta meta = fire.getFireworkMeta();
 								meta.addEffect(FireworkEffect.builder().with(FireworkEffect.Type.BURST).withColor(Color.fromRGB(random.nextInt(125)+25, 255, random.nextInt(55)+25), Color.fromRGB(25, random.nextInt(155)+100, 255), Color.fromRGB(random.nextInt(105)+150, 25, 255)).build());
 								fire.setFireworkMeta(meta);
@@ -263,39 +275,44 @@ public class EasterBunny extends BossEntity<Rabbit> {
 										continue;
 									}
 									Slime slime = pair.getFirst();
+									Location slimeLoc = slime.getLocation();
 									if (target != null && target.getWorld().equals(slime.getWorld()))
-										slime.setVelocity(slime.getVelocity().add(Utils.getVectorTowards(slime.getLocation(), target.getLocation().add(0, target.getHeight() / 2.0, 0)).multiply(0.1)));
+										slime.setVelocity(slime.getVelocity().add(Utils.getVectorTowards(slimeLoc, target.getLocation().add(0, target.getHeight() / 2.0, 0)).multiply(0.1)));
 									ArmorStand stand = pair.getSecond();
-									stand.teleport(slime.getLocation().add(0, -1, 0));
+									stand.teleport(slimeLoc.add(0, -1, 0));
+									slimeLoc.subtract(0, 1, 0);
 									Vector vec = slime.getVelocity();
-									double pivot = Math.abs(vec.getX());
-									if (Math.abs(vec.getZ()) > pivot)
-										pivot = Math.abs(vec.getZ());
+									double pivot = Math.max(Math.abs(vec.getX()), Math.abs(vec.getZ()));
 									double angle = Math.toDegrees(Math.atan2(Math.abs(vec.getY()), pivot));
 									if (vec.getY() >= 0)
-										stand.setRightArmPose(new EulerAngle(Math.toRadians(360-angle), 0, 0));
+										stand.setRightArmPose(new EulerAngle(Math.toRadians(360 - angle), 0, 0));
 									else
-										stand.setRightArmPose(new EulerAngle(Math.toRadians(360+angle), 0, 0));
+										stand.setRightArmPose(new EulerAngle(Math.toRadians(360 + angle), 0, 0));
+									World slimeWorld = slime.getWorld();
 									for (int p=0; p < 3; p++) {
 										DustTransition dust = random.nextInt(2) == 0 ? new DustTransition(Color.fromRGB(random.nextInt(125)+25, 255, random.nextInt(55)+25), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat())
 												: new DustTransition(Color.fromRGB(random.nextInt(105)+150, 25, 255), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat() / 2f);
-										slime.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, slime.getLocation().add(random.nextDouble()/2.5-.2, random.nextDouble()/2.5-.2, random.nextDouble()/2.5-.2), 1, 0, 0, 0, 0.001, dust);
+										slimeWorld.spawnParticle(Particle.DUST_COLOR_TRANSITION, slimeLoc.getX() + random.nextFloat(-.2f, .2f), slimeLoc.getY() + random.nextFloat(-.2f, .2f), slimeLoc.getZ() + random.nextFloat(-.2f, .2f), 1, 0, 0, 0, 0.001, dust);
 									}
+									double maxHealth = entity.getAttribute(VersionUtils.getMaxHealthAttribute()).getValue();
+									float explosionPower = entity.getHealth() >= maxHealth / 2.0 ? 1.5f : 2.5f;
 									if (slime.isOnGround()) {
-										slime.getWorld().createExplosion(slime.getLocation(), entity.getHealth() >= entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() / 2.0 ? 1.5f : 2.5f, false, true, entity);
+										slimeWorld.createExplosion(slimeLoc, explosionPower, false, true, entity);
 										stand.remove();
 										slime.remove();
 										it.remove();
 										continue;
 									}
-									for (Entity e : slime.getNearbyEntities(.5, .5, .5))
-										if (!e.equals(entity) && !e.equals(stand) && e.getType() != EntityType.FIREWORK_ROCKET) {
-											slime.getWorld().createExplosion(slime.getLocation(), entity.getHealth() >= entity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() / 2.0 ? 1.5f : 2.5f, false, true, entity);
-											stand.remove();
-											slime.remove();
-											it.remove();
-											break;
-										}
+									Collection<Entity> nearbyEntities = slime.getNearbyEntities(.5, .5, .5);
+									for (Entity e : nearbyEntities) {
+										if (e.equals(entity) || e.equals(stand) || e.getType() == EntityType.FIREWORK_ROCKET)
+											continue;
+										slimeWorld.createExplosion(slimeLoc, explosionPower, false, true, entity);
+										stand.remove();
+										slime.remove();
+										it.remove();
+										break;
+									}
 								}
 							}
 						}.runTaskTimer(plugin, 0, 1);
@@ -303,17 +320,16 @@ public class EasterBunny extends BossEntity<Rabbit> {
 				}
 			}
 		}.runTaskTimer(plugin, 80, 20));
-		
 		scheduleTask(new BukkitRunnable() {
-			private RandomGenerator random = RandomGenerator.of("SplittableRandom");
-			
 			@Override
 			public void run() {
+				World world = entity.getWorld();
+				Location entityLoc = entity.getLocation();
 				for (int i=0; i < 8; i++) {
 					DustTransition dust = random.nextInt(2) == 0 ?
 							new DustTransition(Color.fromRGB(random.nextInt(125)+25, 255, random.nextInt(55)+25), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat())
-							: new DustTransition(Color.fromRGB(random.nextInt(105)+150, 25, 255), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat()/2f);
-					entity.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, entity.getLocation().add(random.nextDouble()-.5,0.3+(random.nextDouble()/2-.25),random.nextDouble()-.5), 1, 0, 0, 0, 0.001, dust);
+							: new DustTransition(Color.fromRGB(random.nextInt(105)+150, 25, 255), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat() / 2f);
+					world.spawnParticle(Particle.DUST_COLOR_TRANSITION, entityLoc.getX() + random.nextFloat(-.5f, .5f), entityLoc.getY() + random.nextFloat(-.5f, .5f), entityLoc.getZ() + random.nextFloat(-.5f, .5f), 1, 0, 0, 0, 0.001, dust);
 				}
 			}
 		}.runTaskTimerAsynchronously(plugin, 0, 1));
@@ -331,14 +347,13 @@ public class EasterBunny extends BossEntity<Rabbit> {
 	}
 	public void setAttributes(Rabbit entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(40);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(40);
 	}
 	public Song getSongTheme() {
 		return SongPlayer.Song.EASTER_BOSS;
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(EasterBunny.REGISTERED_KEY, EasterBunny.class);
-		
 		type.setSpawnConditions(event -> {
 			return false;
 		});

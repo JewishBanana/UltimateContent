@@ -6,7 +6,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.SoundCategory;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -27,6 +26,7 @@ import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
+import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 import me.gamercoder215.mobchip.EntityBrain;
 import me.gamercoder215.mobchip.ai.EntityAI;
@@ -52,17 +52,17 @@ public class SoulReaper extends ComplexEntity<Skeleton> {
 			stand.setInvulnerable(true);
 			stand.setSilent(true);
 			stand.getEquipment().setItemInMainHand(new ItemStack(Material.AIR));
-			stand.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(entityVariant.damage);
-			stand.getAttribute(Attribute.GENERIC_ATTACK_KNOCKBACK).setBaseValue(entityVariant.knockback);
+			stand.getAttribute(VersionUtils.getAttackDamageAttribute()).setBaseValue(entityVariant.damage);
+			stand.getAttribute(VersionUtils.getAttackKnockbackAttribute()).setBaseValue(entityVariant.knockback);
 			
 			/**
 			 * Pointless attribute as Vex uses its own implementation of MoveControl which does not utilize any attributes for speed
 			 * TODO:
 			 * - Create implementation of VexMoveControl with a setter for the speedModifier variable
 			 */
-			stand.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(entityVariant.movementSpeed);
+			stand.getAttribute(VersionUtils.getMovementSpeedAttribute()).setBaseValue(entityVariant.movementSpeed);
 			
-			stand.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(30);
+			stand.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(30);
 			stand.setCustomName(entityVariant.displayName);
 			stand.setCustomNameVisible(entityVariant.nameVisible);
 			setTargetGoals(stand);

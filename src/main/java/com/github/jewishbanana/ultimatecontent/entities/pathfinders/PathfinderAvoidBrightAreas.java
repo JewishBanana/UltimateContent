@@ -1,6 +1,6 @@
 package com.github.jewishbanana.ultimatecontent.entities.pathfinders;
 
-import java.util.Queue;
+import java.util.List;
 
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -8,26 +8,32 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Mob;
 import org.jetbrains.annotations.NotNull;
 
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
+import me.gamercoder215.mobchip.ai.controller.EntityController;
 import me.gamercoder215.mobchip.ai.goal.CustomPathfinder;
 import me.gamercoder215.mobchip.bukkit.BukkitBrain;
 
 public class PathfinderAvoidBrightAreas extends CustomPathfinder {
 	
-	private byte maxBrightness;
-	private double searchDistance;
-	private double speedMod;
+	private final byte maxBrightness;
+	private final float searchDistance;
+	private final double speedMod;
+	private final float goalDistanceSquared = 2.25f;
+	
 	private Location goal;
 	private int ticks;
-
-	public PathfinderAvoidBrightAreas(@NotNull Mob m, byte maxBrightness, double searchDistance, double speedMod) {
+	private EntityController controller;
+	
+	public PathfinderAvoidBrightAreas(@NotNull Mob m, byte maxBrightness, float searchDistance, double speedMod) {
 		super(m);
 		this.maxBrightness = maxBrightness;
 		this.searchDistance = searchDistance;
 		this.speedMod = speedMod;
+		this.controller = BukkitBrain.getBrain(entity).getController();
 	}
-	public PathfinderAvoidBrightAreas(@NotNull Mob m, byte maxBrightness, double searchDistance) {
+	public PathfinderAvoidBrightAreas(@NotNull Mob m, byte maxBrightness, float searchDistance) {
 		this(m, maxBrightness, searchDistance, 2.0);
 	}
 	@Override
@@ -36,28 +42,32 @@ public class PathfinderAvoidBrightAreas extends CustomPathfinder {
 	}
 	@Override
 	public boolean canStart() {
-		if (entity.getLocation().getBlock().getLightLevel() >= maxBrightness)
-			return true;
-		return false;
+		return entity.getLocation().getBlock().getLightLevel() >= maxBrightness;
 	}
 	@Override
 	public void start() {
-		byte lightLevel = entity.getLocation().getBlock().getLightLevel();
-		Queue<Block> queue = Utils.getBlocksInCircleRadius(entity.getLocation(), searchDistance);
+		Location entityLoc = entity.getLocation();
+		byte lightLevel = entityLoc.getBlock().getLightLevel();
+		List<Block> queue = BlockUtils.getBlocksInCircleRadius(entityLoc, searchDistance);
 		Block tempGoal = null;
-		for (Block b : queue) {
-			Block temp = Utils.getHighestExposedBlock(b, 3);
+		byte tempGoalLight = Byte.MAX_VALUE;
+		for (int i = 0; i < queue.size(); i++) {
+			Block b = queue.get(i);
+			Block temp = BlockUtils.getHighestExposedBlock(b, 3);
 			if (temp == null)
 				continue;
 			temp = temp.getRelative(BlockFace.UP);
-			if (temp.getLightLevel() > maxBrightness && (tempGoal != null || temp.getLightLevel() >= lightLevel))
+			byte tempLight = temp.getLightLevel();
+			if (tempLight > maxBrightness && (tempGoal != null || tempLight >= lightLevel))
 				continue;
-			if (tempGoal == null || temp.getLightLevel() < tempGoal.getLightLevel())
+			if (tempGoal == null || tempLight < tempGoalLight) {
 				tempGoal = temp;
+				tempGoalLight = tempLight;
+			}
 		}
 		if (tempGoal != null) {
 			goal = tempGoal.getLocation().add(.5, 0, .5);
-			BukkitBrain.getBrain(entity).getController().moveTo(goal, speedMod);
+			controller.moveTo(goal, speedMod);
 			ticks = 30;
 		}
 	}
@@ -65,13 +75,13 @@ public class PathfinderAvoidBrightAreas extends CustomPathfinder {
 	public void tick() {
 		ticks--;
 		if (goal != null)
-			BukkitBrain.getBrain(entity).getController().moveTo(goal, speedMod);
+			controller.moveTo(goal, speedMod);
 	}
 	@Override
 	public boolean canContinueToUse() {
 		if (goal == null || ticks == 0 || goal.getBlock().getLightLevel() >= maxBrightness)
 			return false;
-		if (Utils.isLocationsWithinDistance(entity.getLocation(), goal, 2.25))
+		if (Utils.isLocationsWithinDistance(entity.getLocation(), goal, goalDistanceSquared))
 			return false;
 		return true;
 	}

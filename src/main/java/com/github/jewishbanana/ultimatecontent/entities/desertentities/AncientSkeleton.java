@@ -9,7 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World.Environment;
-import org.bukkit.attribute.Attribute;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.LivingEntity;
@@ -20,7 +20,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.uiframework.items.UIAbilityType;
+import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
 import com.github.jewishbanana.ultimatecontent.abilities.CursedWinds;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
@@ -32,6 +32,13 @@ import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 public class AncientSkeleton extends BaseEntity<Skeleton> {
 	
 	public static final String REGISTERED_KEY = "uc:ancient_skeleton";
+	private static final CursedWinds ability;
+	static {
+		ability = AbilityAttributes.createInitializedAbilityInstance(CursedWinds.class);
+		ability.damage = 4.0;
+		ability.range = 10.0;
+		ability.fireTicks = 80;
+	}
 	
 	private Skeleton[] minions = new Skeleton[3];
 
@@ -55,27 +62,29 @@ public class AncientSkeleton extends BaseEntity<Skeleton> {
 				if (!entity.isValid())
 					return;
 				if (isTargetInRange(entity, 0, 64)) {
+					Location entityLoc = entity.getLocation();
 					for (Skeleton temp : minions)
 						if (temp != null && !temp.isDead()) {
 							cooldown = 10;
-							CursedWinds ability = UIAbilityType.createAbilityInstance(CursedWinds.class);
-							ability.initFields();
 							Set<UUID> immune = new HashSet<>();
 							for (Skeleton minion : minions)
 								if (minion != null)
 									immune.add(minion.getUniqueId());
 							ability.setVolume((float) entityVariant.volume);
-							ability.activate(entity.getLocation(), entity, immune, null);
+							ability.activate(entityLoc, entity, immune, null);
 							return;
 						}
 					cooldown = 17;
 					LivingEntity target = entity.getTarget();
 					entity.setAI(false);
 					entity.setVelocity(new Vector());
-					playSound(entity.getLocation(), Sound.ENTITY_SKELETON_CONVERTED_TO_STRAY, 1, .5);
+					playSound(entityLoc, Sound.ENTITY_SKELETON_CONVERTED_TO_STRAY, 1f, .5f);
 					Location targetLoc = entity.getTarget().getLocation();
 					for (int i=0; i < 3; i++) {
-						Location loc = Utils.findRandomSpotInRadius(entity.getLocation(), 1.5, 4.0, 2, 6, temp -> temp.getBlock().getRelative(BlockFace.DOWN).getType().isOccluding() && temp.getBlock().getRelative(BlockFace.DOWN, 2).getType().isOccluding());
+						Location loc = Utils.findRandomSpotInRadius(entityLoc, 1.5f, 4f, 2, 6, () -> Utils.getRandomizedVector(), temp -> {
+							Block block = temp.getBlock();
+							return block.getRelative(BlockFace.DOWN).getType().isOccluding() && block.getRelative(BlockFace.DOWN, 2).getType().isOccluding();
+						});
 						if (loc == null)
 							continue;
 						loc.setDirection(Utils.getVectorTowards(loc, targetLoc));
@@ -110,8 +119,9 @@ public class AncientSkeleton extends BaseEntity<Skeleton> {
 							for (Skeleton temp : minions) {
 								if (temp == null || temp.isDead())
 									continue;
-								temp.teleport(temp.getLocation().clone().add(0, .035, 0));
-								temp.getWorld().spawnParticle(VersionUtils.getBlockDust(), temp.getLocation(), 5, .5, .5, .5, .01, sandData);
+								Location loc = temp.getLocation();
+								temp.teleport(loc.add(0, .035, 0));
+								temp.getWorld().spawnParticle(VersionUtils.getBlockDust(), loc, 5, .5, .5, .5, .01, sandData);
 							}
 						}
 					}.runTaskTimer(plugin, 0, 1);
@@ -130,7 +140,7 @@ public class AncientSkeleton extends BaseEntity<Skeleton> {
 	}
 	public void setAttributes(Skeleton entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(40);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(40);
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(AncientSkeleton.REGISTERED_KEY, AncientSkeleton.class);

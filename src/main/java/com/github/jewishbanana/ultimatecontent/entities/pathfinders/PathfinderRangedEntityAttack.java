@@ -17,22 +17,34 @@ import com.github.jewishbanana.ultimatecontent.Main;
 import com.github.jewishbanana.ultimatecontent.utils.NavigationUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
+import me.gamercoder215.mobchip.EntityBody;
 import me.gamercoder215.mobchip.EntityBody.InteractionHand;
 import me.gamercoder215.mobchip.EntityBrain;
+import me.gamercoder215.mobchip.ai.controller.EntityController;
 import me.gamercoder215.mobchip.ai.goal.CustomPathfinder;
 import me.gamercoder215.mobchip.bukkit.BukkitBrain;
 
 public class PathfinderRangedEntityAttack extends CustomPathfinder {
 	
-	private static final RandomGenerator random = Utils.random();
+	private static final RandomGenerator random = Utils.getRandomGenerator();
+	private static final ItemStack AIR_ITEM = new ItemStack(Material.AIR);
+	private static final double STRAFE_THRESHOLD = 0.3;
+	private static final int SEE_TIME_THRESHOLD = -60;
+	private static final int USING_TICKS_THRESHOLD = 20;
+	private static final int STRAFE_TIME_RESET = 20;
 	
-	private int interval;
-	private double minRange;
-	private double maxRange;
-	private double speedMod;
-	private float strafeSpeed;
-	private Predicate<Mob> conditions;
-	private Consumer<Mob> shootProjectile;
+	private final int interval;
+	private final double minRangeSquared;
+	private final double maxRangeSquared;
+	private final double speedMod;
+	private final float strafeSpeed;
+	private final Predicate<Mob> conditions;
+	private final Consumer<Mob> shootProjectile;
+	private final EntityBrain brain;
+	private final EntityController controller;
+	private final EntityBody body;
+	private final double maxRangeInner;
+	private final double maxRangeOuter;
 	
 	private int attackTime;
 	private int usingTicks;
@@ -45,12 +57,17 @@ public class PathfinderRangedEntityAttack extends CustomPathfinder {
 	public PathfinderRangedEntityAttack(@NotNull Mob mob, int interval, double minRange, double maxRange, double speedMod, double strafeSpeedMulti, Predicate<Mob> conditions, Consumer<Mob> shootProjectile) {
 		super(mob);
 		this.interval = interval;
-		this.minRange = minRange * minRange;
-		this.maxRange = maxRange * maxRange;
+		this.minRangeSquared = minRange * minRange;
+		this.maxRangeSquared = maxRange * maxRange;
+		this.maxRangeInner = this.maxRangeSquared * 0.25;
+		this.maxRangeOuter = this.maxRangeSquared * 0.75;
 		this.speedMod = speedMod;
 		this.strafeSpeed = (float) (0.5 * strafeSpeedMulti);
 		this.conditions = conditions == null ? entity -> entity.getTarget() != null && entity.hasLineOfSight(entity.getTarget()) : conditions;
 		this.shootProjectile = shootProjectile;
+		this.brain = BukkitBrain.getBrain(entity);
+		this.controller = brain.getController();
+		this.body = brain.getBody();
 	}
 	public PathfinderRangedEntityAttack(@NotNull Mob mob, int interval, double minRange, double maxRange, double speedMod) {
 		this(mob, interval, minRange, maxRange, speedMod, 1.0, null, null);
@@ -76,8 +93,9 @@ public class PathfinderRangedEntityAttack extends CustomPathfinder {
 		LivingEntity target = entity.getTarget();
 		if (target == null)
 			return;
-		EntityBrain brain = BukkitBrain.getBrain(entity);
-		double distance = entity.getLocation().distanceSquared(target.getLocation());
+		Location entityLoc = entity.getLocation();
+		Location targetLoc = target.getLocation();
+		double distance = entityLoc.distanceSquared(targetLoc);
 		boolean canSee = entity.hasLineOfSight(target);
 		if (canSee != this.seeTime > 0)
 			this.seeTime = 0;
@@ -86,64 +104,64 @@ public class PathfinderRangedEntityAttack extends CustomPathfinder {
 		} else {
 			this.seeTime--;
 		}
-		if (distance < minRange) {
-			if (fleeLocation == null || fleeLocation.distanceSquared(target.getLocation()) < minRange)
-				fleeLocation = NavigationUtils.findPositionInDirection(entity, Utils.getVectorTowards(target.getLocation(), entity.getLocation()), 3.0, 7.0);
+		if (distance < minRangeSquared) {
+			if (fleeLocation == null || fleeLocation.distanceSquared(targetLoc) < minRangeSquared)
+				fleeLocation = NavigationUtils.findPositionInDirection(entity, Utils.getVectorTowards(targetLoc, entityLoc), 3f, 7f);
 			if (fleeLocation != null)
-				brain.getController().moveTo(fleeLocation, speedMod);
+				controller.moveTo(fleeLocation, speedMod);
 			this.strafingTime = -1;
-		} else if (distance > maxRange || this.seeTime < 20) {
-			brain.getController().moveTo(target, speedMod);
+		} else if (distance > maxRangeSquared || this.seeTime < STRAFE_TIME_RESET) {
+			controller.moveTo(target, speedMod);
 			this.strafingTime = -1;
 		} else {
-			brain.getController().moveTo(entity.getLocation());
+			controller.moveTo(entityLoc);
 			this.strafingTime++;
 		}
-		if (this.strafingTime >= 20) {
-			if (random.nextFloat() < 0.3D)
+		if (this.strafingTime >= STRAFE_TIME_RESET) {
+			if (random.nextFloat() < STRAFE_THRESHOLD)
 				this.strafingClockwise = !this.strafingClockwise;
-			if (random.nextFloat() < 0.3D)
+			if (random.nextFloat() < STRAFE_THRESHOLD)
 				this.strafingBackwards = !this.strafingBackwards;
 			this.strafingTime = 0;
 		}
 		if (this.strafingTime > -1) {
-			if (distance > (this.maxRange * 0.75F)) {
+			if (distance > maxRangeOuter) {
 				this.strafingBackwards = false;
-			} else if (distance < (this.maxRange * 0.25F)) {
+			} else if (distance < maxRangeInner) {
 				this.strafingBackwards = true;
 			}
-			brain.getController().strafe(this.strafingBackwards ? -strafeSpeed : strafeSpeed,
+			controller.strafe(this.strafingBackwards ? -strafeSpeed : strafeSpeed,
 					this.strafingClockwise ? strafeSpeed : -strafeSpeed);
 			Entity vehicle = entity.getVehicle();
 			if (vehicle instanceof Mob mob)
 				BukkitBrain.getBrain(mob).getController().lookAt(target);
-			brain.getController().lookAt(target);
+			controller.lookAt(target);
 		} else {
-			brain.getController().lookAt(target);
+			controller.lookAt(target);
 		}
-		if (brain.getBody().isUsingItem()) {
+		if (body.isUsingItem()) {
 			usingTicks++;
-			if (!canSee && this.seeTime < -60) {
+			if (!canSee && this.seeTime < SEE_TIME_THRESHOLD) {
 				stopUsingItem(entity);
-			} else if (canSee && usingTicks >= 20) {
+			} else if (canSee && usingTicks >= USING_TICKS_THRESHOLD) {
 				stopUsingItem(entity);
 				shootProjectile.accept(entity);
 				this.attackTime = this.interval;
 			}
-		} else if (--this.attackTime <= 0 && this.seeTime >= -60) {
-			brain.getBody().useItem(InteractionHand.MAIN_HAND);
+		} else if (--this.attackTime <= 0 && this.seeTime >= SEE_TIME_THRESHOLD) {
+			body.useItem(InteractionHand.MAIN_HAND);
 		}
 	}
 	@Override
 	public boolean canContinueToUse() {
 		LivingEntity target = entity.getTarget();
-		if (target == null || target.isDead() || seeTime < -60)
+		if (target == null || target.isDead() || seeTime < SEE_TIME_THRESHOLD)
 			return false;
 		return true;
 	}
 	private void stopUsingItem(Mob mob) {
 		ItemStack item = mob.getEquipment().getItemInMainHand();
-		mob.getEquipment().setItemInMainHand(new ItemStack(Material.AIR), true);
+		mob.getEquipment().setItemInMainHand(AIR_ITEM, true);
 		new BukkitRunnable() {
 			@Override
 			public void run() {

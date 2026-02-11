@@ -1,13 +1,11 @@
 package com.github.jewishbanana.ultimatecontent.utils;
 
 import java.awt.Color;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -22,7 +20,6 @@ import org.bukkit.DyeColor;
 import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Tag;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
@@ -133,26 +130,17 @@ public class Utils {
 			damage += 2.5 * meta.getEnchantLevel(Enchantment.IMPALING);
 		return damage;
 	}
-	public static boolean rayTraceForSolid(Location initial, Location target) {
-		Vector vec = getVectorTowards(initial, target);
-		try {
-			vec.checkFinite();
-		} catch (IllegalArgumentException err) {
-			return false;
-		}
-		int distance = (int) initial.distance(target);
-		if (!initial.getBlock().isPassable())
-			return true;
-		Location temp = initial.clone();
-		for (int i=1; i < distance; i++)
-			if (!temp.add(vec).getBlock().isPassable())
-				return true;
-		return false;
-	}
 	public static Vector getVectorTowards(Location initial, Location towards) {
-		return new Vector(towards.getX() - initial.getX(), towards.getY() - initial.getY(), towards.getZ() - initial.getZ()).normalize();
+	    final float dx = (float)(towards.getX() - initial.getX());
+	    final float dy = (float)(towards.getY() - initial.getY());
+	    final float dz = (float)(towards.getZ() - initial.getZ());
+	    final float lengthSquared = dx * dx + dy * dy + dz * dz;
+	    if (lengthSquared == 0.0f)
+	        return new Vector(0, 0, 0);
+	    final float invLength = fastInverseSqrt(lengthSquared);
+	    return new Vector(dx * invLength, dy * invLength, dz * invLength);
 	}
-	public static Vector getUnormalizedVectorTowards(Location initial, Location towards) {
+	public static Vector getNoneNormalizedVectorTowards(Location initial, Location towards) {
 		return new Vector(towards.getX() - initial.getX(), towards.getY() - initial.getY(), towards.getZ() - initial.getZ());
 	}
 	public static void runConsoleCommand(String command, World world) {
@@ -175,38 +163,6 @@ public class Utils {
 	    Block targetBlock = lastTwoTargetBlocks.get(1);
 	    Block adjacentBlock = lastTwoTargetBlocks.get(0);
 	    return targetBlock.getFace(adjacentBlock);
-	}
-	public static Block rayCastForBlock(Location location, int minRange, int maxRange, int maxAttempts, Set<Material> materialWhitelist) {
-		for (int i=0; i < maxAttempts; i++) {
-			Location tempLoc = location.clone();
-			Vector tempVec = new Vector(random.nextDouble(-1, 1), random.nextDouble(-1, 1), random.nextDouble(-1, 1)).normalize();
-			for (int c=0; c < maxRange; c++) {
-				tempLoc.add(tempVec);
-				Block b = tempLoc.getBlock();
-				if (!b.isPassable()) {
-					if (c < minRange || (materialWhitelist != null && !materialWhitelist.contains(b.getType())))
-						break;
-					return b;
-				}
-			}
-		}
-		return null;
-	}
-	public static Block rayCastForBlock(Location location, int minRange, int maxRange, int maxAttempts, Set<Material> materialWhitelist, Set<Block> blockWhitelist) {
-		for (int i=0; i < maxAttempts; i++) {
-			Location tempLoc = location.clone();
-			Vector tempVec = new Vector(random.nextDouble(-1, 1), random.nextDouble(-1, 1), random.nextDouble(-1, 1)).normalize();
-			for (int c=0; c < maxRange; c++) {
-				tempLoc.add(tempVec);
-				Block b = tempLoc.getBlock();
-				if (!b.isPassable()) {
-					if (c < minRange || !blockWhitelist.contains(b) || (materialWhitelist != null && !materialWhitelist.contains(b.getType())))
-						break;
-					return b;
-				}
-			}
-		}
-		return null;
 	}
 	public static void damageItem(ItemStack toDamage, int damage) {
 		ItemMeta meta = toDamage.getItemMeta();
@@ -238,166 +194,106 @@ public class Utils {
 				return true;
 		return false;
 	}
-	public static Vector randomVector() {
-		return new Vector(random.nextDouble(-1, 1), random.nextDouble(-1, 1), random.nextDouble(-1, 1));
-	}
-	public static RandomGenerator random() {
-		return random;
-	}
 	public static List<ItemStack> createIngredients(Collection<Material> materials) {
 		List<ItemStack> list = new ArrayList<>();
 		for (Material material : materials)
 			list.add(new ItemStack(material));
 		return list;
 	}
-	public static Vector getRandomizedVector(double xWeight, double yWeight, double zWeight) {
-		return new Vector(xWeight == 0 ? 0.0 : random.nextDouble(-xWeight, xWeight), yWeight == 0 ? 0.0 : random.nextDouble(-yWeight, yWeight), zWeight == 0 ? 0.0 : random.nextDouble(-zWeight, zWeight)).normalize();
+	static float fastInverseSqrt(float x) {
+	    final float halfX = 0.5f * x;
+	    int i = Float.floatToRawIntBits(x);
+	    i = 0x5f3759df - (i >> 1);
+	    float y = Float.intBitsToFloat(i);
+	    y = y * (1.5f - halfX * y * y);
+	    return y;
+	}
+	public static Vector getRandomizedVector(float xWeight, float yWeight, float zWeight) {
+	    final float x = xWeight == 0 ? 0.0f : random.nextFloat(-xWeight, xWeight);
+	    final float y = yWeight == 0 ? 0.0f : random.nextFloat(-yWeight, yWeight);
+	    final float z = zWeight == 0 ? 0.0f : random.nextFloat(-zWeight, zWeight);
+	    final float lengthSquared = x * x + y * y + z * z;
+	    if (lengthSquared == 0.0f)
+	        return new Vector(0, 0, 0);
+	    final float invLength = fastInverseSqrt(lengthSquared);
+	    return new Vector(x * invLength, y * invLength, z * invLength);
 	}
 	public static Vector getRandomizedVector() {
-		return new Vector(random.nextDouble(-1, 1), random.nextDouble(-1, 1), random.nextDouble(-1, 1)).normalize();
+	    final float x = random.nextFloat(-1.0f, 1.0f);
+	    final float y = random.nextFloat(-1.0f, 1.0f);
+	    final float z = random.nextFloat(-1.0f, 1.0f);
+	    final float lengthSquared = x * x + y * y + z * z;
+	    if (lengthSquared == 0.0f)
+	        return new Vector(0, 0, 0);
+	    final float invLength = fastInverseSqrt(lengthSquared);
+	    return new Vector(x * invLength, y * invLength, z * invLength);
 	}
-	public static void sendErrorMessage() {
-		Main.consoleSender.sendMessage(Utils.convertString("&c[UltimateContent]: An error has occurred above this message. Please report the full error to the discord https://discord.gg/MhXFj72VeN"));
-	}
-	public static double calculateAnimationValue(
-            int currentFrame, 
-            int totalFrames, 
-            double acceleration, 
-            double deceleration, 
-            double maxValue
-    ) {
-        if (totalFrames <= 0 || currentFrame < 0 || currentFrame >= totalFrames) {
-            throw new IllegalArgumentException("Invalid frame or totalFrames input.");
-        }
-
-        // Compute midpoint of animation (peak value)
-        int midpoint = totalFrames / 2;
-
-        double value;
-        if (currentFrame < midpoint) {
-            // Acceleration phase
-            value = acceleration * currentFrame * currentFrame;
-        } else {
-            // Deceleration phase
-            int frameFromEnd = totalFrames - currentFrame - 1;
-            value = deceleration * frameFromEnd * frameFromEnd;
-        }
-
-        // Ensure value does not exceed maxValue
-        return Math.min(value, maxValue);
-    }
-	public static Location findRandomSpotInRadius(Location initial, double minDist, double maxDist, int height, int attempts) {
-		double squaredMin = minDist * minDist;
-		double squaredMax = maxDist * maxDist;
-		for (int i=0; i < attempts; i++) {
-			double distance = random.nextDouble(minDist, maxDist);
-			Location temp = EntityUtils.findSmartYSpawn(initial, initial.clone().add(getRandomizedVector().multiply(distance)), height, (int) Math.floor(Math.sqrt(squaredMax - (distance * distance))));
-			if (temp != null && temp.distanceSquared(initial) >= squaredMin)
-				return temp;
+	public static double calculateAnimationValue(int currentFrame, int totalFrames, double acceleration, double deceleration, double maxValue) {
+		if (totalFrames <= 0 || currentFrame < 0 || currentFrame >= totalFrames)
+			throw new IllegalArgumentException("Invalid frame or totalFrames input.");
+		// Compute midpoint of animation (peak value)
+		int midpoint = totalFrames / 2;
+		double value;
+		if (currentFrame < midpoint) {
+			// Acceleration phase
+			value = acceleration * currentFrame * currentFrame;
+		} else {
+			// Deceleration phase
+			int frameFromEnd = totalFrames - currentFrame - 1;
+			value = deceleration * frameFromEnd * frameFromEnd;
 		}
-		return null;
+		// Ensure value does not exceed maxValue
+		return Math.min(value, maxValue);
 	}
-	public static Location findRandomSpotInRadius(Location initial, double minDist, double maxDist, int height, int attempts, Predicate<Location> conditions) {
-		double squaredMin = minDist * minDist;
-		double squaredMax = maxDist * maxDist;
-		for (int i=0; i < attempts; i++) {
-			double distance = random.nextDouble(minDist, maxDist);
-			Location temp = EntityUtils.findSmartYSpawn(initial, initial.clone().add(getRandomizedVector().multiply(distance)), height, (int) Math.floor(Math.sqrt(squaredMax - (distance * distance))));
-			if (temp != null && temp.distanceSquared(initial) >= squaredMin && conditions.test(temp.clone()))
-				return temp;
-		}
-		return null;
+	public static Location findRandomSpotInRadius(Location initial, float minDist, float maxDist, int height, int attempts, Supplier<Vector> vector, Predicate<Location> conditions) {
+		final double squaredMin = minDist * minDist;
+		final World world = initial.getWorld();
+		final double initialX = initial.getX();
+		final double initialY = initial.getY();
+	    final double initialZ = initial.getZ();
+	    final int verticalRange = (int) maxDist;
+	    for (int i = 0; i < attempts; i++) {
+	        final float distance = random.nextFloat(minDist, maxDist);
+	        final Vector dir = vector.get();
+	        final double offsetX = dir.getX() * distance;
+	        final double offsetZ = dir.getZ() * distance;
+	        final Location searchLoc = new Location(world, initialX + offsetX, initialY, initialZ + offsetZ);
+	        final Location temp = SpawnUtils.findSmartYSpawn(initial, searchLoc, height, verticalRange);
+	        if (temp != null) {
+	            final double dx = temp.getX() - initialX;
+	            final double dz = temp.getZ() - initialZ;
+	            final double distSquared = dx * dx + dz * dz;
+	            if (distSquared >= squaredMin && conditions.test(temp))
+	                return temp;
+	        }
+	    }
+	    return null;
 	}
-	public static Location findRandomSpotInCircle(Location initial, double minDist, double maxDist) {
-		return initial.clone().add(getRandomizedVector(1.0, 0.0, 1.0).multiply(random.nextDouble(minDist, maxDist)));
+	public static Location findRandomSpotInRadius(Location initial, float minDist, float maxDist, int height, int attempts, Supplier<Vector> vector) {
+		return findRandomSpotInRadius(initial, minDist, maxDist, height, attempts, vector, test -> true);
 	}
-	public static Location findRandomSpotInCircle(Location initial, double minDist, double maxDist, int attempts, Predicate<Location> conditions) {
-		for (int i=0; i < attempts; i++) {
-			double distance = random.nextDouble(minDist, maxDist);
-			Location temp = initial.clone().add(getRandomizedVector(1.0, 0.0, 1.0).multiply(distance));
-			if (conditions.test(temp.clone()))
-				return temp;
-		}
-		return null;
+	public static Location findRandomSpotInRadius(Location initial, float minDist, float maxDist, int height, int attempts) {
+		return findRandomSpotInRadius(initial, minDist, maxDist, height, attempts, () -> getRandomizedVector());
 	}
-	public static Block rayTraceForBlock(Location location, int maxDistance, int attempts, Predicate<Block> condition, Supplier<Vector> createVector) {
-		for (int i=0; i < attempts; i++) {
-			Vector vec = createVector.get();
-			Location temp = location.clone().add(vec);
-			for (int j=1; j < maxDistance; j++) {
-				Block block = temp.getBlock();
-//				block.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, temp, 1, 0, 0, 0, .001);
-				if (condition.test(block))
-					return block;
-				if (!block.isPassable())
-					break;
-				temp.add(vec);
-			}
-		}
-		return null;
+	public static Location findRandomSpotInCircle(Location initial, float minDist, float maxDist, int attempts, Predicate<Location> conditions) {
+	    final World world = initial.getWorld();
+	    final double initialX = initial.getX();
+	    final double initialY = initial.getY();
+	    final double initialZ = initial.getZ();
+	    for (int i = 0; i < attempts; i++) {
+	        final float distance = random.nextFloat(minDist, maxDist);
+	        final Vector dir = getRandomizedVector(1f, 0f, 1f);
+	        final double x = initialX + dir.getX() * distance;
+	        final double y = initialY + dir.getY() * distance;
+	        final double z = initialZ + dir.getZ() * distance;
+	        final Location temp = new Location(world, x, y, z);
+	        if (conditions.test(temp))
+	            return temp;
+	    }
+	    return null;
 	}
-	public static Block rayTraceForBlock(Location location, int maxDistance, int attempts, Predicate<Block> condition) {
-		return rayTraceForBlock(location, maxDistance, attempts, condition, () -> getRandomizedVector());
-	}
-	public static Block getHighestExposedBlock(Block block, int maxDistance) {
-		if (block == null)
-			return null;
-		Block b = block;
-		if (b.isPassable())
-			for (int i=0; i < maxDistance; i++) {
-				b = b.getRelative(BlockFace.DOWN);
-				if (!b.isPassable())
-					return b;
-			}
-		else
-			for (int i=0; i < maxDistance; i++) {
-				b = b.getRelative(BlockFace.UP);
-				if (b.isPassable())
-					return b.getRelative(BlockFace.DOWN);
-			}
-		return null;
-	}
-	public static Queue<Block> getBlocksInCircleRadius(Location location, double radius) {
-		Queue<Block> queue = new ArrayDeque<>();
-		double radiusSquared = radius * radius;
-		Vector block = new Vector(location.getX(), location.getY(), location.getZ());
-		World world = location.getWorld();
-		for (double x = -radius; x <= radius; x++)
-			for (double z = -radius; z <= radius; z++) {
-				Vector position = block.clone().add(new Vector(x, 0, z));
-				if (block.distanceSquared(position) <= radiusSquared)
-					queue.add(position.toLocation(world).getBlock());
-			}
-		return queue;
-	}
-	public static Queue<Block> getBlocksInCircleCircumference(Location location, double radius) {
-		Queue<Block> queue = new ArrayDeque<>();
-		double outerRadius = radius * radius;
-		double innerRadius = (radius - 1) * (radius - 1);
-		Vector block = new Vector(location.getX(), location.getY(), location.getZ());
-		World world = location.getWorld();
-		for (double x = -radius; x <= radius; x++)
-			for (double z = -radius; z <= radius; z++) {
-				Vector position = block.clone().add(new Vector(x, 0, z));
-				double distance = block.distanceSquared(position);
-				if (distance <= outerRadius && distance > innerRadius)
-					queue.add(position.toLocation(world).getBlock());
-			}
-		return queue;
-	}
-	public static Queue<Block> getBlocksInSphereRadius(Location location, double radius) {
-		Queue<Block> queue = new ArrayDeque<>();
-		double radiusSquared = radius * radius;
-		for (double x = -radius; x <= radius; x++)
-			for (double y = -radius; y <= radius; y++)
-				for (double z = -radius; z <= radius; z++) {
-					Location position = location.clone().add(x, y, z);
-					if (position.distanceSquared(location) <= radiusSquared) {
-						queue.add(position.getBlock());
-//						position.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, getCenterOfBlock(position.getBlock()), 1, 0, 0, 0, .00001);
-					}
-				}
-		return queue;
+	public static Location findRandomSpotInCircle(Location initial, float minDist, float maxDist) {
+		return initial.clone().add(getRandomizedVector(1f, 0f, 1f).multiply(random.nextFloat(minDist, maxDist)));
 	}
 	public static int clamp(int value, int min, int max) {
 		return value < min ? min : value > max ? max : value;
@@ -408,32 +304,35 @@ public class Utils {
 	public static float clamp(float value, float min, float max) {
 		return value < min ? min : value > max ? max : value;
 	}
-	public static boolean isLocationsWithinDistance(Location loc1, Location loc2, double distanceSquared) {
+	public static boolean isLocationsWithinDistance(Location loc1, Location loc2, float distanceSquared) {
 		return loc1 != null && loc2 != null && loc1.getWorld().equals(loc2.getWorld()) && loc1.distanceSquared(loc2) <= distanceSquared;
 	}
 	public static enum AreaClearing {
 		
 		CUBE_3X3_FROM_CENTER(block -> {
+			final World world = block.getWorld();
 			for (int x = block.getX() - 1; x <= block.getX() + 1; x++)
 				for (int y = block.getY() - 1; y <= block.getY() + 1; y++)
 					for (int z = block.getZ() - 1; z <= block.getZ() + 1; z++)
-						if (!block.getWorld().getBlockAt(x, y, z).isPassable())
+						if (!world.getBlockAt(x, y, z).isPassable())
 							return false;
 			return true;
 		}),
 		CUBE_3X3_FROM_CENTER_BOTTOM(block -> {
+			final World world = block.getWorld();
 			for (int x = block.getX() - 1; x <= block.getX() + 1; x++)
 				for (int y = block.getY(); y <= block.getY() + 2; y++)
 					for (int z = block.getZ() - 1; z <= block.getZ() + 1; z++)
-						if (!block.getWorld().getBlockAt(x, y, z).isPassable())
+						if (!world.getBlockAt(x, y, z).isPassable())
 							return false;
 			return true;
 		}),
 		CUBE_3X3_FROM_CENTER_TOP(block -> {
+			final World world = block.getWorld();
 			for (int x = block.getX() - 1; x <= block.getX() + 1; x++)
 				for (int y = block.getY() - 2; y <= block.getY(); y++)
 					for (int z = block.getZ() - 1; z <= block.getZ() + 1; z++)
-						if (!block.getWorld().getBlockAt(x, y, z).isPassable())
+						if (!world.getBlockAt(x, y, z).isPassable())
 							return false;
 			return true;
 		}),
@@ -453,92 +352,17 @@ public class Utils {
 	public static boolean isAreaClear(Block block, AreaClearing clearing) {
 		return clearing.function.apply(block);
 	}
-	public static boolean isAreaClear(Location location, double radius) {
-		for (Block b : getBlocksInSphereRadius(location, radius))
+	public static boolean isAreaClear(Location location, float radius) {
+		for (Block b : BlockUtils.getBlocksInSphereRadius(location, radius))
 			if (!b.isPassable())
 				return false;
 		return true;
 	}
-	public static boolean isBlockColdBiome(Block block) {
-		double humidity = block.getWorld().getHumidity(block.getX(), block.getY(), block.getZ());
-		return humidity >= 0.4 && humidity <= 0.8 && block.getWorld().getTemperature(block.getX(), block.getY(), block.getZ()) < 0.15;
-	}
-	public static boolean isBlockDesertBiome(Block block) {
-		return block.getWorld().getTemperature(block.getX(), block.getY(), block.getZ()) >= 1.8 && block.getWorld().getHumidity(block.getX(), block.getY(), block.getZ()) < 0.1;
-	}
-	public static double getDamageOnBlock(Block block, ItemStack item) {
-		double toolDamage = 1.0;
-		double harvestDamage = 100.0;
-		if (item != null) {
-			switch (item.getType()) {
-			case WOODEN_AXE:
-			case WOODEN_PICKAXE:
-			case WOODEN_SHOVEL:
-				toolDamage = 2.0;
-				break;
-			case STONE_AXE:
-			case STONE_PICKAXE:
-			case STONE_SHOVEL:
-				toolDamage = 4.0;
-				break;
-			case IRON_AXE:
-			case IRON_PICKAXE:
-			case IRON_SHOVEL:
-				toolDamage = 6.0;
-				break;
-			case DIAMOND_AXE:
-			case DIAMOND_PICKAXE:
-			case DIAMOND_SHOVEL:
-				toolDamage = 8.0;
-				break;
-			case GOLDEN_AXE:
-			case GOLDEN_PICKAXE:
-			case GOLDEN_SHOVEL:
-				toolDamage = 12.0;
-				break;
-			case NETHERITE_AXE:
-			case NETHERITE_PICKAXE:
-			case NETHERITE_SHOVEL:
-				toolDamage = 9.0;
-				break;
-			default:
-				break;
-			}
-			switch (item.getType()) {
-			case WOODEN_PICKAXE:
-			case STONE_PICKAXE:
-			case IRON_PICKAXE:
-			case GOLDEN_PICKAXE:
-			case DIAMOND_PICKAXE:
-			case NETHERITE_PICKAXE:
-				if (Tag.MINEABLE_PICKAXE.isTagged(block.getType()))
-					harvestDamage = 30.0;
-				break;
-			case WOODEN_AXE:
-			case STONE_AXE:
-			case IRON_AXE:
-			case GOLDEN_AXE:
-			case DIAMOND_AXE:
-			case NETHERITE_AXE:
-				if (Tag.MINEABLE_AXE.isTagged(block.getType()))
-					harvestDamage = 30.0;
-				break;
-			case WOODEN_SHOVEL:
-			case STONE_SHOVEL:
-			case IRON_SHOVEL:
-			case GOLDEN_SHOVEL:
-			case DIAMOND_SHOVEL:
-			case NETHERITE_SHOVEL:
-				if (Tag.MINEABLE_SHOVEL.isTagged(block.getType()))
-					harvestDamage = 30.0;
-				break;
-			default:
-				break;
-			}
-			if (item.containsEnchantment(VersionUtils.getEfficiency()))
-				toolDamage += Math.pow(item.getEnchantmentLevel(VersionUtils.getEfficiency()), 2.0) + 1;
-		}
-		return toolDamage / block.getType().getHardness() / harvestDamage;
+	public static boolean isAreaClear(Location location, float radius, float height) {
+		for (Block b : BlockUtils.getBlocksInCylinderRadius(location, radius, height))
+			if (!b.isPassable())
+				return false;
+		return true;
 	}
 	public static Vector getParabolicVelocity(Location from, Location to, double heightGain, double gravity) {
 	    double dx = to.getX() - from.getX();
@@ -560,10 +384,17 @@ public class Utils {
 
 	    return velocity;
 	}
-	public static Location getCenterOfBlock(Block block) {
-		return block.getLocation().add(.5, .5, .5);
-	}
 	public static <T> boolean isNotNullAndCondition(T object, Predicate<T> condition) {
 		return object != null && condition.test(object);
+	}
+	public static void sendExceptionLog(Exception error) {
+		error.printStackTrace();
+		Main.consoleSender.sendMessage(Utils.convertString("&c[UltimateContent]: An error has occurred above this message. Please report the full error to the discord https://discord.gg/MhXFj72VeN"));
+	}
+	public static void sendConsoleMessage(String message) {
+		Main.consoleSender.sendMessage(Utils.prefix + convertString(message));
+	}
+	public static RandomGenerator getRandomGenerator() {
+		return random;
 	}
 }

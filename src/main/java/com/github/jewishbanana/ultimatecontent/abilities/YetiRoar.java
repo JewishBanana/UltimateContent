@@ -18,6 +18,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
 
+import com.github.jewishbanana.deadlydisasters.utils.BlockUtils;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.UIAbilityType;
 import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
@@ -31,14 +32,14 @@ public class YetiRoar extends AbilityAttributes {
 	
 	public double damage;
 	public double range;
-	private double particleMultiplier;
 	public int freezeTicks;
+	private double particleMultiplier;
 
 	public YetiRoar(UIAbilityType type) {
 		super(type);
 	}
 	public void activate(Entity entity, GenericItem base) {
-		activate(entity.getLocation().add(0,entity.getHeight()/2.0,0), entity, base);
+		activate(entity.getLocation().add(0, entity.getHeight() / 2.0, 0), entity, base);
 	}
 	public void activate(Location loc, GenericItem base) {
 		activate(loc, null, base);
@@ -47,10 +48,10 @@ public class YetiRoar extends AbilityAttributes {
 		World world = loc.getWorld();
 		BlockVector block = new BlockVector(loc.getX(), loc.getY(), loc.getZ());
 		BlockData bd = Material.PACKED_ICE.createBlockData();
-		playSound(loc, Sound.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, 1, .6);
-		playSound(loc, Sound.ENTITY_RAVAGER_ROAR, 2, .5);
-		int snowParticles = (int) (20.0 * particleMultiplier);
-		int blockCrackParticles = (int) (3.0 * particleMultiplier);
+		playSound(loc, Sound.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, 1f, .6f);
+		playSound(loc, Sound.ENTITY_RAVAGER_ROAR, 2f, .5f);
+		final int snowParticles = (int) Math.ceil(20.0 * particleMultiplier);
+		final int blockCrackParticles = (int) Math.ceil(3.0 * particleMultiplier);
 		new BukkitRunnable() {
 			private int tick;
 
@@ -81,20 +82,22 @@ public class YetiRoar extends AbilityAttributes {
 								if (!b.isPassable())
 									continue;
 							}
-							world.spawnParticle(VersionUtils.getSnowShovel(), b.getLocation().clone().add(0.5, 0.5, 0.5), snowParticles, .3, .5, .3, 0.001);
-							world.spawnParticle(VersionUtils.getBlockCrack(), b.getLocation().clone().add(0.5, 0.5, 0.5), blockCrackParticles, .3, .5, .3, 0.001, bd);
-							Location blockLoc = b.getLocation().add(.5, .5, .5);
+							Location center = BlockUtils.getCenterOfBlock(b);
+							if (snowParticles > 0)
+								world.spawnParticle(VersionUtils.getSnowShovel(), center, snowParticles, .3, .5, .3, 0.001);
+							if (blockCrackParticles > 0)
+								world.spawnParticle(VersionUtils.getBlockCrack(), center, blockCrackParticles, .3, .5, .3, 0.001, bd);
 							if (Tag.FIRE.isTagged(b.getType()) && canBlockBeDamaged(b)) {
 								b.setType(Material.AIR);
-								playSound(blockLoc, Sound.BLOCK_FIRE_EXTINGUISH, 1, 1);
-								world.spawnParticle(VersionUtils.getLargeSmoke(), blockLoc.clone().subtract(0, .3, 0), 5, .3, .5, .3, 0.001, bd);
+								playSound(center, Sound.BLOCK_FIRE_EXTINGUISH, 1, 1);
+								world.spawnParticle(VersionUtils.getLargeSmoke(), center.getX(), center.getY() - 0.3, center.getZ(), 5, .3, .5, .3, 0.001);
 							}
-							playSound(b.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, .5, .5);
-							for (Entity e : world.getNearbyEntities(blockLoc, 0.5, 1, 0.5)) {
+							playSound(center, Sound.ENTITY_PLAYER_HURT_FREEZE, .5f, .5f);
+							for (Entity e : world.getNearbyEntities(center, 0.5, 1, 0.5)) {
 								if (e.equals(activator) || !canEntityBeHarmed(e, activator))
 									continue;
 								if (e instanceof LivingEntity alive) {
-									if (!EntityUtils.damageEntity(alive, damage, "deaths.yetiRoar", DamageCause.FREEZE))
+									if (!EntityUtils.damageEntity(alive, damage, "deaths.yetiRoar", DamageCause.FREEZE, activator, false, false, Sound.ENTITY_PLAYER_HURT_FREEZE))
 										continue;
 									alive.addPotionEffect(new PotionEffect(VersionUtils.getSlowness(), 100, 7, true, false));
 								}
@@ -108,28 +111,14 @@ public class YetiRoar extends AbilityAttributes {
 			}
 		}.runTaskTimer(plugin, 0, 5);
 	}
-	public void initFields() {
-		this.damage = getDoubleField("damage", 1.0);
-		this.range = getDoubleField("range", 4.0);
-		this.particleMultiplier = getDoubleField("particleMultiplier", 1.0);
-		this.freezeTicks = getIntegerField("freezeTicks", 100);
-	}
 	public static void register() {
 		UIAbilityType.registerAbility(REGISTERED_KEY, YetiRoar.class);
 	}
-	public Map<String, Object> serialize() {
-		Map<String, Object> map = super.serialize();
-		map.put("damage", damage);
-		map.put("range", range);
-		map.put("particleMultiplier", particleMultiplier);
-		map.put("freezeTicks", freezeTicks);
-		return map;
-	}
 	public void deserialize(Map<String, Object> map) {
 		super.deserialize(map);
-		damage = (double) map.get("damage");
-		range = (double) map.get("range");
-		particleMultiplier = (double) map.get("particleMultiplier");
-		freezeTicks = (int) map.get("freezeTicks");
+		damage = registerSerializedDoubleField("damage", map);
+		range = registerSerializedDoubleField("range", map);
+		freezeTicks = registerSerializedIntegerField("freezeTicks", map);
+		particleMultiplier = registerSerializedDoubleField("particleMultiplier", map);
 	}
 }

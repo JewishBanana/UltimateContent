@@ -5,11 +5,11 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World.Environment;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Enderman;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
@@ -45,31 +45,31 @@ public class EndTotem extends ComplexEntity<Enderman> {
 		headStand = new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
 			initStand(stand);
 			stand.getEquipment().setHelmet(new ItemStack(Material.END_PORTAL_FRAME));
-		}, new Vector(0,1,0));
+		}, new Vector(0, 1, 0));
 		createStands(entity.getLocation(), headStand, new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
 			initStand(stand);
 			stand.getEquipment().setItemInMainHand(new ItemStack(Material.CHORUS_PLANT));
 			stand.getEquipment().setItemInOffHand(new ItemStack(Material.CHORUS_FLOWER));
-			stand.setRightArmPose(new EulerAngle(0,0.3,1.1));
-			stand.setLeftArmPose(new EulerAngle(0,0.5,-1.8));
-		}, new Vector(0,1,0)), new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
+			stand.setRightArmPose(new EulerAngle(0, 0.3, 1.1));
+			stand.setLeftArmPose(new EulerAngle(0, 0.5, -1.8));
+		}, new Vector(0, 1, 0)), new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
 			initStand(stand);
 			stand.getEquipment().setHelmet(new ItemStack(Material.PURPUR_PILLAR));
 			stand.getEquipment().setItemInMainHand(new ItemStack(Material.CHORUS_PLANT));
 			stand.getEquipment().setItemInOffHand(new ItemStack(Material.CHORUS_FLOWER));
-			stand.setRightArmPose(new EulerAngle(0,0.3,1.1));
-			stand.setLeftArmPose(new EulerAngle(0,0.5,-1.8));
-		}, new Vector(0,.2,0), 90f), new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
+			stand.setRightArmPose(new EulerAngle(0, 0.3, 1.1));
+			stand.setLeftArmPose(new EulerAngle(0, 0.5, -1.8));
+		}, new Vector(0, .2, 0), 90f), new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
 			initStand(stand);
 			stand.getEquipment().setHelmet(new ItemStack(Material.PURPUR_PILLAR));
 			stand.getEquipment().setItemInMainHand(new ItemStack(Material.CHORUS_PLANT));
 			stand.getEquipment().setItemInOffHand(new ItemStack(Material.CHORUS_FLOWER));
-			stand.setRightArmPose(new EulerAngle(0,0.3,1.1));
-			stand.setLeftArmPose(new EulerAngle(0.5,0.5,-1.8));
-		}, new Vector(0,-.55,0)), new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
+			stand.setRightArmPose(new EulerAngle(0, 0.3, 1.1));
+			stand.setLeftArmPose(new EulerAngle(0.5, 0.5, -1.8));
+		}, new Vector(0, -.55, 0)), new CreatureStand<ArmorStand>(ArmorStand.class, stand -> {
 			initStand(stand);
 			stand.getEquipment().setHelmet(new ItemStack(Material.OBSIDIAN));
-		}, new Vector(0,-1.3,0)));
+		}, new Vector(0, -1.3, 0)));
 		
 		offsets = new Vector[] { new Vector(), new Vector(), new Vector(), new Vector(), new Vector() };
 		
@@ -79,10 +79,10 @@ public class EndTotem extends ComplexEntity<Enderman> {
 				if (!entity.isValid())
 					return;
 				Location loc = entity.getLocation();
-				loc.getWorld().spawnParticle(Particle.REVERSE_PORTAL, loc.clone().add(0,1,0), 7, .5, .75, .5, 0.01);
+				loc.getWorld().spawnParticle(Particle.REVERSE_PORTAL, loc.clone().add(0, 1, 0), 7, .5, .75, .5, 0.01);
 				headStand.getEntity(loc).setHeadPose(new EulerAngle(Math.toRadians(loc.getPitch()), 0, 0));
 				if (hitAnimation) {
-					loc.getWorld().spawnParticle(Particle.DRAGON_BREATH, loc.clone().add(0,1,0), 7, .2, .2, .2, 0.2);
+					VersionUtils.spawnDragonBreathParticle(loc.clone().add(0, 1, 0), 7, .2, .2, .2, 0.2, 1f);
 					CreatureStand<?> headStand = getCreatureStand(0);
 					headStand.getEntity(loc).teleport(loc.add(headStand.getOffset()));
 					loc.subtract(headStand.getOffset());
@@ -116,13 +116,13 @@ public class EndTotem extends ComplexEntity<Enderman> {
 		}.runTaskTimer(plugin, 0, 1));
 		
 		final Vector[] velocities = new Vector[] {
-				Utils.getRandomizedVector(1.0, 0.2, 1.0).multiply(0.03),
-				Utils.getRandomizedVector(1.0, 0.2, 1.0).multiply(0.03),
-				Utils.getRandomizedVector(1.0, 0.2, 1.0).multiply(0.03),
-				Utils.getRandomizedVector(1.0, 0.2, 1.0).multiply(0.03),
-				Utils.getRandomizedVector(1.0, 0.2, 1.0).multiply(0.03)
+				Utils.getRandomizedVector(1f, 0.2f, 1f).multiply(0.03),
+				Utils.getRandomizedVector(1f, 0.2f, 1f).multiply(0.03),
+				Utils.getRandomizedVector(1f, 0.2f, 1f).multiply(0.03),
+				Utils.getRandomizedVector(1f, 0.2f, 1f).multiply(0.03),
+				Utils.getRandomizedVector(1f, 0.2f, 1f).multiply(0.03)
 				};
-		final double[] maxVelocities = new double[] { random.nextDouble(5, 15), random.nextDouble(5, 15), random.nextDouble(5, 15), random.nextDouble(5, 15), random.nextDouble(5, 15) };
+		final float[] maxVelocities = new float[] { random.nextFloat(5, 15), random.nextFloat(5, 15), random.nextFloat(5, 15), random.nextFloat(5, 15), random.nextFloat(5, 15) };
 		final int[] frame = {1, 0};
 		scheduleTask(new BukkitRunnable() {
 			@Override
@@ -135,8 +135,8 @@ public class EndTotem extends ComplexEntity<Enderman> {
 						frame[1] = 0;
 						offsets = new Vector[] { new Vector(), new Vector(), new Vector(), new Vector(), new Vector() };
 						for (int i=0; i < velocities.length; i++) {
-							velocities[i] = Utils.getRandomizedVector(1.0, 0.2, 1.0).multiply(0.03);
-							maxVelocities[i] = random.nextDouble(5, 15);
+							velocities[i] = Utils.getRandomizedVector(1f, 0.2f, 1f).multiply(0.03);
+							maxVelocities[i] = random.nextFloat(5, 15);
 						}
 						return;
 					}
@@ -147,7 +147,7 @@ public class EndTotem extends ComplexEntity<Enderman> {
 		}.runTaskTimerAsynchronously(plugin, 0, 1));
 	}
 	public void hitEntity(EntityDamageByEntityEvent event) {
-		Location loc = event.getEntity().getLocation().add(0,.5,0);
+		Location loc = event.getEntity().getLocation().add(0, .5, 0);
 		Vector velocity = Utils.getVectorTowards(event.getDamager().getLocation(), loc).multiply(knockbackMultiplier);
 		velocity.setY(Math.min(velocity.getY(), knockbackMultiplier / 3.0));
 		event.getEntity().setVelocity(velocity);
@@ -155,29 +155,33 @@ public class EndTotem extends ComplexEntity<Enderman> {
 		hitAnimation = true;
 		hitAnimationFrame = 0;
 	}
+	public void onChangeBlock(EntityChangeBlockEvent event) {
+		if (event.getTo() == Material.AIR)
+			event.setCancelled(true);
+	}
 	public void onDeath(EntityDeathEvent event) {
 		super.onDeath(event);
-		event.getEntity().getWorld().spawnParticle(VersionUtils.getEnchantParticle(), event.getEntity().getLocation().add(0,2,0), 1000, .25, .25, .25, 20);
+		event.getEntity().getWorld().spawnParticle(VersionUtils.getEnchantParticle(), event.getEntity().getLocation().add(0, 2, 0), 1000, .25, .25, .25, 20);
 		if (VersionUtils.displaysAllowed && getSectionBoolean("deathRagdoll", false)) {
 			Location loc = event.getEntity().getLocation();
 			int lifeTicks = (int) (getSectionDouble("ragdollSeconds", 7.0) * 20.0);
-			PhysicsEngine.dropBlockWithPhysics(getCreatureStandEntity(0, loc).getLocation().add(0,1.5,0), Material.END_PORTAL_FRAME, 0.6f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
-			PhysicsEngine.dropBlockWithPhysics(getCreatureStandEntity(2, loc).getLocation().add(0,1.5,0), Material.PURPUR_PILLAR, 0.6f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
-			PhysicsEngine.dropBlockWithPhysics(getCreatureStandEntity(3, loc).getLocation().add(0,1.5,0), Material.PURPUR_PILLAR, 0.6f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
-			PhysicsEngine.dropBlockWithPhysics(getCreatureStandEntity(4, loc).getLocation().add(0,1.5,0), Material.OBSIDIAN, 0.6f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
+			PhysicsEngine.dropBlockWithPhysics(getCreatureStandEntity(0, loc).getLocation().add(0, 1.5, 0), Material.END_PORTAL_FRAME, 0.6f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
+			PhysicsEngine.dropBlockWithPhysics(getCreatureStandEntity(2, loc).getLocation().add(0, 1.5, 0), Material.PURPUR_PILLAR, 0.6f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
+			PhysicsEngine.dropBlockWithPhysics(getCreatureStandEntity(3, loc).getLocation().add(0, 1.5, 0), Material.PURPUR_PILLAR, 0.6f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
+			PhysicsEngine.dropBlockWithPhysics(getCreatureStandEntity(4, loc).getLocation().add(0, 1.5, 0), Material.OBSIDIAN, 0.6f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
 			for (int i=1; i < 4; i++) {
 				Entity stand = getCreatureStandEntity(i, loc);
 				Vector direction = stand.getLocation().getDirection();
 				Vector left = new Vector(direction.getZ(), 0, -direction.getX());
 				Vector right = new Vector(-direction.getZ(), 0, direction.getX());
-				PhysicsEngine.dropBlockWithPhysics(stand.getLocation().add(right).add(0,1.5,0), Material.CHORUS_PLANT, 0.35f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
-				PhysicsEngine.dropBlockWithPhysics(stand.getLocation().add(left).add(0,1.5,0), Material.CHORUS_FLOWER, 0.35f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
+				PhysicsEngine.dropBlockWithPhysics(stand.getLocation().add(right).add(0, 1.5, 0), Material.CHORUS_PLANT, 0.35f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
+				PhysicsEngine.dropBlockWithPhysics(stand.getLocation().add(left).add(0, 1.5, 0), Material.CHORUS_FLOWER, 0.35f, Utils.getRandomizedVector().multiply(0.2), 0.06, lifeTicks);
 			}
 		}
 	}
 	public void setAttributes(Enderman entity) {
 		super.setAttributes(entity);
-		this.knockbackMultiplier = entity.getAttribute(Attribute.GENERIC_ATTACK_KNOCKBACK).getValue();
+		this.knockbackMultiplier = entity.getAttribute(VersionUtils.getAttackKnockbackAttribute()).getValue();
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(EndTotem.REGISTERED_KEY, EndTotem.class);

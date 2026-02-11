@@ -4,7 +4,6 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import org.bukkit.Location;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Creeper;
@@ -50,7 +49,7 @@ public class InfestedCreeper extends ComplexEntity<Creeper> implements Exploding
 	}
 	public void setAttributes(Creeper entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(40);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(40);
 		this.damageMultiplier = getSectionDouble("damageMultiplier", 1.0);
 	}
 	public double getExplosionDamageMultiplier() {
@@ -64,7 +63,7 @@ public class InfestedCreeper extends ComplexEntity<Creeper> implements Exploding
 		});
 	}
 	public static final Function<Location, BaseEntity<?>> attemptSpawn = area -> {
-		Location spawn = SpawnUtils.findSpawnLocation(area);
+		Location spawn = SpawnUtils.findMonsterSpawnLocation(area);
 		if (spawn == null || spawn.getBlock().getBiome() != Biome.DEEP_DARK)
 			return null;
 		return UIEntityManager.spawnEntity(spawn, InfestedCreeper.class);

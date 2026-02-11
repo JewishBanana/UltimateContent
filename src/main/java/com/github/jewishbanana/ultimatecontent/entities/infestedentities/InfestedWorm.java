@@ -28,6 +28,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
+import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.CustomHead;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
@@ -102,7 +103,7 @@ public class InfestedWorm extends ComplexEntity<ArmorStand> {
 					new BukkitRunnable() {
 						private Entity target = entities.iterator().next();
 						private int standCount = (int) Stream.of(stands).filter(temp -> temp.getEntityOrNull() != null).count();
-						private Location loc = Utils.getCenterOfBlock(block);
+						private Location loc = BlockUtils.getCenterOfBlock(block);
 						private int unearthTicks = 20;
 						
 						@Override
@@ -195,7 +196,7 @@ public class InfestedWorm extends ComplexEntity<ArmorStand> {
 				parameters.sender.sendMessage(Utils.convertString("&cYou can only summon an infested worm on a solid block! Please look at a solid block when running this command!"));
 				return false;
 			}
-			parameters.location = Utils.getCenterOfBlock(temp);
+			parameters.location = BlockUtils.getCenterOfBlock(temp);
 			return true;
 		});
 	}

@@ -7,7 +7,6 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World.Environment;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
@@ -81,9 +80,9 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 				if (block == null || block.isPassable())
 					return;
 				if (!attackAnimation)
-					entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), new Location(loc.getWorld(), loc.getX(), block.getY()+1.1, loc.getZ()), 5, .2, .2, .2, 0.1, block.getBlockData());
+					entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), loc.getX(), block.getY()+1.1, loc.getZ(), 5, .2, .2, .2, 0.1, block.getBlockData());
 				else
-					entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), new Location(loc.getWorld(), loc.getX(), block.getY()+1.1, loc.getZ()), 40, .4, .3, .4, 0.1, block.getBlockData());
+					entity.getWorld().spawnParticle(VersionUtils.getBlockCrack(), loc.getX(), block.getY()+1.1, loc.getZ(), 40, .4, .3, .4, 0.1, block.getBlockData());
 			}
 		}.runTaskTimerAsynchronously(plugin, 0, 1));
 		scheduleTask(new BukkitRunnable() {
@@ -91,7 +90,7 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 			public void run() {
 				if (!entity.isValid())
 					return;
-				playSound(entity.getLocation(), Sound.BLOCK_CHORUS_FLOWER_DEATH, .15, .5);
+				playSound(entity.getLocation(), Sound.BLOCK_CHORUS_FLOWER_DEATH, .15f, .5f);
 			}
 		}.runTaskTimer(plugin, 0, 5));
 		scheduleTask(new BukkitRunnable() {
@@ -111,9 +110,9 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 		entity.setAI(false);
 		attackAnimation = true;
 		final Location start = entity.getLocation();
-		playSound(start, Sound.BLOCK_GRAVEL_BREAK, 1, .5);
-		playSound(start, Sound.BLOCK_NETHER_SPROUTS_BREAK, 1, .5);
-		playSound(start, Sound.ENTITY_HOGLIN_DEATH, 1, .5);
+		playSound(start, Sound.BLOCK_GRAVEL_BREAK, 1f, .5f);
+		playSound(start, Sound.BLOCK_NETHER_SPROUTS_BREAK, 1f, .5f);
+		playSound(start, Sound.ENTITY_HOGLIN_DEATH, 1f, .5f);
 		BlockData bd = entity.getLocation().getBlock().getRelative(BlockFace.DOWN).getBlockData();
 		for (int i=0; i < offsets.length; i++)
 			offsets[i] = new Vector();
@@ -220,10 +219,10 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 		}.runTaskTimer(plugin, 5, 1);
 		final Vector[] velocities = new Vector[11];
 		for (int i=0; i < velocities.length; i++)
-			velocities[i] = Utils.getRandomizedVector(1.0, 0.01, 1.0).multiply(0.05);
-		final double[] maxVelocities = new double[11];
+			velocities[i] = Utils.getRandomizedVector(1f, 0.01f, 1f).multiply(0.05);
+		final float[] maxVelocities = new float[11];
 		for (int i=0; i < maxVelocities.length; i++)
-			maxVelocities[i] = random.nextDouble(5, 10);
+			maxVelocities[i] = random.nextFloat(5, 10);
 		scheduleTask(new BukkitRunnable() {
 			private int frame;
 			private boolean flipped;
@@ -242,8 +241,8 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 						for (int i=0; i < offsets.length; i++)
 							offsets[i] = new Vector();
 						for (int i=0; i < velocities.length; i++) {
-							velocities[i] = Utils.getRandomizedVector(1.0, 0.01, 1.0).multiply(0.05);
-							maxVelocities[i] = random.nextDouble(5, 10);
+							velocities[i] = Utils.getRandomizedVector(1f, 0.01f, 1f).multiply(0.05);
+							maxVelocities[i] = random.nextFloat(5, 10);
 						}
 						return;
 					}
@@ -278,8 +277,8 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 	}
 	public void setAttributes(Silverfish entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(40);
-		entity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(0);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(40);
+		entity.getAttribute(VersionUtils.getAttackDamageAttribute()).setBaseValue(0);
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(VoidWorm.REGISTERED_KEY, VoidWorm.class);

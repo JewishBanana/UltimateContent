@@ -37,27 +37,27 @@ public interface TameableEntity {
 		setProtectiveGoals(tameable, mob);
 		PathfindersHandler.addTamedMob(entity.getUniqueId(), tameable);
 	}
-	public static void setProtectiveGoals(TameableEntity tameable, Mob entity) {
+	default void setProtectiveGoals(TameableEntity tameable, Mob entity) {
 		UUID owner = tameable.getOwner();
 		if (owner == null)
 			return;
 		EntityBrain brain = BukkitBrain.getBrain(entity);
 		EntityAI goals = brain.getTargetAI();
 		goals.clear();
-		goals.put(new PathfinderHurtByEntity(entity, owner), 1);
-		goals.put(new PathfinderOwnerHurtByEntity(entity, tameable), 1);
-		goals.put(new PathfinderOwnerHurtEntity(entity, tameable), 2);
-		goals.put(new PathfinderAllyHurtByEntity(entity, tameable), 3);
-		goals.put(new PathfinderOwnerTargetedByEntity(entity, tameable), 4);
+		goals.put(new PathfinderHurtByEntity(entity, owner), 0);
+		goals.put(new PathfinderOwnerHurtByEntity(entity, tameable), 0);
+		goals.put(new PathfinderOwnerHurtEntity(entity, tameable), 1);
+		goals.put(new PathfinderAllyHurtByEntity(entity, tameable), 2);
+		goals.put(new PathfinderOwnerTargetedByEntity(entity, tameable), 3);
 		
 		goals = brain.getGoalAI();
 		goals.clear();
 		goals.put(new PathfinderFloat(entity), 1);
 		if (entity instanceof Creature creature)
-			goals.put(new PathfinderMeleeAttack(creature), 2);
-		goals.put(new PathfinderFollowEntity(entity, owner, 2, 12), 3);
-		goals.put(new PathfinderLookAtEntity<Player>(entity, Player.class), 4);
-		goals.put(new PathfinderLookAtEntity<LivingEntity>(entity, LivingEntity.class), 5);
-		goals.put(new PathfinderRandomLook(entity), 6);
+			goals.put(new PathfinderMeleeAttack(creature), 4);
+		goals.put(new PathfinderFollowEntity(entity, owner, 2, 12), 5);
+		goals.put(new PathfinderLookAtEntity<Player>(entity, Player.class), 6);
+		goals.put(new PathfinderLookAtEntity<LivingEntity>(entity, LivingEntity.class), 7);
+		goals.put(new PathfinderRandomLook(entity), 8);
 	}
 }

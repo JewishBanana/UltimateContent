@@ -33,14 +33,14 @@ public class KillerChicken extends BaseEntity<Chicken> {
 		EntityAI goals = brain.getTargetAI();
 		goals.clear();
 		goals.put(new PathfinderHurtByTarget(entity, EntityType.RABBIT), 1);
-		goals.put(new PathfinderNearestAttackableTarget<Player>(entity, Player.class), 2);
+		goals.put(new PathfinderNearestAttackableTarget<>(entity, Player.class), 2);
 		
 		goals = brain.getGoalAI();
 		goals.clear();
-		goals.put(new PathfinderFloat(entity), 1);
-		goals.put(new PathfinderAnimalAttackTarget(entity, entityVariant.damage, 1.0, 10), 2);
-		goals.put(new PathfinderRandomStrollLand(entity), 3);
-		goals.put(new PathfinderLookAtEntity<>(entity, LivingEntity.class), 4);
+		goals.put(new PathfinderFloat(entity), 0);
+		goals.put(new PathfinderAnimalAttackTarget(entity, entityVariant.damage, 1f, 10), 3);
+		goals.put(new PathfinderRandomStrollLand(entity), 4);
+		goals.put(new PathfinderLookAtEntity<>(entity, LivingEntity.class), 5);
 	}
 	public void wasHit(EntityDamageByEntityEvent event) {
 		if (event.getDamager().hasMetadata("uc-eastermobs"))

@@ -3,7 +3,6 @@ package com.github.jewishbanana.ultimatecontent.entities.infestedentities;
 import java.util.function.Function;
 
 import org.bukkit.Location;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.Zombie;
 import org.bukkit.util.Vector;
@@ -29,7 +28,7 @@ public class InfestedZombie extends BaseEntity<Zombie> {
 	}
 	public void setAttributes(Zombie entity) {
 		super.setAttributes(entity);
-		entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE).setBaseValue(40);
+		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(40);
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(InfestedZombie.REGISTERED_KEY, InfestedZombie.class);
@@ -39,7 +38,7 @@ public class InfestedZombie extends BaseEntity<Zombie> {
 		});
 	}
 	public static final Function<Location, BaseEntity<?>> attemptSpawn = area -> {
-		Location spawn = SpawnUtils.findSpawnLocation(area);
+		Location spawn = SpawnUtils.findMonsterSpawnLocation(area);
 		if (spawn == null || spawn.getBlock().getBiome() != Biome.DEEP_DARK)
 			return null;
 		return UIEntityManager.spawnEntity(spawn, InfestedZombie.class);

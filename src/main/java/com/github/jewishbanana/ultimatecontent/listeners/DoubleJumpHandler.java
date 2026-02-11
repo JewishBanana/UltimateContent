@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -17,6 +17,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -30,18 +31,17 @@ import org.bukkit.scheduler.BukkitTask;
 import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorChangeEvent;
 import com.github.jewishbanana.uiframework.items.Ability;
 import com.github.jewishbanana.uiframework.items.GenericItem;
-import com.github.jewishbanana.uiframework.items.ItemField;
+import com.github.jewishbanana.uiframework.items.StoredField;
 import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
 import com.github.jewishbanana.ultimatecontent.Main;
 import com.github.jewishbanana.ultimatecontent.abilities.DoubleJump;
-import com.github.jewishbanana.ultimatecontent.enchants.BunnyHop;
+import com.github.jewishbanana.ultimatecontent.items.BaseItem;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.mojang.datafixers.util.Pair;
 
 public class DoubleJumpHandler implements Listener {
 	
 	private Main plugin;
-	private RandomGenerator random = RandomGenerator.of("SplittableRandom");
 	private Set<UUID> doubleJumpEnabledPlayers = new HashSet<>();
 	private Set<UUID> doubleJumpingPlayers = new HashSet<>();
 	private Map<UUID, Float> doubleJumpFall = new HashMap<>();
@@ -127,10 +127,11 @@ public class DoubleJumpHandler implements Listener {
 					if (ability == null)
 						continue;
 					plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-						ItemField<?> field = base.getField(BunnyHop.bunnyHopParticleKey);
+						StoredField<?> field = base.getField(BaseItem.PARTICLE_LORE_IDENTIFIER);
 						if (field == null)
 							return;
-						switch ((byte) field.getSetting()) {
+						ThreadLocalRandom random = ThreadLocalRandom.current();
+						switch ((byte) field.getValue()) {
 						case 0:
 							for (int i=0; i < (int) (2.0 * ((DoubleJump) ability).getParticleMultiplier()); i++) {
 		            			DustTransition dust = new DustTransition(Color.fromRGB(random.nextInt(125)+25, 255, random.nextInt(55)+25), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat());
@@ -189,26 +190,27 @@ public class DoubleJumpHandler implements Listener {
 			}
 		}
 	}
-	@EventHandler(ignoreCancelled = true)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
 	public void onDamage(EntityDamageEvent e) {
 		if (e.getCause() == DamageCause.FALL && doubleJumpEnabledPlayers.contains(e.getEntity().getUniqueId())) {
-			GenericItem base = GenericItem.getItemBase(((LivingEntity) e.getEntity()).getEquipment().getBoots());
+			Player player = (Player) e.getEntity();
+			GenericItem base = GenericItem.getItemBase(player.getEquipment().getBoots());
             if (base == null) {
-            	doubleJumpEnabledPlayers.remove(e.getEntity().getUniqueId());
+            	doubleJumpEnabledPlayers.remove(player.getUniqueId());
             	return;
             }
             Ability ability = base.getAbility(DoubleJump.REGISTERED_KEY);
             if (ability == null) {
-            	doubleJumpEnabledPlayers.remove(e.getEntity().getUniqueId());
+            	doubleJumpEnabledPlayers.remove(player.getUniqueId());
             	return;
             }
             DoubleJump doubleJump = (DoubleJump) ability;
-			if (e.getEntity().getFallDistance() < 5.0 * doubleJump.getJumpHeightMultiplier())
+			if (player.getFallDistance() < 5.0 * doubleJump.getJumpHeightMultiplier())
 				e.setCancelled(true);
-			doubleJumpingPlayers.remove(e.getEntity().getUniqueId());
-			doubleJumpFall.put(e.getEntity().getUniqueId(), 0f);
-			((Player) e.getEntity()).setAllowFlight(true);
-			e.setDamage(e.getDamage()-(e.getDamage()*doubleJump.getFallDamageNegation()));
+			doubleJumpingPlayers.remove(player.getUniqueId());
+			doubleJumpFall.put(player.getUniqueId(), 0f);
+			player.setAllowFlight(true);
+			e.setDamage(e.getDamage() - (e.getDamage() * doubleJump.getFallDamageNegation()));
 			return;
 		}
 	}

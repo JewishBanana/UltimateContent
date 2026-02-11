@@ -9,12 +9,13 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 import com.github.jewishbanana.ultimatecontent.Main;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
+import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class SpecialEvent implements Listener {
 	
 	protected static final RandomGenerator random;
 	static {
-		random = RandomGenerator.of("SplittableRandom");
+		random = Utils.getRandomGenerator();
 	}
 
 	protected Main plugin;
