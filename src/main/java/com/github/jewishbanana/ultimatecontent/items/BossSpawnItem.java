@@ -10,9 +10,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 
-import com.github.jewishbanana.deadlydisasters.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.listeners.BossBlocksHandler;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
+import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class BossSpawnItem extends BaseItem {
 	

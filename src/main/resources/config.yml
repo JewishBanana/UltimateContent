@@ -23,16 +23,19 @@
 general:
     # This section controls the affects of UltimateContent within protected regions. The applicable region protection plugins are listed on the plugins page!
     protected_regions:
-        # This setting controls if abilities can activate and take affect on entities within protected regions
+        # This setting controls if abilities can activate and take affect on entities within protected regions.
         affect_entities: true
-        # This setting controls if abilities can damage the environment within protected regions
+        # This setting controls if abilities can damage the environment within protected regions.
         damage_blocks: false
-    # This section is for modifying settings related to the special limited seasonal events within the plugin
+    # This section is for modifying settings related to the special limited seasonal events within the plugin.
     special_events:
-        # Toggles if special events are enabled or not on the server
+        # Toggles if special events are enabled or not on the server.
         enabled: true
-        # This controls if players are sent messages indicating if an event is currently on-going or when they make progress on an event
+        # This controls if players are sent messages indicating if an event is currently on-going or when they make progress on an event.
         send_event_messages: true
+        # This is a list of worlds that you want special events to work within. In disabled worlds, no features will work and no event entities will spawn.
+        enabled_worlds:
+        - ALL
     # This section controls what entities and blocks are blacklisted entirely from being harmed/broken from abilities. Each ability can have its own personal blacklist, 
     # however, this blacklist section is a global list meaning that these entries will automatically be added to every single abilities blacklist making configuration easier.
     blacklist:

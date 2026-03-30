@@ -155,12 +155,12 @@
 	    	<version>3.1.0</version>
 	    	<scope>provided</scope>
 		</dependency>
-		<dependency>
+		<!--<dependency>
 	        <groupId>com.github.jewishbanana</groupId>
 	        <artifactId>deadly-disasters</artifactId>
 	        <version>1.0.0</version>
 	        <scope>provided</scope>
-	    </dependency>
+	    </dependency>-->
 	    <dependency>
 	        <groupId>com.github.jewishbanana</groupId>
 	        <artifactId>playerarmorchangeevent</artifactId>

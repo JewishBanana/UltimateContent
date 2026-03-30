@@ -18,7 +18,7 @@ import com.github.jewishbanana.ultimatecontent.Main;
 
 public class DependencyUtils {
 	
-	public static com.github.jewishbanana.deadlydisasters.Main DDHook;
+//	public static com.github.jewishbanana.deadlydisasters.Main DDHook;
 	private static boolean isDDPro;
 	
 	private static Predicate<Location> regionCheck;
@@ -33,8 +33,8 @@ public class DependencyUtils {
 	public static void init(Main plugin) {
 		PluginManager pm = plugin.getServer().getPluginManager();
 		if (pm.isPluginEnabled("DeadlyDisasters")) {
-			DDHook = com.github.jewishbanana.deadlydisasters.Main.getInstance();
-			isDDPro = DDHook.isPluginPro();
+//			DDHook = com.github.jewishbanana.deadlydisasters.Main.getInstance();
+//			isDDPro = DDHook.isPluginPro();
 		}
 		Predicate<Location> check = null;
 		try {
