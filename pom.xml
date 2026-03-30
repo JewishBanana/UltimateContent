@@ -163,7 +163,7 @@
 	    </dependency>-->
 	    <dependency>
 	        <groupId>com.github.jewishbanana</groupId>
-	        <artifactId>playerarmorchangeevent</artifactId>
+	        <artifactId>PlayerChangeArmorEvent</artifactId>
 	        <version>1.1.2</version>
 	        <scope>compile</scope>
 	    </dependency>
