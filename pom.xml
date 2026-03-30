@@ -171,7 +171,7 @@
 	    <dependency>
             <groupId>com.github.datatags.MobChipLite</groupId>
             <artifactId>mobchip-bukkit</artifactId>
-            <version>47310a6</version>
+            <version>782a96219f</version>
         </dependency>
 		<dependency>
 			<groupId>com.github.koca2000</groupId>
@@ -200,7 +200,7 @@
 		<dependency>
 		    <groupId>com.github.TownyAdvanced.Towny</groupId>
 		    <artifactId>towny</artifactId>
-		    <version>0.100.3.10</version>
+		    <version>0.102.0.12</version>
 		    <scope>provided</scope>
 		</dependency>
 		<dependency>
