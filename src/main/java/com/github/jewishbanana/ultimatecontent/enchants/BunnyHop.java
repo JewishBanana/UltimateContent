@@ -1,5 +1,6 @@
 package com.github.jewishbanana.ultimatecontent.enchants;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,13 +21,17 @@ import com.github.jewishbanana.ultimatecontent.items.BaseItem;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
+import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class BunnyHop extends CustomEnchant {
 	
 	public static final String REGISTERED_KEY = "uc:bunny_hop";
-	public static final List<Material> applicableTypes = Arrays.asList(Material.LEATHER_BOOTS, Material.CHAINMAIL_BOOTS, Material.IRON_BOOTS, Material.GOLDEN_BOOTS, Material.DIAMOND_BOOTS, Material.NETHERITE_BOOTS);
-	
+	public static final List<Material> applicableTypes = new ArrayList<>(Arrays.asList(Material.LEATHER_BOOTS, Material.CHAINMAIL_BOOTS, Material.IRON_BOOTS, Material.GOLDEN_BOOTS, Material.DIAMOND_BOOTS, Material.NETHERITE_BOOTS));
 	public static final NamespacedKey bunnyHopParticleKey = new NamespacedKey(plugin, "ui-bhpk");
+	static {
+		if (VersionUtils.isMCVersionOrAbove("1.21.9"))
+			applicableTypes.add(Material.COPPER_BOOTS);
+	}
 	
 	private StoredField<Byte> particleField;
 	
@@ -34,6 +39,12 @@ public class BunnyHop extends CustomEnchant {
 		this.setMaxLevel(3);
 	}
 	public void inventoryClick(InventoryClickEvent event, GenericItem base) {
+		if (!base.hasSpecialLore(BaseItem.PARTICLE_LORE_IDENTIFIER)) {
+			base.setSpecialLore(BaseItem.PARTICLE_LORE_IDENTIFIER, Utils.convertString(DataUtils.getConfigString("language.misc.all") + DataUtils.getConfigString("language.items.particleToggle")));
+			particleField.setValue((byte) 0);
+			base.refreshItemLore();
+			return;
+		}
 		if (EntityUtils.isPlayerImmune((Player) event.getWhoClicked()))
 			event.getWhoClicked().sendMessage(Utils.convertString(DataUtils.getConfigString("language.items.particleToggleError")));
 		if (event.getClick() == ClickType.RIGHT) {

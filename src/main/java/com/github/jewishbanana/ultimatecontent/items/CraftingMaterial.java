@@ -20,7 +20,7 @@ public class CraftingMaterial extends BaseItem {
 	public CraftingMaterial(ItemStack item) {
 		super(item);
 	}
-	protected static AnvilRecipe createAnvilIncrementEnchantRecipe(UIItemType itemType, String enchant, String key, RecipeChoice ingredients, Function<GenericItem, Integer> costDecider) {
+	protected static AnvilRecipe createAnvilIncrementEnchantRecipe(UIItemType itemType, String enchant, String key, RecipeChoice ingredients, Function<GenericItem, Integer> costDecider, Function<ItemStack, ItemStack> finalTouches) {
 		UIEnchantment type = UIEnchantment.getEnchant(enchant);
 		if (type == null)
 			return null;
@@ -30,16 +30,16 @@ public class CraftingMaterial extends BaseItem {
 			int level = type.getEnchantLevel(item);
 			if (level >= type.getMaxLevel() || item.getAmount() != inventory.getSecondSlot().getAmount() || !type.canBeEnchanted(item))
 				return new AnvilResult(new ItemStack(Material.AIR));
-//			ItemMeta meta = item.getItemMeta();
-//			ItemListener.attachRecipeMetaFix(meta);
-//			item.setItemMeta(meta);
 			GenericItem base = GenericItem.createItemBase(item);
 			if (type.addEnchant(base, level+1, true, true)) {
 				base.getType().getBuilder().assembleLore(item, item.getItemMeta(), base.getType(), base);
-				return new AnvilResult(item, costDecider.apply(base));
+				return new AnvilResult(finalTouches.apply(item), costDecider.apply(base));
 			}
 			return new AnvilResult(new ItemStack(Material.AIR));
 		});
+	}
+	protected static AnvilRecipe createAnvilIncrementEnchantRecipe(UIItemType itemType, String enchant, String key, RecipeChoice ingredients, Function<GenericItem, Integer> costDecider) {
+		return createAnvilIncrementEnchantRecipe(itemType, enchant, key, ingredients, costDecider, item -> item);
 	}
 	public ItemCategory getItemCategory() {
 		return ItemCategory.DefaultCategory.CRAFTING_INGREDIENTS.getItemCategory();

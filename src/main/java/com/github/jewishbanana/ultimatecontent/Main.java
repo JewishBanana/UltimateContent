@@ -67,6 +67,7 @@ public class Main extends JavaPlugin {
 	 * - blood pact items and weapons
 	 * - hook into dd achievements
 	 * - fix saber throw
+	 * - implement void tear
 	 */
 	
 	public static ConsoleCommandSender consoleSender;
@@ -75,7 +76,7 @@ public class Main extends JavaPlugin {
 	private static FixedMetadataValue fixedData;
 	private static SpecialEvent specialEvent;
 	
-	private static final String UIFrameworkVersion = "3.1.0";
+	private static final String UIFrameworkVersion = "3.1.1";
 	
 	public void onEnable() {
 		instance = this;

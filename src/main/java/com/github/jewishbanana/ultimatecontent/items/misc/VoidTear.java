@@ -1,25 +1,10 @@
 package com.github.jewishbanana.ultimatecontent.items.misc;
 
-import java.util.Random;
-
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
-import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mob;
-import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.ItemBuilder;
@@ -27,7 +12,6 @@ import com.github.jewishbanana.uiframework.items.UIItemType;
 import com.github.jewishbanana.ultimatecontent.items.BaseItem;
 import com.github.jewishbanana.ultimatecontent.items.CustomItemBuilder;
 import com.github.jewishbanana.ultimatecontent.items.Rarity;
-import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class VoidTear extends BaseItem {
@@ -102,7 +86,7 @@ public class VoidTear extends BaseItem {
 //						ce = new com.github.jewishbanana.deadlydisasters.entities.endstormentities.EndTotem(entity, com.github.jewishbanana.deadlydisasters.Main.getInstance(), rand);
 //					} else if (com.github.jewishbanana.deadlydisasters.entities.CustomEntityType.BABYENDTOTEM.canSpawn()) {
 //						entity = (Mob) loc.getWorld().spawnEntity(loc, EntityType.WOLF);
-////						ce = new deadlydisasters.entities.endstormentities.BabyEndTotem(entity, deadlydisasters.Main.getInstance(), random);
+//						ce = new deadlydisasters.entities.endstormentities.BabyEndTotem(entity, deadlydisasters.Main.getInstance(), random);
 //					}
 //					var[1]--;
 //					if (var[1] <= 0) cancel();
@@ -115,7 +99,7 @@ public class VoidTear extends BaseItem {
 	}
 	@Override
 	public ItemBuilder createItem() {
-		return CustomItemBuilder.create(getType(), Material.GHAST_TEAR).setHiddenEnchanted(VersionUtils.getUnbreaking()).assembleLore().build();
+		return CustomItemBuilder.create(getType(), Material.GHAST_TEAR).setHiddenEnchanted(VersionUtils.getUnbreaking()).assembleLore().setCustomModelData(100001).build();
 	}
 	public static void register() {
 		UIItemType.registerItem(REGISTERED_KEY, VoidTear.class);
