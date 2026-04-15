@@ -74,8 +74,12 @@ public class VersionUtils {
 		jump_boost = Registry.EFFECT.get(NamespacedKey.minecraft("jump_boost"));
 		slowness = Registry.EFFECT.get(NamespacedKey.minecraft("slowness"));
 		resistance = Registry.EFFECT.get(NamespacedKey.minecraft("resistance"));
+
+		mcVersion = Arrays.stream(Bukkit.getBukkitVersion().split("-")[0].split("\\."))
+				.filter(e -> e.matches("\\d+"))
+				.map(Integer::parseInt)
+				.toArray(Integer[]::new);
 		
-		mcVersion = Arrays.stream(Bukkit.getBukkitVersion().substring(0, Bukkit.getBukkitVersion().indexOf('-')).split("\\.")).map(e -> Integer.parseInt(e)).toArray(Integer[]::new);
 		if (isMCVersionOrAbove("1.20.4")) {
 			usingNewDamageEvent = true;
 			short_grass = Material.SHORT_GRASS;
