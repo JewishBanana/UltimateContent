@@ -5,7 +5,7 @@ main: ${mainClass}
 description: Adds tons of new custom weapons, armor and other items to the game.
 api-version: 1.17
 depend: [UIFramework]
-softdepend: [WorldGuard, Towny, GriefPrevention, Lands, Kingdoms]
+softdepend: [WorldGuard, Towny, GriefPrevention, Lands, Kingdoms, FieldZone, UltimateClans, Factions]
 
 commands:
     ultimatecontent:

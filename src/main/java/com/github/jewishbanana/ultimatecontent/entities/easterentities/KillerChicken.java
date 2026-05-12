@@ -53,6 +53,8 @@ public class KillerChicken extends BaseEntity<Chicken> {
 		type.setSpawnConditions(event -> {
 			if (!EasterEvent.isEventActive)
 				return false;
+			if (!CustomEntityType.KILLER_CHICKEN.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			return event.getEntityType() == EntityType.CHICKEN;
 		});
 	}

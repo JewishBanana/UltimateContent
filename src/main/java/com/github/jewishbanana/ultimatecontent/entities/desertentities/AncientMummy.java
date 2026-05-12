@@ -4,7 +4,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.World.Environment;
 import org.bukkit.entity.Husk;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -19,7 +18,6 @@ import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.utils.SpawnUtils;
-import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class AncientMummy extends BaseEntity<Husk> {
@@ -73,9 +71,10 @@ public class AncientMummy extends BaseEntity<Husk> {
 		type.setSpawnConditions(event -> {
 			if (!(event.getEntity() instanceof Monster))
 				return false;
+			if (!CustomEntityType.ANCIENT_MUMMY.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			Location loc = event.getLocation();
-			if (!Utils.isEnvironment(loc.getWorld(), Environment.NORMAL) 
-					|| !VersionUtils.isBiomeDesert(loc.getBlock().getBiome()) 
+			if (!VersionUtils.isBiomeDesert(loc.getBlock().getBiome()) 
 					|| !SpawnUtils.canMonsterSpawn(loc))
 				return false;
 			return true;

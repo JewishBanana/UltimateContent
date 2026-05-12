@@ -5,7 +5,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Animals;
@@ -227,8 +226,10 @@ public class ShadowLeech extends ComplexEntity<Silverfish> {
 		type.setSpawnConditions(event -> {
 			if (!(event.getEntity() instanceof Monster))
 				return false;
+			if (!CustomEntityType.SHADOW_LEECH.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			Block block = event.getLocation().getBlock();
-			if (block == null || block.getLightLevel() >= maxLightLevel || !Utils.isEnvironment(block.getWorld(), Environment.NORMAL, Environment.THE_END))
+			if (block == null || block.getLightLevel() >= maxLightLevel)
 				return false;
 			return true;
 		});

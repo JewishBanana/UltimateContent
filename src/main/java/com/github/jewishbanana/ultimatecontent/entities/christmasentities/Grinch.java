@@ -180,6 +180,12 @@ public class Grinch extends BaseEntity<Zombie> {
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(Grinch.REGISTERED_KEY, Grinch.class);
 		
-		type.setSpawnConditions(ChristmasEvent.eventEntitySpawnCondition);
+		type.setSpawnConditions(event -> {
+			if (!CustomEntityType.GRINCH.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
+			if (!ChristmasEvent.eventEntitySpawnCondition.test(event))
+				return false;
+			return true;
+		});
 	}
 }

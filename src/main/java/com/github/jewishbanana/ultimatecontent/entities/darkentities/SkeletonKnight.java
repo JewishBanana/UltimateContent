@@ -1,7 +1,6 @@
 package com.github.jewishbanana.ultimatecontent.entities.darkentities;
 
 import org.bukkit.Location;
-import org.bukkit.World.Environment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Skeleton;
@@ -45,9 +44,9 @@ public class SkeletonKnight extends BaseEntity<Skeleton> {
 		type.setSpawnConditions(event -> {
 			if (!(event.getEntity() instanceof Monster))
 				return false;
-			Location loc = event.getLocation();
-			if (!Utils.isEnvironment(loc.getWorld(), Environment.NORMAL))
+			if (!CustomEntityType.SKELETON_KNIGHT.isWorldSpawnable(event.getLocation().getWorld()))
 				return false;
+			Location loc = event.getLocation();
 			if (!Utils.isAreaClear(loc, 1.8f, 2.5f))
 				return false;
 			return true;

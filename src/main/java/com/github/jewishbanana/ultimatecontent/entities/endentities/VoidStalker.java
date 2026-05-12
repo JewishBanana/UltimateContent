@@ -1,8 +1,6 @@
 package com.github.jewishbanana.ultimatecontent.entities.endentities;
 
-import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.World.Environment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Phantom;
 import org.bukkit.event.entity.EntityCombustEvent;
@@ -14,7 +12,6 @@ import org.bukkit.potion.PotionEffectType;
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
-import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class VoidStalker extends BaseEntity<Phantom> {
 	
@@ -42,8 +39,7 @@ public class VoidStalker extends BaseEntity<Phantom> {
 		UIEntityManager type = UIEntityManager.registerEntity(VoidStalker.REGISTERED_KEY, VoidStalker.class);
 		
 		type.setSpawnConditions(event -> {
-			Location loc = event.getLocation();
-			if (!Utils.isEnvironment(loc.getWorld(), Environment.THE_END))
+			if (!CustomEntityType.VOID_STALKER.isWorldSpawnable(event.getLocation().getWorld()))
 				return false;
 			return true;
 		});

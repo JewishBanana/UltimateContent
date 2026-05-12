@@ -312,6 +312,12 @@ public class Frosty extends BaseEntity<Snowman> {
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(Frosty.REGISTERED_KEY, Frosty.class);
 		
-		type.setSpawnConditions(ChristmasEvent.eventEntitySpawnCondition);
+		type.setSpawnConditions(event -> {
+			if (!CustomEntityType.FROSTY.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
+			if (!ChristmasEvent.eventEntitySpawnCondition.test(event))
+				return false;
+			return true;
+		});
 	}
 }

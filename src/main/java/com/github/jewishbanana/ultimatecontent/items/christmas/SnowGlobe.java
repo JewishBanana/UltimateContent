@@ -68,6 +68,10 @@ public class SnowGlobe extends BossSpawnItem {
 			event.setCancelled(true);
 			return false;
 		}
+		return true;
+	}
+	public void spawnBoss(Location location) {
+		Block block = location.getBlock();
 		addToBossBlocks(block);
 		Vector vec = Utils.getRandomizedVector(1f, 0, 1f).multiply(100);
 		Location spawn = block.getLocation();
@@ -142,7 +146,6 @@ public class SnowGlobe extends BossSpawnItem {
 				}
 			}
 		}.runTaskTimer(plugin, 0, 1);
-		return true;
 	}
 	@Override
 	public ItemBuilder createItem() {

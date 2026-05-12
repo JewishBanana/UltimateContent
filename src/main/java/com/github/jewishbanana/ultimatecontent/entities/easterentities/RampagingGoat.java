@@ -99,6 +99,8 @@ public class RampagingGoat extends BaseEntity<Goat> {
 		type.setSpawnConditions(event -> {
 			if (!EasterEvent.isEventActive)
 				return false;
+			if (!CustomEntityType.RAMPAGING_GOAT.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			Block block = event.getLocation().getBlock();
 			return !block.getRelative(BlockFace.DOWN).isPassable() && block.getY() > 150;
 		});

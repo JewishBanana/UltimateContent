@@ -11,9 +11,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.Mob;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
+import com.github.jewishbanana.uiframework.events.CustomEntitySpawnEvent;
 import com.github.jewishbanana.ultimatecontent.Main;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedCreeper;
@@ -26,7 +30,7 @@ import com.github.jewishbanana.ultimatecontent.entities.infestedentities.Infeste
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedZombie;
 import com.mojang.datafixers.util.Pair;
 
-public class EntitySpawningHandler {
+public class EntitySpawningHandler implements Listener {
 	
 	private final RandomGenerator random = RandomGenerator.of("SplittableRandom");
 	private final List<Pair<Function<Location, BaseEntity<?>>, Double>> entityTypes = new ArrayList<>();
@@ -73,5 +77,13 @@ public class EntitySpawningHandler {
 				});
 			}
 		}.runTaskTimerAsynchronously(plugin, 0, 200);
+		
+		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+	}
+	@EventHandler(ignoreCancelled = true)
+	public void onCustomEntitySpawn(CustomEntitySpawnEvent event) {
+		if (event.getReason() != SpawnReason.NATURAL)
+			return;
+		
 	}
 }

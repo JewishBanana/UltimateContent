@@ -57,6 +57,8 @@ general:
 #
 # Third-Party Plugin Settings
 #
+###############################################################################################################################################################################
+#
 # This section is for settings related to third-party plugin hooks into UltimateContent. This section is for settings like specific region protection toggling and other important ones.
 #
 # CHANGING THESE SETTINGS REQUIRES A SERVER RESTART TO TAKE EFFECT!
@@ -71,10 +73,15 @@ external:
         grief_prevention: true
         lands: true
         kingdoms: true
+        field_zone: true
+        ultimate_clans: true
+        factions_uuid: true
 
 ###############################################################################################################################################################################
 #
 # ITEMS:
+#
+###############################################################################################################################################################################
 #
 # This section is designated for all the custom items in UltimateContent. The items are sorted by their category such as weapons, armor, crafting, seasonal, etc. All of the
 # information below explains what each config setting does for each item. Most items do not have all of these settings within their configuration but they are all supported
@@ -131,6 +138,8 @@ external:
 ###############################################################################################################################################################################
 #
 # ABILITY SETTINGS:
+#
+###############################################################################################################################################################################
 #
 # Within each item you can add a section "abilities" which is listed above this section for more information, and you can add as many abilities as you want to the item within
 # this section. The following settings listed here are global settings that all abilities can use, keep in mind that there are two sub-sections to this section, one which has
@@ -443,6 +452,8 @@ items:
 #
 # ABILITIES:
 #
+###############################################################################################################################################################################
+#
 # This section controls the default settings for abilities. All settings except for the name and description can be overridden in individual ability sections for items or enchants. 
 # If a setting is not overridden, it will use this sections setting as its default value. If you wish to modify the name or description for an ability, look into the displays section.
 #
@@ -591,6 +602,8 @@ abilities:
 #
 # DISPLAYS:
 #
+###############################################################################################################################################################################
+#
 # Displays are alternate ability displays that can be referenced within ability settings on items. They just simply replace the name and description of the ability in the
 # item's lore with the name and description of the display. An example usage of why displays are useful is I create one called "bunny_hop" and reference it in the bunny hop
 # enchant on the double jump ability, this means that instead of listing the ability as a double jump it will list it as my custom display bunny hop renaming the ability.
@@ -609,6 +622,8 @@ displays:
 ###############################################################################################################################################################################
 #
 # ENCHANTS:
+#
+###############################################################################################################################################################################
 #
 # These are the custom enchants of UltimateContent which can be referenced in the enchant section in custom items.
 #
@@ -714,6 +729,8 @@ enchants:
 #
 # ENTITIES:
 #
+###############################################################################################################################################################################
+#
 # This section is for configuring the custom entities within UltimateContent.
 #
 #   "spawnRate" : [DECIMAL] - The chance of an entity spawning within its desired conditions. This number is from 0-100 and the entity conditions are unique for each category
@@ -774,16 +791,51 @@ enchants:
 ###############################################################################################################################################################################
 
 entities:
+    # Global settings are shared settings for all entities. All global settings can be overridden within individual entity sections!
+    global_settings:
+        #######################################################################################################################################################################
+        #
+        # DISABLE NATURAL SPAWNING
+        #
+        # This setting acts as a switch that simply disables all custom entities from naturally spawning. Keep in mind that custom entities can still be spawned via command!
+        #
+        #######################################################################################################################################################################
+        disable_natural_spawning: false
+        #######################################################################################################################################################################
+        #
+        # SPAWNING WORLDS
+        #
+        # This setting controls what worlds custom entities can naturally spawn within. This can be overridden in any individual entities section giving you precise control on 
+        # worlds that entities can spawn within. By default it is set to "ALL" and can be changed to any of the following below options below, keep in mind this is a list setting.
+        #
+        #   "NONE" - Placeholder to disable naturally spawning entirely for all custom entities (Excluding entities with this setting overridden in their sections).
+        #
+        #   "ALL" - Enables natural custom entity spawning in all worlds.
+        #
+        #   "OVERWORLD" - Enables natural custom entity spawning on overworld type worlds.
+        #
+        #   "NETHER" - Enables natural custom entity spawning on nether type worlds.
+        #
+        #   "END" - Enables natural custom entity spawning on end type worlds.
+        #
+        #   [world_name] - Enables natural custom entity spawning on the specified world by its name.
+        #
+        #######################################################################################################################################################################
+        spawning_worlds:
+        - ALL
     dark_entities:
         primed_creeper:
+            # Primed creepers can only spawn in place of vanilla creepers.
             spawnRate: 2.0
             health: 22.0
-            # The damage multiplier on the explosion damage with 1.0 being vanilla creeper explosion damage
+            # The damage multiplier on the explosion damage with 1.0 being vanilla creeper explosion damage.
             damageMultiplier: 1.2
             name: "&8Primed Creeper"
             volume: 1.0
             drops:
             - gunpowder | 20.0 | 0-8
+            spawning_worlds:
+            - OVERWORLD
         dark_mage:
             spawnRate: 0.5
             health: 30.0
@@ -800,7 +852,7 @@ entities:
         shadow_leech:
             spawnRate: 0.5
             health: 8.0
-            # Shadow leech's pierce armor and do pure damage to the entity
+            # Shadow leeches pierce armor and do pure damage to the entity.
             damage: 1.0
             name: "&8Shadow Leech"
             volume: 1.0
@@ -810,8 +862,11 @@ entities:
                     damage: 2.0
                     movementSpeed: 0.3
                     name: "&8Bloody Shadow Leech"
-                    # The chance that a normal shadow leech will convert into a bloody shadow leech
+                    # The chance that a normal shadow leech will convert into a bloody shadow leech.
                     conversionChance: 12.5
+            spawning_worlds:
+            - OVERWORLD
+            - END
         skeleton_knight:
             spawnRate: 0.75
             health: 25.0
@@ -827,6 +882,8 @@ entities:
                       drop_rate: 2.0
             drops:
             - bone | 40.0 | 1-3
+            spawning_worlds:
+            - OVERWORLD
         zombie_knight:
             spawnRate: 0.25
             health: 30.0
@@ -842,26 +899,30 @@ entities:
                       drop_rate: 2.0
             drops:
             - rotten_flesh | 40.0 | 1-3
+            spawning_worlds:
+            - OVERWORLD
         swamp_beast:
             spawnRate: 0.75
             health: 40.0
             damage: 10.0
             name: "&8Swamp Beast"
             volume: 1.0
-            # The distance the mud ability reaches from the swamp beast
+            # The distance the mud ability reaches from the swamp beast.
             mudRange: 8.0
             drops:
             - rotten_flesh | 40.0 | 1-3
             - dirt | 10.0 | 0-4
+            spawning_worlds:
+            - OVERWORLD
         undead_miner:
             spawnRate: 1.0
             health: 30.0
             damage: 6.0
             name: "&8Undead Miner"
             volume: 1.0
-            # If the placed blocks by undead miners should be removed after they die or despawn
+            # If the placed blocks by undead miners should be removed after they die or despawn.
             removePlacedBlocks: true
-            # Undead miners by default will equip the block from their related environment into their offhand, if you want undead miners to build with a specific block then you can do so by setting the item in their off hand to the desired block
+            # Undead miners by default will equip the block from their related environment into their offhand, if you want undead miners to build with a specific block then you can do so by setting the item in their off hand to the desired block.
             equipment:
                 main_hand:
                     - item: "diamond_pickaxe"
@@ -885,6 +946,8 @@ entities:
             - rotten_flesh | 40.0 | 1-3
             - iron_ore | 10.0 | 0-2
             - gold_ore | 5.0 | 0-2
+            spawning_worlds:
+            - OVERWORLD
     desert_entities:
         ancient_mummy:
             spawnRate: 1.5
@@ -896,6 +959,8 @@ entities:
             - uc:ancient_cloth | 15.0
             - bone | 25.0 | 0-2
             - rotten_flesh | 60.0 | 0-3
+            spawning_worlds:
+            - OVERWORLD
         ancient_skeleton:
             spawnRate: 1.0
             health: 30.0
@@ -905,6 +970,8 @@ entities:
             drops:
             - uc:ancient_bone | 10.0
             - gold_nugget | 20.0 | 0-3
+            spawning_worlds:
+            - OVERWORLD
     water_entities:
         cursed_diver:
             spawnRate: 2.0
@@ -918,6 +985,8 @@ entities:
                       drop_rate: 2.5
             drops:
             - rotten_flesh | 60.0 | 0-3
+            spawning_worlds:
+            - OVERWORLD
     snow_entities:
         yeti:
             spawnRate: 0.6
@@ -926,9 +995,14 @@ entities:
             name: "&9Yeti"
             volume: 1.0
             deathRagdoll: true
+            # The maximum number of yetis allowed within a 12 chunk (192 block) radius. Set to 0 to disable the limit.
+            maxLocalCount: 5
             drops:
             - uc:yeti_fur | 10.0
             - beef | 40.0 | 1-6
+            spawning_worlds:
+            - OVERWORLD
+    # Infested entities are unique and can only spawn in deep dark biomes naturally.
     infested_entities:
         infested_zombie:
             spawnRate: 10.0
@@ -951,7 +1025,7 @@ entities:
         infested_creeper:
             spawnRate: 7.0
             health: 25.0
-            # The damage multiplier on the explosion damage with 1.0 being vanilla creeper explosion damage
+            # The damage multiplier on the explosion damage with 1.0 being vanilla creeper explosion damage.
             damageMultiplier: 1.5
             name: "&3Infested Creeper"
             volume: 1.0
@@ -995,7 +1069,7 @@ entities:
             variants:
                 infested_archer_tribesman:
                     name: "&3Infested Archer Tribesman"
-                    # The chance that a normal infested tribesman will convert into an archer infested tribesman
+                    # The chance that a normal infested tribesman will convert into an archer infested tribesman.
                     conversionChance: 20.0
                     equipment:
                         main_hand:
@@ -1016,7 +1090,7 @@ entities:
                     damage: 8.0
                     movementSpeed: 0.35
                     name: "&3Alpha Infested Devourer"
-                    # The chance that a normal infested devourer will convert into an alpha
+                    # The chance that a normal infested devourer will convert into an alpha.
                     conversionChance: 20.0
                     drops:
                     - stick | 50.0 | 2-6
@@ -1026,7 +1100,7 @@ entities:
             damage: 5.0
             name: "&3Infested Howler"
             volume: 1.0
-            # The chance of the howler spawning a nearby warden when it shrieks
+            # The chance of the howler spawning a nearby warden when it shrieks.
             spawnWardenChance: 25.0
             drops:
             - sculk | 33.3 | 0-2
@@ -1037,14 +1111,16 @@ entities:
             volume: 1.0
     nether_entities:
         lost_soul:
-            # Lost souls can only spawn in soul sand valley biomes
+            # Lost souls can only spawn in soul sand valley biomes.
             spawnRate: 3.0
             health: 14.0
             damage: 5.0
             name: "&3Lost Soul"
             volume: 1.0
+            spawning_worlds:
+            - NETHER
         soul_reaper:
-            # Soul reapers can only spawn in soul sand valley biomes
+            # Soul reapers can only spawn in soul sand valley biomes.
             spawnRate: 0.5
             health: 40.0
             damage: 25.0
@@ -1054,17 +1130,20 @@ entities:
                 main_hand:
                     - item: "uc:soul_ripper"
                       drop_rate: 10.0
+            spawning_worlds:
+            - NETHER
         fire_phantom:
             spawnRate: 1.0
             health: 20.0
             damage: 8.0
             name: "&cFire Phantom"
             volume: 1.0
-            # Controls if the blaze items explode out from fire phantoms upon death
+            # Controls if the blaze items explode out from fire phantoms upon death.
             spawnFireItems: true
             drops:
             - fire_charge | 80.0
-    # End entities can only spawn naturally in end type worlds
+            spawning_worlds:
+            - NETHER
     end_entities:
         end_totem:
             spawnRate: 1.0
@@ -1078,6 +1157,8 @@ entities:
             - chorus_fruit | 80.0 | 0-2
             - obsidian | 50.0
             - uc:void_tear | 12.5
+            spawning_worlds:
+            - END
         void_worm:
             spawnRate: 0.75
             health: 30.0
@@ -1089,6 +1170,8 @@ entities:
             - chorus_fruit | 70.0 | 0-2
             - crying_obsidian | 40.0 | 0-2
             - bone | 50.0 | 0-3
+            spawning_worlds:
+            - END
         void_guardian:
             spawnRate: 2.0
             health: 40.0
@@ -1104,6 +1187,8 @@ entities:
                       drop_rate: 7.5
             drops:
             - chorus_fruit | 60.0 | 0-4
+            spawning_worlds:
+            - END
         void_archer:
             spawnRate: 1.25
             health: 20.0
@@ -1117,6 +1202,8 @@ entities:
             drops:
             - bone | 50.0 | 1-2
             - arrow | 25.0 | 0-2
+            spawning_worlds:
+            - END
         void_stalker:
             spawnRate: 2.5
             health: 20.0
@@ -1125,7 +1212,9 @@ entities:
             volume: 1.0
             drops:
             - ender_eye | 20.0
-    # Christmas entities can only spawn naturally in cold biomes and only during the seasonal Christmas event during December
+            spawning_worlds:
+            - END
+    # Christmas entities can only spawn naturally in cold biomes and only during the seasonal Christmas event during December.
     christmas_entities:
         elf:
             spawnRate: 0.75
@@ -1145,10 +1234,12 @@ entities:
             - uc:ornament | 5.0
             - bone | 30.0 | 0-2
             - rotten_flesh | 40.0 | 0-2
+            spawning_worlds:
+            - OVERWORLD
             variants:
                 archer_elf:
                     name: "&cArcher Elf"
-                    # The chance that a normal elf will convert into an archer elf
+                    # The chance that a normal elf will convert into an archer elf.
                     conversionChance: 33.3
                     equipment:
                         main_hand:
@@ -1164,6 +1255,8 @@ entities:
             - uc:broken_snow_globe | 7.5
             - snowball | 40.0 | 2-6
             - stick | 30.0 | 0-2
+            spawning_worlds:
+            - OVERWORLD
         grinch:
             spawnRate: 0.5
             health: 40.0
@@ -1180,6 +1273,8 @@ entities:
             drops:
             - bone | 30.0 | 0-3
             - rotten_flesh | 40.0 | 0-4
+            spawning_worlds:
+            - OVERWORLD
         santa:
             health: 400.0
             damage: 20.0
@@ -1191,7 +1286,7 @@ entities:
             - uc:santa_hat | 100.0
     easter_entities:
         killer_chicken:
-            # Will only spawn in place of wild chickens
+            # Will only spawn in place of wild chickens.
             spawnRate: 5.0
             health: 20.0
             damage: 8.0
@@ -1200,8 +1295,10 @@ entities:
             drops:
             - feather | 40.0 | 0-3
             - bone | 30.0 | 0-2
+            spawning_worlds:
+            - OVERWORLD
         rampaging_goat:
-            # Will only spawn on high cliffs at Y > 150
+            # Will only spawn on high cliffs at Y > 150.
             spawnRate: 5.0
             health: 60.0
             damage: 20.0
@@ -1209,6 +1306,8 @@ entities:
             volume: 1.0
             drops:
             - uc:red_egg | 20.0
+            spawning_worlds:
+            - OVERWORLD
         easter_bunny:
             health: 200.0
             damage: 20.0
@@ -1226,10 +1325,14 @@ entities:
             volume: 1.0
             drops:
             - uc:spooky_pumpkin | 100.0
+            spawning_worlds:
+            - OVERWORLD
 
 ###############################################################################################################################################################################
 #
 # LANGUAGE:
+#
+###############################################################################################################################################################################
 #
 # This section is just for translation or customization purposes.
 #

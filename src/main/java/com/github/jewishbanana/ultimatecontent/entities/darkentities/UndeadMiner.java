@@ -369,7 +369,9 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 		type.setSpawnConditions(event -> {
 			if (event.getEntityType() != EntityType.ZOMBIE)
 				return false;
-			if (!Utils.isEnvironment(event.getLocation().getWorld(), Environment.NORMAL) || event.getLocation().getY() > 50)
+			if (!CustomEntityType.UNDEAD_MINER.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
+			if (event.getLocation().getY() > 50)
 				return false;
 			return true;
 		});

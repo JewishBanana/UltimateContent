@@ -2,6 +2,7 @@ package com.github.jewishbanana.ultimatecontent.entities.snowentities;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Animals;
@@ -13,11 +14,13 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
+import com.github.jewishbanana.uiframework.UIFramework;
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
 import com.github.jewishbanana.ultimatecontent.abilities.YetiRoar;
@@ -47,6 +50,7 @@ public class Yeti extends ComplexEntity<IronGolem> {
 	
 	public static final String REGISTERED_KEY = "uc:yeti";
 	private static final YetiRoar ability;
+	private static int maxLocalCount;
 	private static final ItemStack SNOW_BLOCK_ITEM = new ItemStack(Material.SNOW_BLOCK);
 	private static final ItemStack PACKED_ICE_ITEM = new ItemStack(Material.PACKED_ICE);
 	private static final EulerAngle ARM_ANGLE_1 = new EulerAngle(0, 0.9, 0.4);
@@ -362,14 +366,27 @@ public class Yeti extends ComplexEntity<IronGolem> {
 		super.setAttributes(entity);
 		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(40);
 	}
+	public static void reload() {
+		maxLocalCount = CustomEntityType.YETI.getSectionInteger("maxLocalCount", 5);
+	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(Yeti.REGISTERED_KEY, Yeti.class);
+		NamespacedKey entityKey = new NamespacedKey(UIFramework.getInstance(), "uif-entity");
 		type.setSpawnConditions(event -> {
+			if (!CustomEntityType.YETI.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			Location loc = event.getLocation();
 			if (!BlockUtils.isBlockColdBiome(loc.getBlock()) || !SpawnUtils.canMonsterSpawn(loc))
 				return false;
 			if (!Utils.isAreaClear(loc, 1.8f, 2.5f))
 				return false;
+			if (maxLocalCount > 0) {
+				long count = loc.getWorld().getNearbyEntities(loc, 192, 192, 192, e ->
+					REGISTERED_KEY.equals(e.getPersistentDataContainer().get(entityKey, PersistentDataType.STRING))
+				).size();
+				if (count >= maxLocalCount)
+					return false;
+			}
 			return true;
 		});
 	}

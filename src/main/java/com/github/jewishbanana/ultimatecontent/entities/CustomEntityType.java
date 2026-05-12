@@ -4,11 +4,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.random.RandomGenerator;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
@@ -134,6 +138,7 @@ public enum CustomEntityType {
 	public EntityVariant normalVariant;
 	
 	private Map<Double, Variant> variants = new HashMap<>();
+	private Predicate<World> applicableWorldCheck;
 	
 	private CustomEntityType(String registeredName, Category category) {
 		this.registeredName = registeredName;
@@ -208,6 +213,11 @@ public enum CustomEntityType {
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_SKELETON_DEATH, 1, 0.5) };
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.ANCIENT_SKELETON.getHead());
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.MAIN_HAND, new ItemStack(Material.AIR));
+			variant.movementSpeed = 0.3;
+		}
+		case DARK_MAGE -> {
+			setLoadoutToLeatherArmor(variant.defaultLoadout, 40, 40, 40, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
+			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.DARK_MAGE.getHead());
 			variant.movementSpeed = 0.3;
 		}
 		case SHADOW_LEECH -> {
@@ -369,10 +379,14 @@ public enum CustomEntityType {
 		for (CustomEntityType type : values())
 			initDefaults(type);
 	}
-	private static void setup(CustomEntityType type, JavaPlugin plugin) {
+	private static void setup(CustomEntityType type, JavaPlugin plugin, boolean disabledSpawning) {
 		UIEntityManager entityType = UIEntityManager.getEntityType(type.registeredName);
-		if (entityType != null)
-			entityType.setSpawnRate(DataUtils.getConfigDouble(type.configPath+"spawnRate", 0.0) / 100.0);
+		if (entityType != null) {
+			if (disabledSpawning)
+				entityType.setSpawnRate(0);
+			else
+				entityType.setSpawnRate(DataUtils.getConfigDouble(type.configPath+"spawnRate", 0.0) / 100.0);
+		}
 		type.variants.clear();
 		List<Variant> typeVariants = Variant.variants.get(type);
 		if (typeVariants != null)
@@ -384,6 +398,37 @@ public enum CustomEntityType {
 				if (section.contains("conversionChance"))
 					type.variants.put(DataUtils.getConfigDouble(type.configPath+"variants."+var.getKey()+".conversionChance", 0.0) / 100.0, var);
 			});
+		type.applicableWorldCheck = null;
+		List<String> list = DataUtils.getConfigStringListOrNull(type.configPath+"spawning_worlds");
+		if (list == null)
+			list = DataUtils.getConfigStringListOrNull("entities.global_settings.spawning_worlds");
+		if (list != null) {
+			type.applicableWorldCheck = world -> false;
+			loop:
+			for (String string : list)
+				switch (string.toUpperCase()) {
+				case "NONE":
+					type.applicableWorldCheck = world -> false;
+					break;
+				case "ALL":
+					type.applicableWorldCheck = world -> true;
+					break loop;
+				case "OVERWORLD":
+					type.applicableWorldCheck = type.applicableWorldCheck.or(world -> world.getEnvironment() == Environment.NORMAL);
+					break;
+				case "NETHER":
+					type.applicableWorldCheck = type.applicableWorldCheck.or(world -> world.getEnvironment() == Environment.NETHER);
+					break;
+				case "END":
+					type.applicableWorldCheck = type.applicableWorldCheck.or(world -> world.getEnvironment() == Environment.THE_END);
+					break;
+				default:
+					World temp = Bukkit.getWorld(string);
+					if (temp != null)
+						type.applicableWorldCheck = type.applicableWorldCheck.or(world -> world.getUID().equals(temp.getUID()));
+					break;
+				}
+		}
 	}
 	public int getSectionInteger(String value, int defaultValue) {
 		return DataUtils.getConfigInt(normalVariant.configPath+value, defaultValue);
@@ -397,12 +442,17 @@ public enum CustomEntityType {
 	public String getSectionString(String value, String defaultValue) {
 		return DataUtils.getConfigString(normalVariant.configPath+value, defaultValue);
 	}
+	public boolean isWorldSpawnable(World world) {
+		return applicableWorldCheck == null || applicableWorldCheck.test(world);
+	}
 	public static void reload(JavaPlugin plugin) {
+		boolean disabledSpawning = DataUtils.getConfigBoolean("entities.global_settings.disable_natural_spawning");
 		for (CustomEntityType type : values())
 			try {
-				setup(type, plugin);
+				setup(type, plugin, disabledSpawning);
 			} catch (Exception e) {
 				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in reading config data for entity &f"+type.normalVariant.displayName+" &cthe entities section has a syntax error. Please look over the instructions in the config above the entities section to see how to properly set up custom equipment load outs. This entity will use its default settings!"));
 			}
+		Yeti.reload();
 	}
 }

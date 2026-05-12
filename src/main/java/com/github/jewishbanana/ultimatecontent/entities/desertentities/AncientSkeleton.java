@@ -8,7 +8,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
@@ -148,9 +147,10 @@ public class AncientSkeleton extends BaseEntity<Skeleton> {
 		type.setSpawnConditions(event -> {
 			if (!(event.getEntity() instanceof Monster))
 				return false;
+			if (!CustomEntityType.ANCIENT_SKELETON.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			Location loc = event.getLocation();
-			if (!Utils.isEnvironment(loc.getWorld(), Environment.NORMAL) 
-					|| !VersionUtils.isBiomeDesert(loc.getBlock().getBiome()) 
+			if (!VersionUtils.isBiomeDesert(loc.getBlock().getBiome()) 
 					|| !SpawnUtils.canMonsterSpawn(loc))
 				return false;
 			return true;

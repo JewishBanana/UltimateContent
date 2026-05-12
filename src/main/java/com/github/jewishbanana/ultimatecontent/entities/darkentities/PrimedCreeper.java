@@ -53,6 +53,8 @@ public class PrimedCreeper extends BaseEntity<Creeper> implements ExplodingEntit
 		UIEntityManager type = UIEntityManager.registerEntity(PrimedCreeper.REGISTERED_KEY, PrimedCreeper.class);
 		
 		type.setSpawnConditions(event -> {
+			if (!CustomEntityType.PRIMED_CREEPER.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			return event.getEntityType() == EntityType.CREEPER;
 		});
 	}

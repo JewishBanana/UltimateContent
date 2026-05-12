@@ -37,6 +37,8 @@ import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 public class EasterBasket extends BossSpawnItem {
 	
 	public static final String REGISTERED_KEY = "uc:easter_basket";
+	
+	private Location spawnLoc;
 
 	public EasterBasket(ItemStack item) {
 		super(item);
@@ -60,19 +62,23 @@ public class EasterBasket extends BossSpawnItem {
 			if (tempBlock == null || temp.getWorld().getHighestBlockAt(temp).getY() > tempBlock.getY())
 				count++;
 		}
-		Location spawn = Utils.findRandomSpotInRadius(location, 25, 30, 3, 15);
-		if (count > 12 || spawn == null) {
+		spawnLoc = Utils.findRandomSpotInRadius(location, 25, 30, 3, 15);
+		if (count > 12 || spawnLoc == null) {
 			event.getPlayer().sendMessage(Utils.convertString(DataUtils.getConfigString("language.items.easterBasketPlaceError")));
 			event.setCancelled(true);
 			return false;
 		}
+		return true;
+	}
+	public void spawnBoss(Location location) {
+		Block block = location.getBlock();
 		addToBossBlocks(block);
-		ArmorStand target = spawn.getWorld().spawn(spawn, ArmorStand.class, temp -> {
+		ArmorStand target = spawnLoc.getWorld().spawn(spawnLoc, ArmorStand.class, temp -> {
 			ComplexEntity.initStand(temp);
 			temp.setSmall(true);
 			EntitiesHandler.attachRemoveKey(temp);
 		});
-		EasterBunny boss = UIEntityManager.spawnEntity(spawn, EasterBunny.class);
+		EasterBunny boss = UIEntityManager.spawnEntity(spawnLoc, EasterBunny.class);
 		Rabbit entity = boss.getCastedEntity();
 		entity.setRemoveWhenFarAway(false);
 		entity.setTarget(target);
@@ -96,11 +102,10 @@ public class EasterBasket extends BossSpawnItem {
 				for (int i=0; i < 8; i++) {
 					DustTransition dust = random.nextInt(2) == 0 ? new DustTransition(Color.fromRGB(random.nextInt(125)+25, 255, random.nextInt(55)+25), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat())
 							: new DustTransition(Color.fromRGB(random.nextInt(105)+150, 25, 255), Color.fromRGB(25, random.nextInt(155)+100, 255), random.nextFloat() / 2f);
-					spawn.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, spawn.clone().add(random.nextDouble()/1.5-.3, random.nextDouble()/1.5-.3, random.nextDouble()/1.5-.3), 1, 0, 0, 0, 0.001, dust);
+					spawnLoc.getWorld().spawnParticle(Particle.DUST_COLOR_TRANSITION, spawnLoc.clone().add(random.nextDouble()/1.5-.3, random.nextDouble()/1.5-.3, random.nextDouble()/1.5-.3), 1, 0, 0, 0, 0.001, dust);
 				}
 			}
 		}.runTaskTimer(plugin, 0, 1);
-		return true;
 	}
 	@Override
 	public ItemBuilder createItem() {

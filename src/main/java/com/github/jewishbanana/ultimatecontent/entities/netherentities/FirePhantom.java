@@ -207,6 +207,8 @@ public class FirePhantom extends BaseEntity<Phantom> {
 		type.setSpawnConditions(event -> {
 			if (event.getEntityType() != EntityType.GHAST)
 				return false;
+			if (!CustomEntityType.FIRE_PHANTOM.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			return true;
 		});
 	}

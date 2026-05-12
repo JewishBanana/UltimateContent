@@ -1,10 +1,12 @@
 package com.github.jewishbanana.ultimatecontent.utils;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -108,6 +110,58 @@ public class DependencyUtils {
 			Utils.sendExceptionLog(e);
 			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eKingdoms &cregions from this plugin will NOT be protected!");
 		}
+		try {
+			if (pm.isPluginEnabled("FieldZone")) {
+				if (DataUtils.getConfigBoolean("external.region_protection_plugins.field_zone")) {
+					kr.rtustudio.fieldzone.region.RegionFlag flag = kr.rtustudio.fieldzone.region.RegionFlag.create(plugin, "disasters");
+					kr.rtustudio.fieldzone.FieldZoneAPI.registerFlag(flag);
+					check = (check == null) ? 
+							loc -> kr.rtustudio.fieldzone.FieldZoneAPI.hasFlag(loc, flag) == kr.rtustudio.fieldzone.region.FlagState.FALSE : 
+				            check.and(loc -> kr.rtustudio.fieldzone.FieldZoneAPI.hasFlag(loc, flag) == kr.rtustudio.fieldzone.region.FlagState.FALSE);
+					plugin.getLogger().info("Successfully hooked into FieldZone");
+				} else
+					plugin.getLogger().info("FieldZone was detected, but region protection for this plugin is disabled in the main config.yml file. FieldZone regions will NOT be protected!");
+			}
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eFieldZone &cregions from this plugin will NOT be protected!");
+		}
+		try {
+			if (pm.isPluginEnabled("UltimateClans")) {
+				if (DataUtils.getConfigBoolean("external.region_protection_plugins.ultimate_clans")) {
+					me.ulrich.clans.interfaces.UClans api = (me.ulrich.clans.interfaces.UClans) Bukkit.getPluginManager().getPlugin("UltimateClans");
+					Optional<me.ulrich.clans.interfaces.ClaimImplement> impl = api.getClaimAPI().getPreferentialOrFirstImplement();
+					if(impl.isPresent()) {
+						me.ulrich.clans.interfaces.ClaimImplement claimImpl = impl.get();
+						check = (check == null) ? 
+								loc -> claimImpl.hasClaimLocation(loc) : 
+								check.and(loc -> claimImpl.hasClaimLocation(loc));
+						plugin.getLogger().info("Successfully hooked into UltimateClans");
+					} else
+						plugin.getLogger().info("UltimateClans was detected, but an implementation could not be found. UltimateClans regions will NOT be protected!");
+				} else
+					plugin.getLogger().info("UltimateClans was detected, but region protection for this plugin is disabled in the main config.yml file. UltimateClans regions will NOT be protected!");
+			}
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eUltimateClans &cregions from this plugin will NOT be protected!");
+		}
+		try {
+			if (pm.isPluginEnabled("Factions")) {
+				if (DataUtils.getConfigBoolean("external.region_protection_plugins.factions_uuid")) {
+					dev.kitteh.factions.Factions factions = dev.kitteh.factions.Factions.factions();
+					check = (check == null) ? 
+				            loc -> !factions.getAt(loc).isWilderness() : 
+				            check.and(loc -> !factions.getAt(loc).isWilderness());
+					plugin.getLogger().info("Successfully hooked into FactionsUUID");
+				} else
+					plugin.getLogger().info("FactionsUUID was detected, but region protection for this plugin is disabled in the main config.yml file. FactionsUUID regions will NOT be protected!");
+			}
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eFactionsUUID &cregions from this plugin will NOT be protected!");
+		}
+		
 		regionCheck = (check == null) ? loc -> false : check;
 	}
 	public static void reload() {

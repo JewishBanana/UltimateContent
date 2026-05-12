@@ -123,6 +123,8 @@ public class SoulReaper extends ComplexEntity<Skeleton> {
 		UIEntityManager type = UIEntityManager.registerEntity(SoulReaper.REGISTERED_KEY, SoulReaper.class);
 		
 		type.setSpawnConditions(event -> {
+			if (!CustomEntityType.SOUL_REAPER.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			if (event.getLocation().getBlock().getBiome() != Biome.SOUL_SAND_VALLEY)
 				return false;
 			return true;

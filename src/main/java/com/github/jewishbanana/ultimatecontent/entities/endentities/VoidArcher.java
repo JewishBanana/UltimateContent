@@ -3,7 +3,6 @@ package com.github.jewishbanana.ultimatecontent.entities.endentities;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.World.Environment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -52,8 +51,7 @@ public class VoidArcher extends BaseEntity<Skeleton> {
 		UIEntityManager type = UIEntityManager.registerEntity(VoidArcher.REGISTERED_KEY, VoidArcher.class);
 		
 		type.setSpawnConditions(event -> {
-			Location loc = event.getLocation();
-			if (!Utils.isEnvironment(loc.getWorld(), Environment.THE_END))
+			if (!CustomEntityType.VOID_ARCHER.isWorldSpawnable(event.getLocation().getWorld()))
 				return false;
 			return true;
 		});

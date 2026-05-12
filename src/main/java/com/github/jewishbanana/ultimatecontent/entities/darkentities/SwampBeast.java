@@ -285,6 +285,8 @@ public class SwampBeast extends BaseEntity<Zombie> {
 		UIEntityManager type = UIEntityManager.registerEntity(SwampBeast.REGISTERED_KEY, SwampBeast.class);
 		
 		type.setSpawnConditions(event -> {
+			if (!CustomEntityType.SWAMP_BEAST.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			return VersionUtils.isBiomeSwamp(event.getLocation().getBlock().getBiome());
 		});
 	}

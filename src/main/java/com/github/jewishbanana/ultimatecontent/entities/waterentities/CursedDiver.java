@@ -36,6 +36,8 @@ public class CursedDiver extends BaseEntity<Drowned> {
 		type.setSpawnConditions(event -> {
 			if (event.getEntityType() != EntityType.DROWNED)
 				return false;
+			if (!CustomEntityType.CURSED_DIVER.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			return true;
 		});
 	}

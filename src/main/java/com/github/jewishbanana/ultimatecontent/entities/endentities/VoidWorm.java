@@ -6,7 +6,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
@@ -284,8 +283,7 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 		UIEntityManager type = UIEntityManager.registerEntity(VoidWorm.REGISTERED_KEY, VoidWorm.class);
 		
 		type.setSpawnConditions(event -> {
-			Location loc = event.getLocation();
-			if (!Utils.isEnvironment(loc.getWorld(), Environment.THE_END))
+			if (!CustomEntityType.VOID_WORM.isWorldSpawnable(event.getLocation().getWorld()))
 				return false;
 			return true;
 		});

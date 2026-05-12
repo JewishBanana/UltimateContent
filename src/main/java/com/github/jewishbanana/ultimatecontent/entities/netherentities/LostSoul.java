@@ -89,6 +89,8 @@ public class LostSoul extends ComplexEntity<Vex> implements TameableEntity {
 		type.setRandomizeData(true);
 		
 		type.setSpawnConditions(event -> {
+			if (!CustomEntityType.LOST_SOUL.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			if (event.getLocation().getBlock().getBiome() != Biome.SOUL_SAND_VALLEY)
 				return false;
 			return true;

@@ -3,6 +3,7 @@ package com.github.jewishbanana.ultimatecontent.items;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Rotatable;
@@ -14,7 +15,7 @@ import com.github.jewishbanana.ultimatecontent.listeners.BossBlocksHandler;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
-public class BossSpawnItem extends BaseItem {
+public abstract class BossSpawnItem extends BaseItem {
 	
 	private static final Map<BossSpawnItem, Block> placedBlocks;
 	static {
@@ -34,9 +35,12 @@ public class BossSpawnItem extends BaseItem {
 		}
 		return true;
 	}
+	
+	public abstract void spawnBoss(Location location);
+	
 	protected void addToBossBlocks(Block block) {
 		placedBlocks.put(this, block);
-		BossBlocksHandler.bossBlocks.add(block);
+		BossBlocksHandler.bossBlocks.put(block, this);
 	}
 	protected void removeBossBlock() {
 		BossBlocksHandler.bossBlocks.remove(placedBlocks.remove(this));

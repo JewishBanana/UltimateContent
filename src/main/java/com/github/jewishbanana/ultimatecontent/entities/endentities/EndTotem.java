@@ -4,7 +4,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.World.Environment;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Enderman;
 import org.bukkit.entity.Entity;
@@ -189,8 +188,7 @@ public class EndTotem extends ComplexEntity<Enderman> {
 		type.setSpawnConditions(event -> {
 			if (event.getEntityType() != EntityType.ENDERMAN)
 				return false;
-			Location loc = event.getLocation();
-			if (!Utils.isEnvironment(loc.getWorld(), Environment.THE_END))
+			if (!CustomEntityType.END_TOTEM.isWorldSpawnable(event.getLocation().getWorld()))
 				return false;
 			return true;
 		});

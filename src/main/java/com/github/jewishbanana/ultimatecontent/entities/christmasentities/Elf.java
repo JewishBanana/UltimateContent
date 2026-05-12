@@ -214,6 +214,8 @@ public class Elf extends BaseEntity<Zombie> implements TameableEntity {
 		Variant.initVariants(ElfVariant.class);
 		
 		type.setSpawnConditions(event -> {
+			if (!CustomEntityType.ELF.isWorldSpawnable(event.getLocation().getWorld()))
+				return false;
 			if (!ChristmasEvent.eventEntitySpawnCondition.test(event))
 				return false;
 			Location spawn = event.getLocation();

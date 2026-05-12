@@ -182,6 +182,16 @@ public class DataUtils {
 			return defaultConfig.getStringList(path);
 		}
 	}
+	public static List<String> getConfigStringListOrNull(String path) {
+		try {
+			if (!config.contains(path, true))
+				return null;
+			return config.getStringList(path);
+		} catch (Exception e) {
+			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring list &evalue from config path '"+path+"' please fix this value!"));
+			return null;
+		}
+	}
 	public static List<Map<?, ?>> getConfigMapList(String path) {
 		try {
 			return config.getMapList(path);

@@ -3,9 +3,7 @@ package com.github.jewishbanana.ultimatecontent.entities.endentities;
 import java.util.UUID;
 
 import org.bukkit.Color;
-import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -20,7 +18,6 @@ import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.utils.CustomHead;
 import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
-import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class VoidGuardian extends BaseEntity<Zombie> {
@@ -109,8 +106,7 @@ public class VoidGuardian extends BaseEntity<Zombie> {
 		UIEntityManager type = UIEntityManager.registerEntity(VoidGuardian.REGISTERED_KEY, VoidGuardian.class);
 		
 		type.setSpawnConditions(event -> {
-			Location loc = event.getLocation();
-			if (!Utils.isEnvironment(loc.getWorld(), Environment.THE_END))
+			if (!CustomEntityType.VOID_GUARDIAN.isWorldSpawnable(event.getLocation().getWorld()))
 				return false;
 			return true;
 		});
