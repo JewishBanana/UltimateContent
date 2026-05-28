@@ -39,7 +39,7 @@ import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import com.github.jewishbanana.uiframework.entities.CustomEntity;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.UndeadMiner;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
 import com.github.jewishbanana.ultimatecontent.listeners.PathfindersHandler;
@@ -59,7 +59,7 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 	protected static final boolean IS_VERSION_19_OR_ABOVE;
 	protected static final BlockData infestedEntityParticles;
 	static {
-		plugin = Main.getInstance();
+		plugin = UltimateContent.getInstance();
 		random = RandomGenerator.of("SplittableRandom");
 		tameOwner = new NamespacedKey(plugin, "uc-tameowner");
 		IS_VERSION_19_OR_ABOVE = VersionUtils.isMCVersionOrAbove("1.19");

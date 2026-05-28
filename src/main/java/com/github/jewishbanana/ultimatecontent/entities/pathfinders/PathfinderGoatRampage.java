@@ -13,7 +13,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
@@ -111,9 +111,9 @@ public class PathfinderGoatRampage extends CustomPathfinder {
 									alive.damage(attackDamage, entity);
 							}
 						}
-					}.runTaskTimer(Main.getInstance(), 0, 1);
+					}.runTaskTimer(UltimateContent.getInstance(), 0, 1);
 				}
-			}.runTaskLater(Main.getInstance(), 12);
+			}.runTaskLater(UltimateContent.getInstance(), 12);
 		}
 	}
 	@Override

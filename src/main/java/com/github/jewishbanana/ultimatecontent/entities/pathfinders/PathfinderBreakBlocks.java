@@ -18,7 +18,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
@@ -136,7 +136,7 @@ public class PathfinderBreakBlocks extends CustomPathfinder {
 					if (blockTicks % 5 == 0)
 						world.playSound(goal, soundGroup.getHitSound(), volume, 1f);
 				}
-			}.runTaskTimer(Main.getInstance(), 0, 1);
+			}.runTaskTimer(UltimateContent.getInstance(), 0, 1);
 			world.playSound(goal, soundGroup.getHitSound(), volume, 1f);
 			breaking = true;
 			return;

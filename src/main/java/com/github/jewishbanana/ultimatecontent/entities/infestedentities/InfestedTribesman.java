@@ -24,7 +24,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.entities.EntityVariant.LoadoutEquipmentSlot;
@@ -72,13 +72,13 @@ public class InfestedTribesman extends BaseEntity<Zombie> {
 		entity.setBaby();
 		entity.setCanPickupItems(false);
 		entity.setSilent(true);
-		entity.setMetadata("uc-tribesman", Main.getFixedMetadata());
+		entity.setMetadata("uc-tribesman", UltimateContent.getFixedMetadata());
 		
 		final int green = random.nextInt(25, 85);
 		EntityUtils.modifyLoadoutArmorColor(this, 1, green, green - 20, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
 		
 		if (variant == TribesmanVariant.ARCHER) {
-			entity.setMetadata("uc-tribesmanarcher", Main.getFixedMetadata());
+			entity.setMetadata("uc-tribesmanarcher", UltimateContent.getFixedMetadata());
 			if (random.nextInt(4) != 0)
 				scheduleTask(new BukkitRunnable() {
 					private final int maxStack = random.nextInt(2);

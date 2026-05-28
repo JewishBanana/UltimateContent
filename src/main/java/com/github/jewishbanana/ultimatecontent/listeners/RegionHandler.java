@@ -11,13 +11,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.FluidLevelChangeEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 
 public class RegionHandler implements Listener {
 	
 	public static Set<Block> fluidChangeBlocks = new HashSet<>();
 
-	public RegionHandler(Main plugin) {
+	public RegionHandler(UltimateContent plugin) {
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)

@@ -27,7 +27,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.BossEntity;
 import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
@@ -50,7 +50,7 @@ public class Santa extends BossEntity<Zombie> {
 		entity.setRemoveWhenFarAway(false);
 		entity.setCanPickupItems(false);
 		entity.setSilent(true);
-		entity.setMetadata("uc-christmasmobs", Main.getFixedMetadata());
+		entity.setMetadata("uc-christmasmobs", UltimateContent.getFixedMetadata());
 		
 		scheduleTask(new BukkitRunnable() {
 			private int abilityCooldown;

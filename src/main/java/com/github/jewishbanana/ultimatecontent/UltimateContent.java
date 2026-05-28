@@ -56,7 +56,7 @@ import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.mojang.datafixers.util.Pair;
 
-public class Main extends JavaPlugin {
+public class UltimateContent extends JavaPlugin {
 	
 	/**
 	 * TODO:

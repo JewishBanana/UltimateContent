@@ -6,7 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 
 import com.github.jewishbanana.uiframework.items.GenericItem;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.items.easter.BlueEgg;
 import com.github.jewishbanana.ultimatecontent.items.easter.GoldenEgg;
 import com.github.jewishbanana.ultimatecontent.items.easter.GreenEgg;
@@ -16,7 +16,7 @@ import com.github.jewishbanana.ultimatecontent.items.easter.RedEgg;
 
 public class ItemMechanicsHandler implements Listener {
 
-	public ItemMechanicsHandler(Main plugin) {
+	public ItemMechanicsHandler(UltimateContent plugin) {
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 	@EventHandler(ignoreCancelled = true)

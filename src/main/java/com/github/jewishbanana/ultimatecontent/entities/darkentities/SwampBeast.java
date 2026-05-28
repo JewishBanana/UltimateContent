@@ -25,7 +25,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
@@ -57,7 +57,7 @@ public class SwampBeast extends BaseEntity<Zombie> {
 		
 		entity.setCanPickupItems(false);
 		makeEntityBreakDoors(entity);
-		entity.setMetadata("uc-swampentity", Main.getFixedMetadata());
+		entity.setMetadata("uc-swampentity", UltimateContent.getFixedMetadata());
 		entity.setAI(true);
 		
 		scheduleTask(new BukkitRunnable() {

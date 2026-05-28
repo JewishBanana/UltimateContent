@@ -14,7 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
 
 public class PhysicsEngine {
@@ -22,7 +22,7 @@ public class PhysicsEngine {
 	private static final JavaPlugin plugin;
 	private static final RandomGenerator random;
 	static {
-		plugin = Main.getInstance();
+		plugin = UltimateContent.getInstance();
 		random = RandomGenerator.of("SplittableRandom");
 	}
 

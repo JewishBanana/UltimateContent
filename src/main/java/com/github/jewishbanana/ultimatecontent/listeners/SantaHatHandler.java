@@ -26,7 +26,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.playerarmorchangeevent.PlayerArmorChangeEvent;
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.uiframework.items.GenericItem;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Elf;
 import com.github.jewishbanana.ultimatecontent.items.christmas.SantaHat;
 import com.github.jewishbanana.ultimatecontent.utils.SpawnUtils;
@@ -36,10 +36,10 @@ public class SantaHatHandler implements Listener {
 	
 	private static Map<UUID, Set<UUID>> activePlayers = new HashMap<>();
 	
-	private Main plugin;
+	private UltimateContent plugin;
 	private Map<UUID, Integer> deadElfTracker = new HashMap<>();
 	
-	public SantaHatHandler(Main plugin) {
+	public SantaHatHandler(UltimateContent plugin) {
 		this.plugin = plugin;
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 		

@@ -23,7 +23,7 @@ import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.uiframework.items.UIItemType;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
@@ -47,7 +47,7 @@ public class Grinch extends BaseEntity<Zombie> {
 		EntitiesHandler.makeEntityNoSunlightCombust(entity);
 		entity.setSilent(true);
 		entity.setCanPickupItems(false);
-		entity.setMetadata("uc-christmasmobs", Main.getFixedMetadata());
+		entity.setMetadata("uc-christmasmobs", UltimateContent.getFixedMetadata());
 		
 		if (random.nextFloat() * 100 < getSectionDouble("cursed_candy_cane_spawn", 0.0)) {
 			entity.getEquipment().setItemInMainHand(UIItemType.getItem(CursedCandyCane.class), true);

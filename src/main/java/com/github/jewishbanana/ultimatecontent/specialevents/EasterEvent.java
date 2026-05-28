@@ -47,7 +47,7 @@ import com.github.jewishbanana.uiframework.items.UIItemType;
 import com.github.jewishbanana.uiframework.listeners.menus.InventoryHandler;
 import com.github.jewishbanana.uiframework.listeners.menus.MenuManager;
 import com.github.jewishbanana.uiframework.utils.UIFUtils;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.easterentities.KillerChicken;
 import com.github.jewishbanana.ultimatecontent.items.easter.BlueEgg;
 import com.github.jewishbanana.ultimatecontent.items.easter.GreenEgg;
@@ -71,7 +71,7 @@ public class EasterEvent extends SpecialEvent {
 	private Set<UUID> modifiedTrades = new HashSet<>();
 	private double killerChickenSpawnRate;
 
-	public EasterEvent(Main plugin) {
+	public EasterEvent(UltimateContent plugin) {
 		super(plugin);
 		isEventActive = true;
 		easterEvent = this;
@@ -99,7 +99,7 @@ public class EasterEvent extends SpecialEvent {
 			}
 		}));
 	}
-	public static EasterEvent checkIsActive(Main plugin) {
+	public static EasterEvent checkIsActive(UltimateContent plugin) {
 		if (!isWithinEasterSeason())
 			return null;
 		EasterEvent event = new EasterEvent(plugin);

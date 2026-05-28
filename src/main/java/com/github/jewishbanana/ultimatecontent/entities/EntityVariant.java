@@ -18,7 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import com.github.jewishbanana.uiframework.items.UIItemType;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.SoundEffect;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
@@ -28,7 +28,7 @@ public class EntityVariant {
 	private static final JavaPlugin plugin;
 	private static final RandomGenerator random;
 	static {
-		plugin = Main.getInstance();
+		plugin = UltimateContent.getInstance();
 		random = Utils.getRandomGenerator();
 	}
 	
@@ -58,7 +58,7 @@ public class EntityVariant {
 		this.configPath = path;
 		ConfigurationSection section = plugin.getConfig().getConfigurationSection(path);
 		if (section == null) {
-			Main.consoleSender.sendMessage(Utils.prefix + Utils.convertString("&cError while trying to find config path for entity variant &d'"+path.substring(0, path.length()-1)+"' &cthis entity type or variant will not function correctly until this config path is added and configured!"));
+			UltimateContent.consoleSender.sendMessage(Utils.prefix + Utils.convertString("&cError while trying to find config path for entity variant &d'"+path.substring(0, path.length()-1)+"' &cthis entity type or variant will not function correctly until this config path is added and configured!"));
 			return;
 		}
 		if (section.contains("name", true))
@@ -81,7 +81,7 @@ public class EntityVariant {
 				String trimmed = line.replaceAll("\\s+", "");
 				String[] values = trimmed.split("\\|");
 				if (values.length < 1) {
-					Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cplease look over the instructions in the config above the entities section to see how to properly set up drops. This drop will be omitted!"));
+					UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cplease look over the instructions in the config above the entities section to see how to properly set up drops. This drop will be omitted!"));
 					return;
 				}
 				for (int i=0; i < values.length; i++)
@@ -92,7 +92,7 @@ public class EntityVariant {
 				if (itemType == null) {
 					Material material = Material.getMaterial(values[0].toUpperCase());
 					if (material == null) {
-						Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe drop &b'"+values[0]+"' &cdoes not exist in line &d'- "+line+"'&c. This drop will be omitted!"));
+						UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe drop &b'"+values[0]+"' &cdoes not exist in line &d'- "+line+"'&c. This drop will be omitted!"));
 						return;
 					}
 					customDrop.item = new ItemStack(material);
@@ -105,31 +105,31 @@ public class EntityVariant {
 					try {
 						customDrop.chance = (float) Double.parseDouble(values[1]);
 					} catch (NumberFormatException e) {
-						Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cthe value &d'"+values[1]+"' &cmust be a decimal number! Please look over the instructions in the config above the entities section to see how to properly set up drops. This drop will be omitted!"));
+						UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cthe value &d'"+values[1]+"' &cmust be a decimal number! Please look over the instructions in the config above the entities section to see how to properly set up drops. This drop will be omitted!"));
 						return;
 					}
 					if (values.length > 2) {
 						String[] innerValues = values[2].split("-");
 						if (innerValues.length != 2) {
-							Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cplease look over the instructions in the config above the entities section to see how to properly set up drops. This drop will be omitted!"));
+							UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cplease look over the instructions in the config above the entities section to see how to properly set up drops. This drop will be omitted!"));
 							return;
 						}
 						int tempMin = 0;
 						try {
 							tempMin = Integer.parseInt(innerValues[0]);
 						} catch (NumberFormatException e) {
-							Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cthe value &d'"+innerValues[0]+"' &cmust be an integer within the third section &d'"+values[2]+"'&c! Please look over the instructions in the config above the entities section to see how to properly set up drops. This drop will be omitted!"));
+							UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cthe value &d'"+innerValues[0]+"' &cmust be an integer within the third section &d'"+values[2]+"'&c! Please look over the instructions in the config above the entities section to see how to properly set up drops. This drop will be omitted!"));
 							return;
 						}
 						int tempMax = 0;
 						try {
 							tempMax = Integer.parseInt(innerValues[1]);
 						} catch (NumberFormatException e) {
-							Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cthe value &d'"+innerValues[1]+"' &cmust be an integer within the third section &d'"+values[2]+"'&c! Please look over the instructions in the config above the entities section to see how to properly set up drops. This drop will be omitted!"));
+							UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cthe value &d'"+innerValues[1]+"' &cmust be an integer within the third section &d'"+values[2]+"'&c! Please look over the instructions in the config above the entities section to see how to properly set up drops. This drop will be omitted!"));
 							return;
 						}
 						if (tempMin > tempMax) {
-							Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cwithin the third section &d'"+values[2]+"'&c! The minimum value cannot be greater than the maximum value! This drop will be omitted!"));
+							UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating a custom drop for entity &f"+displayName+" &cthe following line has a syntax error: &d'- "+line+"' &cwithin the third section &d'"+values[2]+"'&c! The minimum value cannot be greater than the maximum value! This drop will be omitted!"));
 							return;
 						}
 						customDrop.min = tempMin;
@@ -167,7 +167,7 @@ public class EntityVariant {
 					loadout.armor[3] = slot != null ? slot : defaultLoadout.armor[3];
 				}
 			} catch (Exception e) {
-				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating custom equipment loadout for entity &f"+displayName+" &cthe following section has a syntax error: &d'"+path+".equipment' &cplease look over the instructions in the config above the entities section to see how to properly set up custom equipment load outs. This loadout will be omitted!"));
+				UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in creating custom equipment loadout for entity &f"+displayName+" &cthe following section has a syntax error: &d'"+path+".equipment' &cplease look over the instructions in the config above the entities section to see how to properly set up custom equipment load outs. This loadout will be omitted!"));
 				return;
 			}
 	}
@@ -186,7 +186,7 @@ public class EntityVariant {
 				continue;
 			ItemStack item = createEquipmentItemStack(String.valueOf(itemName));
 			if (item == null) {
-				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in setting &e"+slotName+" &cfor entity &f"+entityName+" &cthe item &b'"+String.valueOf(itemName)+"' &cdoes not exist! The slot will ignore this item entry until it is fixed."));
+				UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in setting &e"+slotName+" &cfor entity &f"+entityName+" &cthe item &b'"+String.valueOf(itemName)+"' &cdoes not exist! The slot will ignore this item entry until it is fixed."));
 				continue;
 			}
 			double dropRate = 0;
@@ -194,7 +194,7 @@ public class EntityVariant {
 				try {
 					dropRate = (Double) map.get("drop_rate");
 				} catch (Exception e) {
-					Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in setting &e"+slotName+" &cfor entity &f"+entityName+" &cthe items drop_rate &b'"+String.valueOf(map.get("drop_rate"))+"' &cis not a double value! The slot will ignore this item entry until it is fixed."));
+					UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in setting &e"+slotName+" &cfor entity &f"+entityName+" &cthe items drop_rate &b'"+String.valueOf(map.get("drop_rate"))+"' &cis not a double value! The slot will ignore this item entry until it is fixed."));
 					continue;
 				}
 			double chance = 0f;
@@ -202,7 +202,7 @@ public class EntityVariant {
 				try {
 					chance = (Double) map.get("chance");
 				} catch (Exception e) {
-					Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in setting &e"+slotName+" &cfor entity &f"+entityName+" &cthe items chance &b'"+String.valueOf(map.get("chance"))+"' &cis not a double value! The slot will ignore this item entry until it is fixed."));
+					UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in setting &e"+slotName+" &cfor entity &f"+entityName+" &cthe items chance &b'"+String.valueOf(map.get("chance"))+"' &cis not a double value! The slot will ignore this item entry until it is fixed."));
 					continue;
 				}
 			boolean damaged = true;
@@ -210,7 +210,7 @@ public class EntityVariant {
 				try {
 					damaged = (Boolean) map.get("damaged");
 				} catch (Exception e) {
-					Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in setting &e"+slotName+" &cfor entity &f"+entityName+" &cthe items damaged value &b'"+String.valueOf(map.get("damaged"))+"' &cis not a boolean value! The slot will ignore this item entry until it is fixed."));
+					UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in setting &e"+slotName+" &cfor entity &f"+entityName+" &cthe items damaged value &b'"+String.valueOf(map.get("damaged"))+"' &cis not a boolean value! The slot will ignore this item entry until it is fixed."));
 					continue;
 				}
 			if (chance > 0f)

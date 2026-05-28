@@ -27,7 +27,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.entities.EntityVariant.LoadoutEquipmentSlot;
@@ -82,13 +82,13 @@ public class Elf extends BaseEntity<Zombie> implements TameableEntity {
 		entity.setBaby();
 		entity.setCanPickupItems(false);
 		entity.setSilent(true);
-		entity.setMetadata("uc-elf", Main.getFixedMetadata());
-		entity.setMetadata("uc-christmasmobs", Main.getFixedMetadata());
+		entity.setMetadata("uc-elf", UltimateContent.getFixedMetadata());
+		entity.setMetadata("uc-christmasmobs", UltimateContent.getFixedMetadata());
 		
 		EntityUtils.modifyLoadoutArmorColor(this, random.nextInt(30, 40), random.nextInt(80, 180), 0, LoadoutEquipmentSlot.FEET, LoadoutEquipmentSlot.LEGS, LoadoutEquipmentSlot.CHEST);
 		
 		if (variant == ElfVariant.ARCHER) {
-			entity.setMetadata("uc-elfarcher", Main.getFixedMetadata());
+			entity.setMetadata("uc-elfarcher", UltimateContent.getFixedMetadata());
 			if (random.nextInt(4) != 0)
 				scheduleTask(new BukkitRunnable() {
 					private final int maxStack = random.nextInt(2);
@@ -202,7 +202,7 @@ public class Elf extends BaseEntity<Zombie> implements TameableEntity {
 		Arrow arrow = mob.launchProjectile(Arrow.class);
 		arrow.setVelocity(Utils.getParabolicVelocity(mob.getEyeLocation(), target.getLocation().add(0, target.getHeight() / 2.0, 0), 2.5, 0.05));
 		arrow.addCustomEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 1), false);
-		arrow.setMetadata("uc-elfarrow", Main.getFixedMetadata());
+		arrow.setMetadata("uc-elfarrow", UltimateContent.getFixedMetadata());
 		if (UIEntityManager.getEntity(mob) instanceof Elf base) {
 			base.playSound(mob.getLocation(), Sound.ENTITY_SKELETON_SHOOT, 1f, random.nextFloat(1.4f, 1.8f));
 			EntitiesHandler.elfArrows.put(arrow.getUniqueId(), base);

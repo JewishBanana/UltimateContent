@@ -11,7 +11,7 @@ import org.bukkit.entity.Mob;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 
 import me.gamercoder215.mobchip.EntityBrain;
 import me.gamercoder215.mobchip.bukkit.BukkitBrain;
@@ -54,7 +54,7 @@ public class NavigationUtils {
 				}
 				brain.getController().moveTo(location);
 			}
-		}.runTaskTimer(Main.getInstance(), 2, 1);
+		}.runTaskTimer(UltimateContent.getInstance(), 2, 1);
 	}
 	public NavigationUtils addLocation(Location location) {
 		locations.add(location);

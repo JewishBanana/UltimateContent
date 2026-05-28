@@ -17,7 +17,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
 import com.github.jewishbanana.ultimatecontent.entities.pathfinders.target.PathfinderAllyHurtByEntity;
@@ -39,7 +39,7 @@ public class PathfindersHandler implements Listener {
 	private static Map<UUID, List<PathfinderOwnerTargetedByEntity>> pathfinderOwnerTargeted = new HashMap<>();
 	private static Map<TameableEntity, PathfinderOwnerTargetedByEntity> pathfinderOwnerTargetedMobs = new HashMap<>();
 	
-	public PathfindersHandler(Main plugin) {
+	public PathfindersHandler(UltimateContent plugin) {
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)

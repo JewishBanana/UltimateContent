@@ -13,7 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.utils.NavigationUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
@@ -167,7 +167,7 @@ public class PathfinderRangedEntityAttack extends CustomPathfinder {
 			public void run() {
 				mob.getEquipment().setItemInMainHand(item, true);
 			}
-		}.runTaskLater(Main.getInstance(), 2);
+		}.runTaskLater(UltimateContent.getInstance(), 2);
 		usingTicks = 0;
 	}
 }

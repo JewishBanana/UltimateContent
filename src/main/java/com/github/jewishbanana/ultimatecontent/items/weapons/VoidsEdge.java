@@ -88,8 +88,9 @@ public class VoidsEdge extends Weapon {
 	public boolean hitEntity(EntityDamageByEntityEvent event) {
 		Entity entity = event.getEntity();
 		if (event.getCause() == DamageCause.ENTITY_ATTACK && entity instanceof LivingEntity) {
-			SaberParry.parryMap.put(entity.getUniqueId(), event.getDamager().getUniqueId());
-			plugin.getServer().getScheduler().runTaskLater(plugin, () -> SaberParry.parryMap.remove(entity.getUniqueId()), (int) (((Player) event.getDamager()).getAttackCooldown() * 20.0));
+			Entity damager = event.getDamager();
+			SaberParry.parryMap.put(entity.getUniqueId(), damager.getUniqueId());
+			plugin.getServer().getScheduler().runTaskLater(plugin, () -> SaberParry.parryMap.remove(entity.getUniqueId()), damager instanceof Player player ? (int) (player.getAttackCooldown() * 20.0) : 20);
 		}
 		return true;
 	}

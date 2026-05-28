@@ -33,7 +33,7 @@ import com.github.jewishbanana.uiframework.items.Ability;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.StoredField;
 import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.abilities.DoubleJump;
 import com.github.jewishbanana.ultimatecontent.items.BaseItem;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
@@ -41,14 +41,14 @@ import com.mojang.datafixers.util.Pair;
 
 public class DoubleJumpHandler implements Listener {
 	
-	private Main plugin;
+	private UltimateContent plugin;
 	private Set<UUID> doubleJumpEnabledPlayers = new HashSet<>();
 	private Set<UUID> doubleJumpingPlayers = new HashSet<>();
 	private Map<UUID, Float> doubleJumpFall = new HashMap<>();
 	private Set<UUID> doubleJumpDamaging = new HashSet<>();
 	private Map<UUID, Pair<Integer, BukkitTask>> doubleJumpTimer = new HashMap<>();
 
-	public DoubleJumpHandler(Main plugin) {
+	public DoubleJumpHandler(UltimateContent plugin) {
 		this.plugin = plugin;
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 		

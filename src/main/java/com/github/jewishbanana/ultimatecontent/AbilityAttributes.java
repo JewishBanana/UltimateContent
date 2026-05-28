@@ -51,7 +51,7 @@ public class AbilityAttributes extends Ability {
 	
 	public static final Map<UIAbilityType, AbilityTypeBlacklists> globalBlacklists;
 	static {
-		plugin = Main.getInstance();
+		plugin = UltimateContent.getInstance();
 		random = RandomGenerator.of("SplittableRandom");
 		globalBlacklists = new HashMap<>();
 	}
@@ -471,13 +471,13 @@ public class AbilityAttributes extends Ability {
 			try {
 				return plugin.getConfig().getInt(configPath+'.'+field);
 			} catch (NumberFormatException e) {
-				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
+				UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
 			}
 		if (plugin.getConfig().contains(defaultPath+'.'+field))
 			try {
 				return plugin.getConfig().getInt(defaultPath+'.'+field);
 			} catch (NumberFormatException e) {
-				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+defaultPath+'.'+field+"' please fix this value!"));
+				UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+defaultPath+'.'+field+"' please fix this value!"));
 			}
 		return defaultValue;
 	}
@@ -489,13 +489,13 @@ public class AbilityAttributes extends Ability {
 			try {
 				return plugin.getConfig().getDouble(configPath+'.'+field);
 			} catch (NumberFormatException e) {
-				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
+				UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
 			}
 		if (plugin.getConfig().contains(defaultPath+'.'+field))
 			try {
 				return plugin.getConfig().getDouble(defaultPath+'.'+field);
 			} catch (NumberFormatException e) {
-				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+defaultPath+'.'+field+"' please fix this value!"));
+				UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+defaultPath+'.'+field+"' please fix this value!"));
 			}
 		return defaultValue;
 	}
@@ -507,13 +507,13 @@ public class AbilityAttributes extends Ability {
 			try {
 				return plugin.getConfig().getBoolean(configPath+'.'+field);
 			} catch (NumberFormatException e) {
-				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
+				UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+configPath+'.'+field+"' please fix this value!"));
 			}
 		if (plugin.getConfig().contains(defaultPath+'.'+field))
 			try {
 				return plugin.getConfig().getBoolean(defaultPath+'.'+field);
 			} catch (NumberFormatException e) {
-				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+defaultPath+'.'+field+"' please fix this value!"));
+				UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+defaultPath+'.'+field+"' please fix this value!"));
 			}
 		return defaultValue;
 	}
@@ -645,7 +645,7 @@ public class AbilityAttributes extends Ability {
 			if (value != null) {
 				Target target = Target.forName(value);
 				if (target == null)
-					Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading ability from config path &d'"+configPath+".target' &ethere is no such target type &a'"+DataUtils.getConfigString(configPath+".target")+"'"));
+					UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading ability from config path &d'"+configPath+".target' &ethere is no such target type &a'"+DataUtils.getConfigString(configPath+".target")+"'"));
 				else
 					setTarget(target);
 			}
@@ -658,7 +658,7 @@ public class AbilityAttributes extends Ability {
 				for (String s : DataUtils.getConfigStringList(configPath+".blacklist.blocks")) {
 					Material material = Material.matchMaterial(s);
 					if (material == null) {
-						Main.consoleSender.sendMessage(Utils.prefix+Utils.convertString("&cError in adding material type &d'"+s+"' &cto ability &e"+getDisplayName()+" &cblock blacklist in config section &b"+configPath+".blacklist.blocks &cplease fix this value to match the minecraft name. This material type will be omitted from the abilities block blacklist!"));
+						UltimateContent.consoleSender.sendMessage(Utils.prefix+Utils.convertString("&cError in adding material type &d'"+s+"' &cto ability &e"+getDisplayName()+" &cblock blacklist in config section &b"+configPath+".blacklist.blocks &cplease fix this value to match the minecraft name. This material type will be omitted from the abilities block blacklist!"));
 						continue;
 					}
 					types.add(material);
@@ -679,7 +679,7 @@ public class AbilityAttributes extends Ability {
 						EntityType entityType = EntityType.valueOf(s.toUpperCase());
 						types.add(entityType);
 					} catch (IllegalArgumentException e) {
-						Main.consoleSender.sendMessage(Utils.prefix+Utils.convertString("&cError in adding entity type &d'"+s+"' &cto ability &e"+getDisplayName()+" &centity blacklist in config section &b"+configPath+".blacklist.entities &cplease fix this value to match the minecraft name or custom entity type name. This entity type will be omitted from the abilities entity blacklist!"));
+						UltimateContent.consoleSender.sendMessage(Utils.prefix+Utils.convertString("&cError in adding entity type &d'"+s+"' &cto ability &e"+getDisplayName()+" &centity blacklist in config section &b"+configPath+".blacklist.entities &cplease fix this value to match the minecraft name or custom entity type name. This entity type will be omitted from the abilities entity blacklist!"));
 					}
 				if (!types.isEmpty())
 					setImmuneEntities(EnumSet.copyOf(types));

@@ -15,7 +15,7 @@ import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.items.BossSpawnItem;
 import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
 
@@ -23,7 +23,7 @@ public class BossBlocksHandler implements Listener {
 	
 	public static Map<Block, BossSpawnItem> bossBlocks = new HashMap<>();
 	
-	public BossBlocksHandler(Main plugin) {
+	public BossBlocksHandler(UltimateContent plugin) {
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)

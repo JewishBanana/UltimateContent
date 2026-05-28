@@ -1,5 +1,6 @@
 package com.github.jewishbanana.ultimatecontent.listeners;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -30,7 +31,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.github.jewishbanana.uiframework.events.CustomEntitySpawnEvent;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.ExplodingEntity;
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Elf;
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Frosty;
@@ -55,7 +56,7 @@ public class EntitiesHandler implements Listener {
 	public static final Map<UUID, ExplodingEntity> explodingEntities;
 	
 	static {
-		removeKey = new NamespacedKey(Main.getInstance(), "uck");
+		removeKey = new NamespacedKey(UltimateContent.getInstance(), "uck");
 		noBurnMobs = new HashSet<>();
 		noSuffocateMobs = new HashSet<>();
 		invulnerableEntities = new HashSet<>();
@@ -68,7 +69,7 @@ public class EntitiesHandler implements Listener {
 		explodingEntities = new HashMap<>();
 	}
 	
-	public EntitiesHandler(Main plugin) {
+	public EntitiesHandler(UltimateContent plugin) {
 		plugin.getServer().getWorlds().forEach(world -> world.getEntities().stream().filter(e -> e.getPersistentDataContainer().has(removeKey, PersistentDataType.BYTE)).forEach(e -> e.remove()));
 		
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -159,11 +160,13 @@ public class EntitiesHandler implements Listener {
 	}
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onPlayerPlaceBlock(BlockPlaceEvent event) {
-		Location loc = event.getBlock().getLocation().add(.5, .5, .5);
-		InfestedDevourer.infestedDevourers.forEach(e -> {
-			if (Utils.isLocationsWithinDistance(e.getEntityLocation(), loc, 225))
-				e.blocks.add(event.getBlock());
-		});
+		if (!InfestedDevourer.infestedDevourers.isEmpty()) {
+			Location loc = event.getBlock().getLocation().add(.5, .5, .5);
+			new ArrayList<>(InfestedDevourer.infestedDevourers).forEach(e -> {
+				if (Utils.isLocationsWithinDistance(e.getEntityLocation(), loc, 225))
+					e.blocks.add(event.getBlock());
+			});
+		}
 	}
 	public static void attachRemoveKey(Entity entity) {
 		if (entity != null)

@@ -30,7 +30,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
@@ -58,7 +58,7 @@ public class Frosty extends BaseEntity<Snowman> {
 		
 		entity.setCanPickupItems(false);
 		entity.setDerp(true);
-		entity.setMetadata("uc-christmasmobs", Main.getFixedMetadata());
+		entity.setMetadata("uc-christmasmobs", UltimateContent.getFixedMetadata());
 		entity.setAI(true);
 		
 		scheduleTask(new BukkitRunnable() {

@@ -7,7 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
@@ -18,16 +18,16 @@ public class SpecialEvent implements Listener {
 		random = Utils.getRandomGenerator();
 	}
 
-	protected Main plugin;
+	protected UltimateContent plugin;
 	protected boolean notifyMessages;
 	protected String eventMessage;
 	
-	public SpecialEvent(Main plugin) {
+	public SpecialEvent(UltimateContent plugin) {
 		this.plugin = plugin;
 		
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
-	public static SpecialEvent checkForEvent(Main plugin) {
+	public static SpecialEvent checkForEvent(UltimateContent plugin) {
 		if (!DataUtils.getConfigBoolean("general.special_events.enabled", false))
 			return null;
 		SpecialEvent event = EasterEvent.checkIsActive(plugin);

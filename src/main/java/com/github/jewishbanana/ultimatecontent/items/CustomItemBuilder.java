@@ -26,7 +26,7 @@ import com.github.jewishbanana.uiframework.items.UIEnchantment;
 import com.github.jewishbanana.uiframework.items.UIItemType;
 import com.github.jewishbanana.uiframework.utils.UIFDataUtils;
 import com.github.jewishbanana.uiframework.utils.UIFUtils;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
@@ -204,7 +204,7 @@ public class CustomItemBuilder extends ItemBuilder {
 		tempItem.setItemMeta(tempMeta);
 		return tempItem;
 	}
-	public static void reload(Main plugin) {
+	public static void reload(UltimateContent plugin) {
 		deprecatedString = Utils.convertString(DataUtils.getConfigString("language.misc.deprecatedItem", "(hex:#e0bd5c)(This item is subject to changes/removal and should typically not be given to others!)"));
 	}
 }

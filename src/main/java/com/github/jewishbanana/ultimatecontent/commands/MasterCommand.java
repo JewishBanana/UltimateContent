@@ -9,7 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
@@ -20,7 +20,7 @@ public class MasterCommand implements CommandExecutor, TabCompleter {
 		usage = Utils.convertString("&cUsage: /ultimatecontent <event|help|reload>");
 	}
 	
-	public MasterCommand(Main plugin) {
+	public MasterCommand(UltimateContent plugin) {
 		plugin.getCommand("ultimatecontent").setExecutor(this);
 	}
 	@Override
@@ -39,11 +39,11 @@ public class MasterCommand implements CommandExecutor, TabCompleter {
 				sender.sendMessage(Utils.convertString(DataUtils.getConfigString("language.commands.permissionError")));
 				return true;
 			}
-			if (Main.getSpecialEvent() == null) {
+			if (UltimateContent.getSpecialEvent() == null) {
 				sender.sendMessage(Utils.convertString(DataUtils.getConfigString("language.events.noEvent")));
 				return true;
 			}
-			Main.getSpecialEvent().openGUI((Player) sender);
+			UltimateContent.getSpecialEvent().openGUI((Player) sender);
 			return true;
 		case "help":
 			if (sender instanceof Player && !sender.hasPermission("ultimatecontent.help")) {
@@ -76,7 +76,7 @@ public class MasterCommand implements CommandExecutor, TabCompleter {
 				sender.sendMessage(Utils.convertString(DataUtils.getConfigString("language.commands.permissionError")));
 				return true;
 			}
-			Main.reload();
+			UltimateContent.reload();
 			sender.sendMessage(Utils.convertString("&aSuccessfully reloaded the &9UltimateContent &aconfig!"));
 			sender.sendMessage(Utils.convertString("&ePlease keep in mind that it is highly recommended to do reloads through UltimateContent instead! &d(/ui reload)"));
 			return true;

@@ -105,6 +105,6 @@ public class VoidTear extends BaseItem {
 		UIItemType.registerItem(REGISTERED_KEY, VoidTear.class);
 	}
 	public Rarity getRarity() {
-		return Rarity.EPIC;
+		return Rarity.RARE;
 	}
 }

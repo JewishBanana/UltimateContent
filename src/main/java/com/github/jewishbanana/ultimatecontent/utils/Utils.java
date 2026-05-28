@@ -36,7 +36,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 
 public class Utils {
 	
@@ -50,7 +50,7 @@ public class Utils {
 	static
 	{
 		hexPattern = Pattern.compile("\\(hex:#[a-fA-F0-9]{6}\\)");
-		plugin = Main.getInstance();
+		plugin = UltimateContent.getInstance();
 		random = RandomGenerator.of("SplittableRandom");
 		prefix = convertString("&a[UltimateContent]: ");
 		
@@ -389,10 +389,10 @@ public class Utils {
 	}
 	public static void sendExceptionLog(Exception error) {
 		error.printStackTrace();
-		Main.consoleSender.sendMessage(Utils.convertString("&c[UltimateContent]: An error has occurred above this message. Please report the full error to the discord https://discord.gg/MhXFj72VeN"));
+		UltimateContent.consoleSender.sendMessage(Utils.convertString("&c[UltimateContent]: An error has occurred above this message. Please report the full error to the discord https://discord.gg/MhXFj72VeN"));
 	}
 	public static void sendConsoleMessage(String message) {
-		Main.consoleSender.sendMessage(Utils.prefix + convertString(message));
+		UltimateContent.consoleSender.sendMessage(Utils.prefix + convertString(message));
 	}
 	public static RandomGenerator getRandomGenerator() {
 		return random;

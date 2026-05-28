@@ -42,7 +42,7 @@ import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.BossEntity;
 import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
@@ -75,7 +75,7 @@ public class EasterBunny extends BossEntity<Rabbit> {
 		super(entity, CustomEntityType.EASTER_BUNNY);
 		
 		entity.setRabbitType(Type.THE_KILLER_BUNNY);
-		entity.setMetadata("uc-eastermobs", Main.getFixedMetadata());
+		entity.setMetadata("uc-eastermobs", UltimateContent.getFixedMetadata());
 		
 		scheduleTask(new BukkitRunnable() {
 			private int biteTicks;

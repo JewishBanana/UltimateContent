@@ -11,7 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
@@ -19,7 +19,7 @@ public class DeathHandler implements Listener {
 
 	private Map<String, String> deathMessages = new HashMap<>();
 	
-	public DeathHandler(Main plugin) {
+	public DeathHandler(UltimateContent plugin) {
 		for (String s : plugin.getConfig().getConfigurationSection("language.deaths").getKeys(false))
 			deathMessages.put("deaths."+s, Utils.convertString(DataUtils.getConfigString("language.deaths."+s)));
 		

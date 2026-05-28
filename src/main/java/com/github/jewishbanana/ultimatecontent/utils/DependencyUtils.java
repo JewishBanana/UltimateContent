@@ -16,7 +16,7 @@ import org.bukkit.plugin.PluginManager;
 
 import com.github.jewishbanana.uiframework.entities.CustomEntity;
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 
 public class DependencyUtils {
 	
@@ -32,7 +32,7 @@ public class DependencyUtils {
 	private static Set<EntityType> blacklistedEntities;
 	private static Set<Class<? extends CustomEntity<?>>> blacklistedCustomEntities;
 
-	public static void init(Main plugin) {
+	public static void init(UltimateContent plugin) {
 		PluginManager pm = plugin.getServer().getPluginManager();
 		if (pm.isPluginEnabled("DeadlyDisasters")) {
 //			DDHook = com.github.jewishbanana.deadlydisasters.Main.getInstance();
@@ -113,7 +113,7 @@ public class DependencyUtils {
 		try {
 			if (pm.isPluginEnabled("FieldZone")) {
 				if (DataUtils.getConfigBoolean("external.region_protection_plugins.field_zone")) {
-					kr.rtustudio.fieldzone.region.RegionFlag flag = kr.rtustudio.fieldzone.region.RegionFlag.create(plugin, "disasters");
+					kr.rtustudio.fieldzone.region.RegionFlag flag = kr.rtustudio.fieldzone.region.RegionFlag.create(plugin, "ultimatecontent");
 					kr.rtustudio.fieldzone.FieldZoneAPI.registerFlag(flag);
 					check = (check == null) ? 
 							loc -> kr.rtustudio.fieldzone.FieldZoneAPI.hasFlag(loc, flag) == kr.rtustudio.fieldzone.region.FlagState.FALSE : 
@@ -125,6 +125,20 @@ public class DependencyUtils {
 		} catch (Exception e) {
 			Utils.sendExceptionLog(e);
 			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eFieldZone &cregions from this plugin will NOT be protected!");
+		}
+		try {
+			if (pm.isPluginEnabled("PlotSquared")) {
+				if (DataUtils.getConfigBoolean("external.region_protection_plugins.plot_squared")) {
+					check = (check == null) ? 
+				            loc -> com.plotsquared.core.plot.Plot.getPlot(com.plotsquared.bukkit.util.BukkitUtil.adapt(loc)) != null : 
+				            check.and(loc -> com.plotsquared.core.plot.Plot.getPlot(com.plotsquared.bukkit.util.BukkitUtil.adapt(loc)) != null);
+					plugin.getLogger().info("Successfully hooked into PlotSquared");
+				} else
+					plugin.getLogger().info("PlotSquared was detected, but region protection for this plugin is disabled in the main config.yml file. PlotSquared regions will NOT be protected!");
+			}
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &ePlotSquared &cregions from this plugin will NOT be protected!");
 		}
 		try {
 			if (pm.isPluginEnabled("UltimateClans")) {
@@ -172,7 +186,7 @@ public class DependencyUtils {
 		for (String s : DataUtils.getConfigStringList("general.blacklist.blocks")) {
 			Material material = Material.matchMaterial(s);
 			if (material == null) {
-				Main.consoleSender.sendMessage(Utils.prefix+Utils.convertString("&cError in adding material type &d'"+s+"' &cto global blacklist in config section &bgeneral.blacklist.blocks &cplease fix this value to match the minecraft name. This material type will be omitted from the global blocks blacklist!"));
+				UltimateContent.consoleSender.sendMessage(Utils.prefix+Utils.convertString("&cError in adding material type &d'"+s+"' &cto global blacklist in config section &bgeneral.blacklist.blocks &cplease fix this value to match the minecraft name. This material type will be omitted from the global blocks blacklist!"));
 				continue;
 			}
 			blacklistedMaterials.add(material);
@@ -189,7 +203,7 @@ public class DependencyUtils {
 				EntityType type = EntityType.valueOf(s.toUpperCase());
 				blacklistedEntities.add(type);
 			} catch (IllegalArgumentException e) {
-				Main.consoleSender.sendMessage(Utils.prefix+Utils.convertString("&cError in adding entity type &d'"+s+"' &cto global blacklist in config section &bgeneral.blacklist.entities &cplease fix this value to match the minecraft name or custom entity type name. This entity type will be omitted from the global entities blacklist!"));
+				UltimateContent.consoleSender.sendMessage(Utils.prefix+Utils.convertString("&cError in adding entity type &d'"+s+"' &cto global blacklist in config section &bgeneral.blacklist.entities &cplease fix this value to match the minecraft name or custom entity type name. This entity type will be omitted from the global entities blacklist!"));
 			}
 		}
 	}

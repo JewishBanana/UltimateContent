@@ -7,12 +7,12 @@ import java.util.Map;
 
 import org.bukkit.NamespacedKey;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 
 public interface Variant {
 	
 	public static final Map<CustomEntityType, List<Variant>> variants = new HashMap<>();
-	public static final NamespacedKey variantKey = new NamespacedKey(Main.getInstance(), "uc-variant");
+	public static final NamespacedKey variantKey = new NamespacedKey(UltimateContent.getInstance(), "uc-variant");
 	public static final Map<Variant, EntityVariant> entityVariants = new HashMap<>();
 	public static final Map<Variant, String> entityKeys = new HashMap<>();
 	

@@ -18,7 +18,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.uiframework.events.CustomEntitySpawnEvent;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedCreeper;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedDevourer;
@@ -35,7 +35,7 @@ public class EntitySpawningHandler implements Listener {
 	private final RandomGenerator random = RandomGenerator.of("SplittableRandom");
 	private final List<Pair<Function<Location, BaseEntity<?>>, Double>> entityTypes = new ArrayList<>();
 
-	public EntitySpawningHandler(Main plugin) {
+	public EntitySpawningHandler(UltimateContent plugin) {
 		entityTypes.addAll(Arrays.asList(
 				Pair.of(InfestedZombie.attemptSpawn, UIEntityManager.getEntityType(InfestedZombie.REGISTERED_KEY).getSpawnRate()),
 				Pair.of(InfestedSkeleton.attemptSpawn, UIEntityManager.getEntityType(InfestedSkeleton.REGISTERED_KEY).getSpawnRate()),

@@ -11,7 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 
@@ -81,7 +81,7 @@ public enum CustomHead {
 		this.base = base;
 		this.url = url;
 	}
-	public static void init(Main plugin) {
+	public static void init(UltimateContent plugin) {
 		for (CustomHead type : values()) {
 			if (VersionUtils.isMCVersionOrAbove("1.18.1")) {
 				org.bukkit.profile.PlayerProfile profile = Bukkit.createPlayerProfile(UUID.fromString("545ff361-b6e6-4531-9c4c-398ef5589a8a"));

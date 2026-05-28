@@ -34,7 +34,7 @@ import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.EntityVariant.LoadoutEquipmentSlot;
 import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
@@ -47,10 +47,10 @@ public class EntityUtils {
 	private static final FixedMetadataValue damageData;
 	private static final boolean isVersion192OrAbove;
 	static {
-		plugin = Main.getInstance();
+		plugin = UltimateContent.getInstance();
 		leatherArmor = Set.of(Material.LEATHER_BOOTS, Material.LEATHER_LEGGINGS, Material.LEATHER_CHESTPLATE, Material.LEATHER_HELMET);
 		fallingBlockData = new FixedMetadataValue(plugin, "protected");
-		damageData = Main.getFixedMetadata();
+		damageData = UltimateContent.getFixedMetadata();
 		isVersion192OrAbove = VersionUtils.isMCVersionOrAbove("1.19.2");
 	}
 	
@@ -195,6 +195,8 @@ public class EntityUtils {
 	}
 	public static void modifyLoadoutArmorColor(BaseEntity<? extends LivingEntity> base, int red, int green, int blue, LoadoutEquipmentSlot... slots) {
 		LivingEntity entity = base.getCastedEntity();
+		if (entity == null)
+			return;
 		ItemStack[] armor = entity.getEquipment().getArmorContents();
 		for (LoadoutEquipmentSlot slot : slots) {
 			ItemStack item = armor[slot.slotIndex];

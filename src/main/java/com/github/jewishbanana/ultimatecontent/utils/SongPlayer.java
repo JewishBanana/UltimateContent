@@ -5,17 +5,17 @@ import java.util.UUID;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 
 public class SongPlayer {
 	
 	private static JavaPlugin plugin;
 	private static boolean isNBEnabled;
 	static {
-		plugin = Main.getInstance();
+		plugin = UltimateContent.getInstance();
 		isNBEnabled = plugin.getServer().getPluginManager().isPluginEnabled("NoteBlockAPI");
 		if (!isNBEnabled)
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eThere is a soft dependency on NoteBlockAPI, without it the only feature that will be disabled is custom note block themed music (Bosses have theme music)."));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eThere is a soft dependency on NoteBlockAPI, without it the only feature that will be disabled is custom note block themed music (Bosses have theme music)."));
 	}
 	
 	public enum Song {

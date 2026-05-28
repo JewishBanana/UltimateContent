@@ -27,7 +27,7 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 
 public class DataUtils {
 	
@@ -38,7 +38,7 @@ public class DataUtils {
 	private static final File dataFile;
 	private static final FileConfiguration dataYaml;
 	static {
-		plugin = Main.getInstance();
+		plugin = UltimateContent.getInstance();
 		config = plugin.getConfig();
 		defaultConfig = YamlConfiguration.loadConfiguration(new InputStreamReader(plugin.getResource("config.yml")));
 		decimalFormat = new DecimalFormat("0.#");
@@ -106,7 +106,7 @@ public class DataUtils {
 		try {
 			return config.getInt(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+path+"' please fix this value!"));
 			return defaultConfig.getInt(path);
 		}
 	}
@@ -116,7 +116,7 @@ public class DataUtils {
 				return defaultValue;
 			return config.getInt(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+path+"' please fix this value!"));
 			return defaultValue;
 		}
 	}
@@ -124,7 +124,7 @@ public class DataUtils {
 		try {
 			return config.getDouble(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+path+"' please fix this value!"));
 			return defaultConfig.getDouble(path);
 		}
 	}
@@ -134,7 +134,7 @@ public class DataUtils {
 				return defaultValue;
 			return config.getDouble(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+path+"' please fix this value!"));
 			return defaultValue;
 		}
 	}
@@ -142,7 +142,7 @@ public class DataUtils {
 		try {
 			return config.getBoolean(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+path+"' please fix this value!"));
 			return defaultConfig.getBoolean(path);
 		}
 	}
@@ -152,7 +152,7 @@ public class DataUtils {
 				return defaultValue;
 			return config.getBoolean(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+path+"' please fix this value!"));
 			return defaultConfig.getBoolean(path);
 		}
 	}
@@ -160,7 +160,7 @@ public class DataUtils {
 		try {
 			return config.getString(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring &evalue from config path '"+path+"' please fix this value!"));
 			return defaultConfig.getString(path);
 		}
 	}
@@ -170,7 +170,7 @@ public class DataUtils {
 				return defaultValue;
 			return config.getString(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring &evalue from config path '"+path+"' please fix this value!"));
 			return defaultValue;
 		}
 	}
@@ -178,7 +178,7 @@ public class DataUtils {
 		try {
 			return config.getStringList(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring list &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring list &evalue from config path '"+path+"' please fix this value!"));
 			return defaultConfig.getStringList(path);
 		}
 	}
@@ -188,7 +188,7 @@ public class DataUtils {
 				return null;
 			return config.getStringList(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring list &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring list &evalue from config path '"+path+"' please fix this value!"));
 			return null;
 		}
 	}
@@ -196,7 +196,7 @@ public class DataUtils {
 		try {
 			return config.getMapList(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dmap list &evalue from config path '"+path+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dmap list &evalue from config path '"+path+"' please fix this value!"));
 			return defaultConfig.getMapList(path);
 		}
 	}
@@ -279,7 +279,7 @@ public class DataUtils {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR could not read recipe data from &e'"+section+"' &cplease fix this!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR could not read recipe data from &e'"+section+"' &cplease fix this!"));
 			return null;
 		}
 	}
@@ -287,7 +287,7 @@ public class DataUtils {
 		try {
 			return dataYaml.getInt(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dinteger &cvalue from data file path '"+path+"'!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dinteger &cvalue from data file path '"+path+"'!"));
 			Utils.sendExceptionLog(e);
 			return 0;
 		}
@@ -296,7 +296,7 @@ public class DataUtils {
 		try {
 			return dataYaml.getDouble(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &ddouble &cvalue from data file path '"+path+"'!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &ddouble &cvalue from data file path '"+path+"'!"));
 			Utils.sendExceptionLog(e);
 			return 0.0;
 		}
@@ -305,7 +305,7 @@ public class DataUtils {
 		try {
 			return dataYaml.getBoolean(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dboolean &cvalue from data file path '"+path+"'!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dboolean &cvalue from data file path '"+path+"'!"));
 			Utils.sendExceptionLog(e);
 			return false;
 		}
@@ -314,7 +314,7 @@ public class DataUtils {
 		try {
 			return dataYaml.getString(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dstring &cvalue from data file path '"+path+"'!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dstring &cvalue from data file path '"+path+"'!"));
 			Utils.sendExceptionLog(e);
 			return null;
 		}
@@ -323,7 +323,7 @@ public class DataUtils {
 		try {
 			return dataYaml.getStringList(path);
 		} catch (Exception e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dstring list &cvalue from data file path '"+path+"'!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR while reading &dstring list &cvalue from data file path '"+path+"'!"));
 			Utils.sendExceptionLog(e);
 			return null;
 		}

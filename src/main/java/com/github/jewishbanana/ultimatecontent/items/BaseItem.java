@@ -16,7 +16,7 @@ import com.github.jewishbanana.uiframework.items.Ability;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.ItemCategory;
 import com.github.jewishbanana.uiframework.items.ItemCategory.DefaultCategory;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
 public class BaseItem extends GenericItem {
@@ -31,7 +31,7 @@ public class BaseItem extends GenericItem {
 	private static final Map<Class<?>, String> configMap;
 	
 	static {
-		plugin = Main.getInstance();
+		plugin = UltimateContent.getInstance();
 		random = RandomGenerator.of("SplittableRandom");
 		powerEnchant = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("power"));
 		protectionEnchant = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("protection"));
@@ -50,7 +50,7 @@ public class BaseItem extends GenericItem {
 		try {
 			return plugin.getConfig().getInt(getConfigPath()+'.'+field);
 		} catch (NumberFormatException e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dinteger &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
 			return 0;
 		}
 	}
@@ -58,7 +58,7 @@ public class BaseItem extends GenericItem {
 		try {
 			return plugin.getConfig().getDouble(getConfigPath()+'.'+field);
 		} catch (NumberFormatException e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &ddouble &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
 			return 0.0;
 		}
 	}
@@ -66,7 +66,7 @@ public class BaseItem extends GenericItem {
 		try {
 			return plugin.getConfig().getBoolean(getConfigPath()+'.'+field);
 		} catch (NumberFormatException e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dboolean &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
 			return false;
 		}
 	}
@@ -74,7 +74,7 @@ public class BaseItem extends GenericItem {
 		try {
 			return plugin.getConfig().getString(getConfigPath()+'.'+field);
 		} catch (NumberFormatException e) {
-			Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
+			UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&eWARNING while reading &dstring &evalue from config path '"+getConfigPath()+'.'+field+"' please fix this value!"));
 			return null;
 		}
 	}

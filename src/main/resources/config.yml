@@ -74,6 +74,7 @@ external:
         lands: true
         kingdoms: true
         field_zone: true
+        plot_squared: true
         ultimate_clans: true
         factions_uuid: true
 
@@ -246,7 +247,7 @@ items:
         dark_mage_wand:
             name: "(hex:#6e5f4f)Dark Mage Wand"
             lore:
-            - "&eYou can feel powerful magic emitting from the wand. Careful while using this as it can be unstable."
+            - "&eYou can feel powerful magic emitting from the wand. This wand was designed for mages, it is unpredictable when you use it."
         tritons_fang:
             name: "(hex:#365ad1)Triton's Fang"
             lore:
@@ -475,7 +476,7 @@ abilities:
         particleMultiplier: 1.0
     saber_throw:
         name: "(hex:#ecf00e)[Saber Throw]"
-        description: "&8- &7The wielder throws the saber dealing lots of damage. The saber will return."
+        description: "&8- &7The wielder throws the saber, dealing lots of damage. The saber will return."
         # Damage dealt to entities hit by the thrown item.
         damage: 9.0
         # The range in blocks the thrown item will travel before returning.

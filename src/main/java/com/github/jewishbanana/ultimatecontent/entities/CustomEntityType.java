@@ -21,7 +21,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
-import com.github.jewishbanana.ultimatecontent.Main;
+import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.entities.EntityVariant.CustomLoadout;
 import com.github.jewishbanana.ultimatecontent.entities.EntityVariant.LoadoutEquipmentSlot;
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Elf;
@@ -451,7 +451,7 @@ public enum CustomEntityType {
 			try {
 				setup(type, plugin, disabledSpawning);
 			} catch (Exception e) {
-				Main.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in reading config data for entity &f"+type.normalVariant.displayName+" &cthe entities section has a syntax error. Please look over the instructions in the config above the entities section to see how to properly set up custom equipment load outs. This entity will use its default settings!"));
+				UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in reading config data for entity &f"+type.normalVariant.displayName+" &cthe entities section has a syntax error. Please look over the instructions in the config above the entities section to see how to properly set up custom equipment load outs. This entity will use its default settings!"));
 			}
 		Yeti.reload();
 	}

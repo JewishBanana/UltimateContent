@@ -17,7 +17,7 @@ public class CustomEnchant extends UIEnchantment {
 	
 	protected static final JavaPlugin plugin;
 	static {
-		plugin = Main.getInstance();
+		plugin = UltimateContent.getInstance();
 	}
 	
 	public enum EnchantRarity {
