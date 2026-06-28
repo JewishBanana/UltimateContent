@@ -12,6 +12,7 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.util.Vector;
 
 import com.github.jewishbanana.uiframework.items.GenericItem;
@@ -33,7 +34,15 @@ public class TeleportRay extends AbilityAttributes {
 	}
 	public void activate(Entity entity, GenericItem base) {
 		Location loc = entity instanceof LivingEntity living ? living.getEyeLocation() : entity.getLocation();
-		Vector vec = loc.getDirection().multiply(1.5);
+		Vector vec;
+		if (entity instanceof Mob mob && mob.getTarget() != null) {
+			// A mob aims the ray at its target rather than wherever it happens to be facing.
+			vec = mob.getTarget().getEyeLocation().toVector().subtract(loc.toVector());
+			if (vec.lengthSquared() < 1.0E-6)
+				vec = loc.getDirection();
+			vec = vec.normalize().multiply(1.5);
+		} else
+			vec = loc.getDirection().multiply(1.5);
 		World world = loc.getWorld();
 		List<Location> pLocs = new ArrayList<>();
 		final int particleCount = (int) Math.ceil(5.0 * particleMultiplier);
@@ -73,6 +82,15 @@ public class TeleportRay extends AbilityAttributes {
 			}
 			world.spawnParticle(VersionUtils.getRedstoneDust(), temp.clone().add(vec.clone().multiply(0.75)), particleCount, 1.5, 1.5, 1.5, 0.001, options);
 		}
+	}
+	@Override
+	public void onMobHoldTick(Mob mob, GenericItem item) {
+		LivingEntity target = mob.getTarget();
+		if (target == null || target.isDead())
+			return;
+		if (mob.getLocation().distanceSquared(target.getLocation()) > range * range)
+			return;
+		mobActivate(mob, item);
 	}
 	public static void register() {
 		UIAbilityType.registerAbility(REGISTERED_KEY, TeleportRay.class);

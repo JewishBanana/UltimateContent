@@ -2,6 +2,8 @@ package com.github.jewishbanana.ultimatecontent.items.misc;
 
 import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
@@ -12,15 +14,37 @@ import com.github.jewishbanana.uiframework.items.ItemCategory;
 import com.github.jewishbanana.uiframework.items.UIItemType;
 import com.github.jewishbanana.ultimatecontent.items.BaseItem;
 import com.github.jewishbanana.ultimatecontent.items.CustomItemBuilder;
+import com.github.jewishbanana.ultimatecontent.items.MobUsable;
 import com.github.jewishbanana.ultimatecontent.items.Rarity;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
-public class EnergyDrink extends BaseItem {
-	
+public class EnergyDrink extends BaseItem implements MobUsable {
+
 	public static final String REGISTERED_KEY = "uc:energy_drink";
-	
+
 	public EnergyDrink(ItemStack item) {
 		super(item);
+	}
+	@Override
+	public int getMobUseRange() {
+		return 0;
+	}
+	@Override
+	public int getMobUseIntervalTicks() {
+		return 200;
+	}
+	@Override
+	public void onMobHoldTick(LivingEntity mob) {
+		mob.getWorld().playSound(mob.getLocation(), Sound.ENTITY_GENERIC_DRINK, 1f, 1f);
+		mob.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20, 0, true, false));
+		plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+			if (!mob.isValid())
+				return;
+			mob.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 600, 1, true, false));
+			mob.addPotionEffect(new PotionEffect(VersionUtils.getJumpBoost(), 600, 1, true, false));
+			mob.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 600, 4, true, false));
+		}, 20);
+		MobUsable.consumeFromMob(mob, this);
 	}
 	@Override
 	public ItemBuilder createItem() {

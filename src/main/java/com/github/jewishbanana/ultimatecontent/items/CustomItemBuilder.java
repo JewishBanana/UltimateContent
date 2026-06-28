@@ -7,12 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.UUID;
 
 import org.bukkit.Material;
-import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.attribute.AttributeModifier.Operation;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -33,11 +29,7 @@ import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 public class CustomItemBuilder extends ItemBuilder {
 	
-	private static final UUID attributesUUID;
 	private static String deprecatedString;
-	static {
-		attributesUUID = UUID.fromString("545ff361-b6e6-4531-9c4c-398ef5589a8a");
-	}
 	
 	public static CustomItemBuilder create(UIItemType type, ItemStack item) {
 		CustomItemBuilder builder = new CustomItemBuilder();
@@ -51,7 +43,6 @@ public class CustomItemBuilder extends ItemBuilder {
 	public static CustomItemBuilder create(UIItemType type, Material material) {
 		return create(type, new ItemStack(material));
 	}
-	@SuppressWarnings("removal")
 	public ItemStack assembleLore(ItemStack tempItem, ItemMeta tempMeta, UIItemType id, GenericItem givenBase) {
 		if (givenBase == null)
 			return assembleLore(tempItem, tempMeta, id);
@@ -170,9 +161,7 @@ public class CustomItemBuilder extends ItemBuilder {
 			if (id.getAttackSpeed() == 0.0)
 				id.setAttackSpeed(1.0);
 			lore.add(UIFUtils.convertString(UIFramework.getLangString("attributes.attack_speed").replaceAll("%value%", UIFDataUtils.getDecimalFormatted(id.getAttackSpeed()))));
-			if (tempMeta.hasAttributeModifiers() && tempMeta.getAttributeModifiers().containsKey(VersionUtils.getAttackSpeedAttribute()))
-				tempMeta.removeAttributeModifier(VersionUtils.getAttackSpeedAttribute());
-			tempMeta.addAttributeModifier(VersionUtils.getAttackSpeedAttribute(), new AttributeModifier(attributesUUID, "generic.attackSpeed", id.getAttackSpeed()-4.01, Operation.ADD_NUMBER, EquipmentSlot.HAND));
+			applyCombatAttributes(tempMeta);
 		}
 		if (id.getProjectileDamage() != 0.0) {
 			if (firstSpace && !attributeSpacing) {

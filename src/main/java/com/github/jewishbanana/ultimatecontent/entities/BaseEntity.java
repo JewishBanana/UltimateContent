@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.random.RandomGenerator;
@@ -39,7 +41,12 @@ import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import com.github.jewishbanana.uiframework.entities.CustomEntity;
+import com.github.jewishbanana.uiframework.items.Ability;
+import com.github.jewishbanana.uiframework.items.GenericItem;
+import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
 import com.github.jewishbanana.ultimatecontent.UltimateContent;
+import com.github.jewishbanana.ultimatecontent.items.MobRangedItem;
+import com.github.jewishbanana.ultimatecontent.items.MobUsable;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.UndeadMiner;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
 import com.github.jewishbanana.ultimatecontent.listeners.PathfindersHandler;
@@ -80,12 +87,13 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 		this.entityVariant = exactVariant != null ? exactVariant.getEntityVariant() : type.normalVariant;
 		setAttributes(entity);
 		if (entityVariant.ambientSounds != null) {
-			final int[] timer = {random.nextInt(entityVariant.ambientSoundFrequency)+entityVariant.ambientSoundFrequency};
 			scheduleTask(new BukkitRunnable() {
+				private int timer = random.nextInt(entityVariant.ambientSoundFrequency)+entityVariant.ambientSoundFrequency;
+				
 				@Override
 				public void run() {
-					if (--timer[0] == 0) {
-						timer[0] = random.nextInt(entityVariant.ambientSoundFrequency)+entityVariant.ambientSoundFrequency;
+					if (--timer == 0) {
+						timer = random.nextInt(entityVariant.ambientSoundFrequency)+entityVariant.ambientSoundFrequency;
 						playRandomSoundEffect(entityVariant.ambientSounds);
 					}
 				}
@@ -93,7 +101,9 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 		}
 		String ownerID = entity.getPersistentDataContainer().get(tameOwner, PersistentDataType.STRING);
 		if (ownerID != null)
-			setOwner(owner);
+			try {
+				setOwner(UUID.fromString(ownerID));
+			} catch (IllegalArgumentException ignored) {}
 	}
 	@SuppressWarnings("unchecked")
 	public void spawn(Entity entity) {
@@ -110,6 +120,8 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 			}
 			if (shouldEquipBaseEntity())
 				entityVariant.equipEntityWithLoadout(alive);
+			if (alive instanceof Mob mob)
+				attachMobItemAbilities(mob);
 		}
 	}
 	public void setAIGoals(T entity) {
@@ -136,7 +148,29 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 	}
 	public void unload() {
 		super.unload();
+		if (this instanceof TameableEntity) {
+			Entity entity = Bukkit.getEntity(getUniqueId());
+			if (entity instanceof Mob mob) {
+				try {
+					EntityBrain brain = BukkitBrain.getBrain(mob);
+					brain.getTargetAI().clear();
+					brain.getGoalAI().clear();
+				} catch (Exception ignored) {}
+			}
+		}
 		PathfindersHandler.removePathfinders(this);
+	}
+	@Override
+	public void postLoad() {
+		if (getEntity() instanceof Mob heldItemMob)
+			attachMobItemAbilities(heldItemMob);
+		if (getOwner() == null || !(this instanceof TameableEntity tameable))
+			return;
+		Entity e = getEntity();
+		if (!(e instanceof Mob mob))
+			return;
+		PathfindersHandler.removePathfinders(this);
+		tameable.setOwner(tameable, mob);
 	}
 	public void setAttributes(T entity) {
 		if (entity instanceof LivingEntity) {
@@ -183,8 +217,10 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 		if (!entity.getPersistentDataContainer().has(tameOwner, PersistentDataType.STRING))
 			entity.getPersistentDataContainer().set(tameOwner, PersistentDataType.STRING, uuid.toString());
 		this.owner = uuid;
-		if (entity instanceof Mob mob)
+		if (entity instanceof Mob mob) {
+			mob.setTarget(null);
 			instance.setOwner(instance, mob);
+		}
 	}
 	private void playSoundEffect(SoundEffect effect) {
 		Entity entity = getEntity();
@@ -270,6 +306,76 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 	}
 	public static boolean isTargetInRange(@NotNull Mob mob, double minSquared, double maxSquared) {
 		return isTargetInRange(mob, minSquared, maxSquared, true);
+	}
+	protected void setupMobItemBehavior(MobUsable usable) {
+		if (!(getEntity() instanceof Mob mob)) return;
+		double rangeSq = (double) usable.getMobUseRange() * usable.getMobUseRange();
+		int interval = usable.getMobUseIntervalTicks();
+		scheduleTask(new BukkitRunnable() {
+			@Override
+			public void run() {
+				if (!mob.isValid()) return;
+				if (rangeSq > 0 && !isTargetInRange(mob, 0, rangeSq, false)) return;
+				usable.onMobHoldTick(mob);
+			}
+		}.runTaskTimer(plugin, interval, interval));
+	}
+	/**
+	 * Generic, config-driven mob item ability behavior. Scans every equipment slot of the mob, reads each held item's full
+	 * ability set (base type abilities, per-instance unique abilities and enchant-granted abilities) and, for any ability bound
+	 * to a player-only (non-passive) action, schedules a periodic proxy at that ability's configured cooldown which calls the
+	 * ability's {@link AbilityAttributes#onMobHoldTick(Mob, GenericItem)}. Passive (event) abilities are skipped as UIFramework
+	 * already dispatches them for the holder. Items with no ability that implement {@link MobUsable} (legacy in-item logic) are
+	 * bridged through the same lifecycle. Works for any mob (custom entity or vanilla); tasks self-cancel once the mob or the
+	 * held item is gone.
+	 *
+	 * @param mob The mob to drive
+	 */
+	public static void attachMobItemAbilities(Mob mob) {
+		EntityEquipment eq = mob.getEquipment();
+		if (eq == null) return;
+		for (EquipmentSlot slot : new EquipmentSlot[] { EquipmentSlot.HAND, EquipmentSlot.OFF_HAND, EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET }) {
+			ItemStack stack = eq.getItem(slot);
+			if (stack == null) continue;
+			GenericItem base = GenericItem.getItemBase(stack);
+			if (base == null) continue;
+			// Ranged weapons give the mob a ranged attack goal so it shoots instead of only meleeing.
+			if (slot == EquipmentSlot.HAND && base instanceof MobRangedItem ranged)
+				ranged.applyMobRangedGoal(mob);
+			Map<Ability, Set<Ability.Action>> all = new LinkedHashMap<>(base.getType().getAbilities());
+			all.putAll(base.getUniqueAbilities());
+			for (Map.Entry<Ability, Set<Ability.Action>> entry : all.entrySet()) {
+				if (!(entry.getKey() instanceof AbilityAttributes aa)) continue;
+				if (entry.getValue().stream().allMatch(Ability.Action::isPassive) && !aa.alwaysMobProxy()) continue;
+				int interval = Math.max(1, aa.getMobProxyInterval());
+				new BukkitRunnable() {
+					@Override
+					public void run() {
+						if (!mob.isValid()) { cancel(); return; }
+						ItemStack current = eq.getItem(slot);
+						GenericItem live = current == null ? null : GenericItem.getItemBase(current);
+						if (live == null) { cancel(); return; }
+						aa.onMobHoldTick(mob, live);
+					}
+				}.runTaskTimer(plugin, interval, interval);
+			}
+			// Legacy non-ability shells (items with hardcoded in-item logic, e.g. EnergyDrink/HeartCrystal) implement MobUsable
+			// directly. Bridge them through the same per-slot lifecycle so they work for any mob holding them.
+			if (base instanceof MobUsable usable && usable.getMobUseIntervalTicks() > 0) {
+				int interval = usable.getMobUseIntervalTicks();
+				double rangeSq = (double) usable.getMobUseRange() * usable.getMobUseRange();
+				new BukkitRunnable() {
+					@Override
+					public void run() {
+						if (!mob.isValid()) { cancel(); return; }
+						ItemStack current = eq.getItem(slot);
+						if (current == null || GenericItem.getItemBase(current) == null) { cancel(); return; }
+						if (rangeSq > 0 && !isTargetInRange(mob, 0, rangeSq, false)) return;
+						usable.onMobHoldTick(mob);
+					}
+				}.runTaskTimer(plugin, interval, interval);
+			}
+		}
 	}
 	public static void initStand(ArmorStand stand) {
 		stand.setInvisible(true);

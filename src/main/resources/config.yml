@@ -68,6 +68,10 @@ general:
 external:
     # This section is to enable or disable region protection from specific plugins. This is for if you are using multiple of them and want finer control. To disable region protection entirely, you can do so in the general section above.
     region_protection_plugins:
+        # There is flag support for world guard regions:
+        #  - "activate-abilities" defaulted to allow. This flag controls if abilities can be activated within the region.
+        #  - "ability-block-damage" defaulted to deny. This setting controls if abilities are able to break/place blocks within the region.
+        #  - "custom-mob-spawning" defaulted to allow. This controls if custom UC mobs can spawn naturally within the region.
         world_guard: true
         towny: true
         grief_prevention: true
@@ -113,7 +117,10 @@ external:
 #   "durability" : [DECIMAL] - This controls the items durability, if set it will override the vanilla durability of the item. If you want to ignore item durability and make
 #                              an item unbreakable set the value to -1.
 #
-#   "abilities" : [SECTION] - This is the list of abilities on the item, abilities can be put or removed on any item with no limits and full control. This also supports 
+#   "shouldConsume" : [BOOLEAN] - By default this is FALSE for every item. When TRUE, one of the item is consumed from the stack each time one of its abilities successfully
+#                                 activates (this applies both to players and to mobs holding the item). Use this for single-use/consumable items like the booster pack or med kit.
+#
+#   "abilities" : [SECTION] - This is the list of abilities on the item, abilities can be put or removed on any item with no limits and full control. This also supports
 #                             abilities that are external from UltimateContent. The different ability settings are listed in the section below this. To add abilities you need
 #                             to put them in the following format:
 #
@@ -248,6 +255,13 @@ items:
             name: "(hex:#6e5f4f)Dark Mage Wand"
             lore:
             - "&eYou can feel powerful magic emitting from the wand. This wand was designed for mages, it is unpredictable when you use it."
+            damage: 2.0
+            attackSpeed: 0.6
+            abilities:
+                unstable_magic:
+                    cooldown: 15.0
+                    usage:
+                    - "right-click"
         tritons_fang:
             name: "(hex:#365ad1)Triton's Fang"
             lore:
@@ -306,9 +320,14 @@ items:
             name: "(hex:#acc7fc)Yeti Fur"
             lore:
             - "&eThick fluffy fur that covers the deadly powerful beasts of the tundra..."
+        blood_ingot:
+            name: "(hex:#e32727)Blood Ingot"
+            lore:
+            - "(hex:#ff4a4a)An ingot infused with dark blood, it pulses with a faint crimson glow..."
     misc:
         booster_pack:
             name: "(hex:#5375fc)Booster Pack"
+            shouldConsume: true
             lore:
             - "&eSmall feather filled with jet fuel? Single use."
             abilities:
@@ -318,6 +337,7 @@ items:
                     - "right-click"
         safety_net:
             name: "(hex:#c0c0c2)Safety Net"
+            shouldConsume: true
             lore:
             - "&eSmall portable platform, single use. You can always rely on this thing to have your back."
             abilities:
@@ -327,10 +347,12 @@ items:
                     - "right-click"
         heart_crystal:
             name: "(hex:#ff6363)Heart Crystal"
+            shouldConsume: true
             lore:
             - "&eCrystalized heart from a strange creature. &6Right-Click to permanently increase health."
         med_kit:
             name: "(hex:#f52222)Med Kit"
+            shouldConsume: true
             lore:
             - "&ePortable first aid kit, might just save your life. Restores &a8 hearts&e, single use."
             abilities:
@@ -341,6 +363,7 @@ items:
                     - "right-click"
         energy_drink:
             name: "(hex:#25f222)Energy Drink"
+            shouldConsume: true
             lore:
             - "&eSuper energized drink that grants temporary &aspeed, jump, and health&e buffs."
         propulsion_cannon:
@@ -353,6 +376,7 @@ items:
                     - "projectile-hit"
         matter_swap:
             name: "(hex:#1fffc7)Matter Swap"
+            shouldConsume: true
             lore:
             - "&eStrange clump of matter that displaces reality. Can be used to swap your position with another entity. Will be consumed on successful use."
             abilities:
@@ -362,6 +386,7 @@ items:
                     - "right-click"
         blinding_trap:
             name: "(hex:#8a8a8a)Blinding Trap"
+            shouldConsume: true
             lore:
             - "&eUse on an opponent or creature to temporarily disorient them for &a10 seconds&e. Will be consumed on successful use."
             abilities:
@@ -575,6 +600,21 @@ abilities:
             entities:
             - ender_crystal
             - uc:void_stalker
+    unstable_magic:
+        name: "(hex:#ff33e0)[Unstable Magic]"
+        description: "&8- &7You muster the courage to chant a random magic spell. Could be good, could be bad."
+        # Relative weight for each spell. Set to 0 to disable a spell entirely.
+        spells:
+            shadow_bolt_volley: 15
+            shade_step: 10
+            curse_of_leeching: 10
+            dark_blessing: 10
+            arcane_recoil: 12
+            gravity_collapse: 10
+            arcane_confusion: 12
+            hex_aura: 8
+            phantom_surge: 8
+            skeleton_summon: 15
     tidal_wave:
         name: "(hex:#2e77ff)[Tidal Wave]"
         description: "&8- &7Calls upon a strong current of water to wash away all in its path."
@@ -605,9 +645,9 @@ abilities:
 #
 ###############################################################################################################################################################################
 #
-# Displays are alternate ability displays that can be referenced within ability settings on items. They just simply replace the name and description of the ability in the
+# Displays are alternate ability names and descriptions that can be referenced within ability settings on items. They just simply replace the name and description of the ability in the
 # item's lore with the name and description of the display. An example usage of why displays are useful is I create one called "bunny_hop" and reference it in the bunny hop
-# enchant on the double jump ability, this means that instead of listing the ability as a double jump it will list it as my custom display bunny hop renaming the ability.
+# enchant on the double jump ability, this means that instead of listing the ability as a double jump it will list it as my custom display bunny hop with my custom settings for it.
 #
 # * "name" : [STRING] - The name that will replace the abilities name. Supports chat color and hex codes.
 #
@@ -850,6 +890,8 @@ entities:
             drops:
             - bone | 30.0 | 0-2
             - rotten_flesh | 50.0 | 0-3
+            spawning_worlds:
+            - OVERWORLD
         shadow_leech:
             spawnRate: 0.5
             health: 8.0
@@ -874,6 +916,8 @@ entities:
             damage: 3.0
             name: "&8Skeleton Knight"
             volume: 1.0
+            # If a skeleton horse should spawn with the skeleton knight as its passenger.
+            spawnHorse: true
             equipment:
                 main_hand:
                     - item: "iron_sword"
@@ -891,6 +935,8 @@ entities:
             damage: 5.0
             name: "&8Zombie Knight"
             volume: 1.0
+            # If a zombie horse should spawn with the zombie knight as its passenger.
+            spawnHorse: true
             equipment:
                 main_hand:
                     - item: "stone_sword"
@@ -1028,6 +1074,8 @@ entities:
             health: 25.0
             # The damage multiplier on the explosion damage with 1.0 being vanilla creeper explosion damage.
             damageMultiplier: 1.5
+            # The fraction of explosion damage dealt to fellow infested mobs and the Warden, so infested creepers don't wipe out their own swarm. 1.0 = full damage, 0.25 = a quarter of the damage.
+            friendlyDamageMultiplier: 0.25
             name: "&3Infested Creeper"
             volume: 1.0
             drops:
@@ -1103,6 +1151,8 @@ entities:
             volume: 1.0
             # The chance of the howler spawning a nearby warden when it shrieks.
             spawnWardenChance: 25.0
+            # The chance (when shrieking inside an active Infested Cave disaster) that the howler sets off the cave's scream.
+            caveScreamChance: 50.0
             drops:
             - sculk | 33.3 | 0-2
         infested_worm:
@@ -1158,6 +1208,21 @@ entities:
             - chorus_fruit | 80.0 | 0-2
             - obsidian | 50.0
             - uc:void_tear | 12.5
+            spawning_worlds:
+            - END
+        # The baby end totem is a tameable pet (tame it with a ghast tear). It does not spawn naturally on its own; it only appears rarely during DeadlyDisasters end storms, so spawnRate has no effect here.
+        baby_end_totem:
+            spawnRate: 0.0
+            health: 20.0
+            damage: 4.0
+            knockback: 2.0
+            name: "&dBaby End Totem"
+            volume: 1.0
+            deathRagdoll: true
+            # When DeadlyDisasters is installed, a tamed baby end totem warns its owner (spins + dragon's breath + sounds) once its owner is this many seconds or fewer from the next disaster. Set to 0 to disable the warning.
+            warning_seconds: 30.0
+            drops:
+            - chorus_fruit | 50.0
             spawning_worlds:
             - END
         void_worm:
@@ -1350,6 +1415,8 @@ language:
             reload: "Reloads the plugins config file. It is recommended to reload the config through UIF instead (/ui reload)!"
             reloadDescription: "Reloads the config file for UltimateContent only! The reason why it is recommended to reload the config through UIF (/ui reload) is because UC hooks into UIF reload command so that it is reloaded with UIF automatically. Other plugins may also hook into UIF reload so this becomes a master reload command for all related plugins."
             info: "For more information about a specific command use &b/uc help [command]"
+    abilities:
+        regionActivationBlocked: "&cYou cannot activate abilities in this region!"
     deaths:
         saberThrow: "&f%player% was sliced by %killer%'s &flightsaber"
         cursedWinds: "&f%player% was cursed by %killer%"
@@ -1361,6 +1428,7 @@ language:
         candyCane: "&f%player% was pierced by a candy cane"
         shadowLeech: "&f%player%'s blood was drained by a %killer%"
         infestedDevourer: "&f%player%'s was devoured by an %killer%"
+        infestedWorm: "&f%player% was chewed up by an %killer%"
     items:
         particleToggle: " &7- Right-Click to toggle visibility of your own particles."
         particleToggleError: "&cParticle settings can only be changed in survival!"

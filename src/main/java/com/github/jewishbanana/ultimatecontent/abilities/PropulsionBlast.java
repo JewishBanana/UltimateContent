@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -38,6 +39,8 @@ public class PropulsionBlast extends AbilityAttributes {
 	}
 	public void activate(Location loc, GenericItem base) {
 	    World world = loc.getWorld();
+	    playSound(loc, Sound.ITEM_TRIDENT_RIPTIDE_1, 0.9f, 1.35f);
+	    playSound(loc, Sound.ENTITY_PHANTOM_FLAP, 0.75f, 0.65f);
 	    final double radiusDiv25 = radius / 25.0;
 	    final double angleIncrement = Math.toRadians(10.0);
 	    Vector rotation = new Vector(1, 0, 0);
@@ -47,7 +50,7 @@ public class PropulsionBlast extends AbilityAttributes {
 	            if (random.nextFloat() < particleMultiplier) {
 	                Location dir = loc.clone().add(angle);
 	                Vector force = angle.clone().multiply(radiusDiv25);
-	                world.spawnParticle(Particle.CLOUD, dir, 0, force.getX(), force.getY(), force.getZ());
+	                world.spawnParticle(Particle.CLOUD, dir, 0, force.getX(), force.getY(), force.getZ(), 1.0, null, true);
 	            }
 	            angle.rotateAroundZ(angleIncrement);
 	        }

@@ -14,6 +14,9 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Mob;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
 
@@ -38,6 +41,52 @@ public class SpawnPlatform extends AbilityAttributes {
 	public void activate(Entity entity, GenericItem base) {
 		entity.setFallDistance(0);
 		activate(entity.getLocation().getBlock().getRelative(BlockFace.DOWN).getLocation().add(.5, .5, .5), base);
+	}
+	@Override
+	public void interacted(PlayerInteractEvent event, GenericItem base) {
+		Player player = event.getPlayer();
+		if (!canActivateInRegion(player))
+			return;
+		// If on cooldown, surface UIFramework's cooldown message first (the silent placement checks below would otherwise
+		// swallow it). This call only sends the message while on cooldown - it commits nothing.
+		if (getType().isEntityOnCooldown(player.getUniqueId())) {
+			use(player, doesSendCooldownMessages());
+			return;
+		}
+		if (!shouldActivate())
+			return;
+		// Only deploy when actually airborne over open, non-liquid space and a platform could form here, so the cooldown
+		// and item are only spent on a real activation.
+		if (!isOverOpenAir(player) || !canPlaceBelow(player))
+			return;
+		if (use(player, doesSendCooldownMessages()))
+			internalActivation(player, event, base, player);
+	}
+	/**
+	 * Whether the entity is in the air over open space - the block directly below it is passable and not a liquid.
+	 */
+	private boolean isOverOpenAir(Entity entity) {
+		Block below = entity.getLocation().getBlock().getRelative(BlockFace.DOWN);
+		return below.isPassable() && !below.isLiquid();
+	}
+	/**
+	 * Whether at least one block of a platform could be placed below the entity - mirrors the placement scan in
+	 * {@link #activate(Location, GenericItem)} so the cooldown/consume is only spent when a platform will actually form.
+	 */
+	private boolean canPlaceBelow(Entity entity) {
+		Location loc = entity.getLocation().getBlock().getRelative(BlockFace.DOWN).getLocation().add(.5, .5, .5);
+		World world = loc.getWorld();
+		BlockVector block = new BlockVector(loc.getX(), loc.getY(), loc.getZ());
+		for (int x=(int) -range; x <= Math.ceil(range); x++)
+			for (int z=(int) -range; z <= Math.ceil(range); z++) {
+				Vector position = block.clone().add(new Vector(x, 0, z));
+				if (block.distance(position) > range)
+					continue;
+				Block b = world.getBlockAt(position.toLocation(world));
+				if (b.isPassable() && canBlockBeDamaged(b))
+					return true;
+			}
+		return false;
 	}
 	public void activate(Location loc, GenericItem base) {
 		SpawnPlatform instance = UIAbilityType.createAbilityInstance(this.getClass());
@@ -95,6 +144,30 @@ public class SpawnPlatform extends AbilityAttributes {
 				}, 100);
 			}, 100);
 		}, 200);
+	}
+	@Override
+	public int getMobProxyInterval() {
+		return 2; // poll quickly so a fall is caught in time, regardless of the configured cooldown
+	}
+	@Override
+	public void onMobHoldTick(Mob mob, GenericItem item) {
+		if (mob.isOnGround() || mob.getFallDistance() < 6)
+			return;
+		// Look further down the faster it is falling so a quick fall isn't skipped over between polls.
+		int checkDist = Math.max(5, (int) Math.ceil(Math.abs(mob.getVelocity().getY()) * getMobProxyInterval()) + 3);
+		Block at = mob.getLocation().getBlock();
+		boolean groundNear = false;
+		for (int i=1; i <= checkDist; i++)
+			if (!at.getRelative(BlockFace.DOWN, i).isPassable()) {
+				groundNear = true;
+				break;
+			}
+		if (!groundNear)
+			return;
+		// Must be falling into open, non-liquid space (don't deploy over water/lava) and have room for a platform.
+		if (!isOverOpenAir(mob) || !canPlaceBelow(mob))
+			return;
+		mobActivate(mob, item);
 	}
 	private void sweep() {
 		blocks.forEach((k, v) -> {

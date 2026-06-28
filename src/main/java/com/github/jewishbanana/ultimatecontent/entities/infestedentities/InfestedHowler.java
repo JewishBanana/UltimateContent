@@ -45,8 +45,16 @@ import me.gamercoder215.mobchip.bukkit.BukkitBrain;
 public class InfestedHowler extends ComplexEntity<Zombie> {
 
 	public static final String REGISTERED_KEY = "uc:infested_howler";
-	
+	// Set by DeadlyDisasters so a howler shrieking inside an active infested cave is handled by that cave instead of spawning
+	// its own Warden. The boolean preserves this entity's configured chance for triggering the cave's full scream.
+	public static CaveScreamCallback caveScreamCallback;
+	@FunctionalInterface
+	public interface CaveScreamCallback {
+		boolean handle(LivingEntity howler, LivingEntity target, boolean triggerCaveScream);
+	}
+
 	private double spawnWardenChance;
+	private double caveScreamChance;
 	private boolean animation;
 	private int shriek;
 	private LivingEntity aliveWarden;
@@ -89,12 +97,11 @@ public class InfestedHowler extends ComplexEntity<Zombie> {
 									if (monster.getTarget() == null)
 										monster.setTarget(target);
 								}
-//							for (InfestedCaves cave : DeathMessages.infestedcaves)
-//								if (cave.getLocation().getWorld().equals(entity.getWorld()) && cave.getLocation().distanceSquared(entity.getLocation()) <= cave.getSizeSquared()) {
-//									cave.shriekEvent(entity.getTarget(), (rand.nextDouble()*100 < (double) entityType.grabCustomSetting("warden_notify_chance")) ? true : false);
-//									cave.closeRoute(entity.getTarget(), 8, Utils.getVectorTowards(entity.getLocation(), entity.getTarget().getLocation().add(0,1,0)));
-//									return;
-//								}
+							// A cave-owned howler must use that cave's Warden and never create a separate one. The callback is
+							// checked on every shriek; its third argument only controls the optional full cave-scream effects.
+							if (caveScreamCallback != null
+									&& caveScreamCallback.handle(entity, target, random.nextDouble() * 100 < caveScreamChance))
+								return;
 							if (IS_VERSION_19_OR_ABOVE && (aliveWarden == null || !aliveWarden.isValid()) && random.nextFloat() < spawnWardenChance)
 								spawnWarden(loc, target);
 						}
@@ -168,6 +175,7 @@ public class InfestedHowler extends ComplexEntity<Zombie> {
 		super.setAttributes(entity);
 		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(30);
 		this.spawnWardenChance = getSectionDouble("spawnWardenChance", 25.0) / 100.0;
+		this.caveScreamChance = getSectionDouble("caveScreamChance", 50.0);
 	}
 	private void spawnWarden(Location location, LivingEntity target) {
 		for (int i=2; i < 30; i++) {

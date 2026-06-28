@@ -86,7 +86,7 @@ public class BaseItem extends GenericItem {
 		plugin.getServer().getScheduler().runTaskLater(plugin, () -> this.onCooldown = false, ticks);
 	}
 	public boolean shouldConsumeItem() {
-		return false;
+		return getBooleanField("shouldConsume");
 	}
 	public String getConfigPath() {
 		return configMap.get(this.getClass());

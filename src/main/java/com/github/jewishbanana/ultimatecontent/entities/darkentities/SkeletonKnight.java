@@ -27,6 +27,8 @@ public class SkeletonKnight extends BaseEntity<Skeleton> {
 		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(30);
 	}
 	public void spawnHorse() {
+		if (!CustomEntityType.SKELETON_KNIGHT.getSectionBoolean("spawnHorse", true))
+			return;
 		Entity entity = getEntity();
 		if (entity == null)
 			return;

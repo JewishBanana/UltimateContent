@@ -24,9 +24,6 @@ public class MatterSwap extends BaseItem {
 	public static void register() {
 		UIItemType.registerItem(REGISTERED_KEY, MatterSwap.class);
 	}
-	public boolean shouldConsumeItem() {
-		return true;
-	}
 	public Rarity getRarity() {
 		return Rarity.RARE;
 	}

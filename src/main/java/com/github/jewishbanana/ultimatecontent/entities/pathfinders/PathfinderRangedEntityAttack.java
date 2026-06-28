@@ -40,6 +40,7 @@ public class PathfinderRangedEntityAttack extends CustomPathfinder {
 	private final float strafeSpeed;
 	private final Predicate<Mob> conditions;
 	private final Consumer<Mob> shootProjectile;
+	private final boolean instantShoot;
 	private final EntityBrain brain;
 	private final EntityController controller;
 	private final EntityBody body;
@@ -55,6 +56,13 @@ public class PathfinderRangedEntityAttack extends CustomPathfinder {
 	private Location fleeLocation;
 
 	public PathfinderRangedEntityAttack(@NotNull Mob mob, int interval, double minRange, double maxRange, double speedMod, double strafeSpeedMulti, Predicate<Mob> conditions, Consumer<Mob> shootProjectile) {
+		this(mob, interval, minRange, maxRange, speedMod, strafeSpeedMulti, conditions, shootProjectile, false);
+	}
+	/**
+	 * @param instantShoot true for weapons that aren't held/drawn (e.g. snowballs) so they fire directly on the interval
+	 *                     instead of waiting for an item-use/draw that never starts.
+	 */
+	public PathfinderRangedEntityAttack(@NotNull Mob mob, int interval, double minRange, double maxRange, double speedMod, double strafeSpeedMulti, Predicate<Mob> conditions, Consumer<Mob> shootProjectile, boolean instantShoot) {
 		super(mob);
 		this.interval = interval;
 		this.minRangeSquared = minRange * minRange;
@@ -65,12 +73,13 @@ public class PathfinderRangedEntityAttack extends CustomPathfinder {
 		this.strafeSpeed = (float) (0.5 * strafeSpeedMulti);
 		this.conditions = conditions == null ? entity -> entity.getTarget() != null && entity.hasLineOfSight(entity.getTarget()) : conditions;
 		this.shootProjectile = shootProjectile;
+		this.instantShoot = instantShoot;
 		this.brain = BukkitBrain.getBrain(entity);
 		this.controller = brain.getController();
 		this.body = brain.getBody();
 	}
 	public PathfinderRangedEntityAttack(@NotNull Mob mob, int interval, double minRange, double maxRange, double speedMod) {
-		this(mob, interval, minRange, maxRange, speedMod, 1.0, null, null);
+		this(mob, interval, minRange, maxRange, speedMod, 1.0, null, null, false);
 	}
 	@Override
 	public @NotNull PathfinderFlag[] getFlags() {
@@ -104,7 +113,11 @@ public class PathfinderRangedEntityAttack extends CustomPathfinder {
 		} else {
 			this.seeTime--;
 		}
-		if (distance < minRangeSquared) {
+		// A 0 min range turns this into a vanilla-skeleton-style attack: it never flees, stays hard-locked facing the target
+		// and only strafes sideways rather than darting in and out and visibly looking around.
+		boolean vanilla = minRangeSquared <= 0;
+		boolean fleeing = !vanilla && distance < minRangeSquared;
+		if (fleeing) {
 			if (fleeLocation == null || fleeLocation.distanceSquared(targetLoc) < minRangeSquared)
 				fleeLocation = NavigationUtils.findPositionInDirection(entity, Utils.getVectorTowards(targetLoc, entityLoc), 3f, 7f);
 			if (fleeLocation != null)
@@ -114,38 +127,53 @@ public class PathfinderRangedEntityAttack extends CustomPathfinder {
 			controller.moveTo(target, speedMod);
 			this.strafingTime = -1;
 		} else {
-			controller.moveTo(entityLoc);
+			if (!vanilla)
+				controller.moveTo(entityLoc);
 			this.strafingTime++;
 		}
 		if (this.strafingTime >= STRAFE_TIME_RESET) {
 			if (random.nextFloat() < STRAFE_THRESHOLD)
 				this.strafingClockwise = !this.strafingClockwise;
-			if (random.nextFloat() < STRAFE_THRESHOLD)
+			if (!vanilla && random.nextFloat() < STRAFE_THRESHOLD)
 				this.strafingBackwards = !this.strafingBackwards;
 			this.strafingTime = 0;
 		}
 		if (this.strafingTime > -1) {
-			if (distance > maxRangeOuter) {
-				this.strafingBackwards = false;
-			} else if (distance < maxRangeInner) {
-				this.strafingBackwards = true;
+			if (!vanilla) {
+				if (distance > maxRangeOuter) {
+					this.strafingBackwards = false;
+				} else if (distance < maxRangeInner) {
+					this.strafingBackwards = true;
+				}
 			}
-			controller.strafe(this.strafingBackwards ? -strafeSpeed : strafeSpeed,
-					this.strafingClockwise ? strafeSpeed : -strafeSpeed);
+			float forward = vanilla ? 0f : (this.strafingBackwards ? -strafeSpeed : strafeSpeed);
+			controller.strafe(forward, this.strafingClockwise ? strafeSpeed : -strafeSpeed);
+		}
+		// While not fleeing (strafing or approaching), hard-lock the head and body onto the target every tick so it stays
+		// facing the player; only when fleeing fall back to the smooth look controller so it can turn to run.
+		if (fleeing) {
 			Entity vehicle = entity.getVehicle();
 			if (vehicle instanceof Mob mob)
 				BukkitBrain.getBrain(mob).getController().lookAt(target);
 			controller.lookAt(target);
 		} else {
-			controller.lookAt(target);
+			Location look = entityLoc.clone().setDirection(target.getEyeLocation().toVector().subtract(entity.getEyeLocation().toVector()));
+			body.setRotation(look.getYaw(), look.getPitch());
+			body.setHeadRotation(look.getYaw());
 		}
-		if (body.isUsingItem()) {
+		if (instantShoot) {
+			// Non-drawn weapons (snowballs etc.) just fire on the interval - there is no draw to wait on.
+			if (--this.attackTime <= 0 && canSee && this.seeTime >= SEE_TIME_THRESHOLD) {
+				shootProjectile.accept(entity);
+				this.attackTime = this.interval;
+			}
+		} else if (body.isUsingItem()) {
 			usingTicks++;
 			if (!canSee && this.seeTime < SEE_TIME_THRESHOLD) {
 				stopUsingItem(entity);
 			} else if (canSee && usingTicks >= USING_TICKS_THRESHOLD) {
+				shootProjectile.accept(entity); // shoot while the weapon is still in hand so the consumer can read it
 				stopUsingItem(entity);
-				shootProjectile.accept(entity);
 				this.attackTime = this.interval;
 			}
 		} else if (--this.attackTime <= 0 && this.seeTime >= SEE_TIME_THRESHOLD) {

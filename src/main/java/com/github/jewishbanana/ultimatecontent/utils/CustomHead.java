@@ -81,6 +81,7 @@ public enum CustomHead {
 		this.base = base;
 		this.url = url;
 	}
+	@SuppressWarnings("deprecation")
 	public static void init(UltimateContent plugin) {
 		for (CustomHead type : values()) {
 			if (VersionUtils.isMCVersionOrAbove("1.18.1")) {
@@ -119,6 +120,7 @@ public enum CustomHead {
 	public ItemStack getHead() {
 		return head.clone();
 	}
+	@SuppressWarnings("deprecation")
 	private static URL getUrlFromBase64(String base64) throws MalformedURLException {
 	    String decoded = new String(Base64.getDecoder().decode(base64));
 	    return new URL(decoded.substring("{\"textures\":{\"SKIN\":{\"url\":\"".length(), decoded.length() - "\"}}}".length()));

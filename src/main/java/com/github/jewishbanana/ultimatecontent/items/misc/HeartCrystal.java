@@ -3,6 +3,7 @@ package com.github.jewishbanana.ultimatecontent.items.misc;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -13,16 +14,36 @@ import com.github.jewishbanana.uiframework.items.ItemBuilder;
 import com.github.jewishbanana.uiframework.items.UIItemType;
 import com.github.jewishbanana.ultimatecontent.items.BaseItem;
 import com.github.jewishbanana.ultimatecontent.items.CustomItemBuilder;
+import com.github.jewishbanana.ultimatecontent.items.MobUsable;
 import com.github.jewishbanana.ultimatecontent.items.Rarity;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
-public class HeartCrystal extends BaseItem {
-	
+public class HeartCrystal extends BaseItem implements MobUsable {
+
 	public static final String REGISTERED_KEY = "uc:heart_crystal";
-	
+
 	public HeartCrystal(ItemStack item) {
 		super(item);
+	}
+	@Override
+	public int getMobUseRange() {
+		return 0;
+	}
+	@Override
+	public int getMobUseIntervalTicks() {
+		return 200;
+	}
+	@Override
+	public void onMobHoldTick(LivingEntity mob) {
+		AttributeInstance attribute = mob.getAttribute(VersionUtils.getMaxHealthAttribute());
+		if (attribute == null || attribute.getBaseValue() >= 40.0)
+			return;
+		attribute.setBaseValue(Math.min(attribute.getBaseValue() + 2.0, 40.0));
+		mob.setHealth(Math.min(mob.getHealth() + 2.0, attribute.getBaseValue()));
+		EntityUtils.playDamageEffect(mob);
+		mob.getWorld().playSound(mob.getLocation(), Sound.BLOCK_CHORUS_FLOWER_GROW, 1, 0.5f);
+		MobUsable.consumeFromMob(mob, this);
 	}
 	public boolean interacted(PlayerInteractEvent event) {
 		if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {

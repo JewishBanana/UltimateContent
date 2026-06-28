@@ -40,6 +40,7 @@ import com.github.jewishbanana.ultimatecontent.entities.desertentities.AncientSk
 import com.github.jewishbanana.ultimatecontent.entities.easterentities.EasterBunny;
 import com.github.jewishbanana.ultimatecontent.entities.easterentities.KillerChicken;
 import com.github.jewishbanana.ultimatecontent.entities.easterentities.RampagingGoat;
+import com.github.jewishbanana.ultimatecontent.entities.endentities.BabyEndTotem;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.EndTotem;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidArcher;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidGuardian;
@@ -68,6 +69,7 @@ import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 public enum CustomEntityType {
 
 	END_TOTEM(EndTotem.REGISTERED_KEY, Category.END_ENTITIES),
+	BABY_END_TOTEM(BabyEndTotem.REGISTERED_KEY, Category.END_ENTITIES),
 	VOID_WORM(VoidWorm.REGISTERED_KEY, Category.END_ENTITIES),
 	VOID_GUARDIAN(VoidGuardian.REGISTERED_KEY, Category.END_ENTITIES),
 	VOID_ARCHER(VoidArcher.REGISTERED_KEY, Category.END_ENTITIES),
@@ -155,6 +157,13 @@ public enum CustomEntityType {
 			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ENDERMAN_HURT, 1, .5) };
 			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_EVOKER_PREPARE_ATTACK, 1, .5) };
 			variant.movementSpeed = 0.32;
+		}
+		case BABY_END_TOTEM -> {
+			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ENDERMITE_STEP, .15, .5) };
+			variant.ambientSoundFrequency = 3;
+			variant.hurtSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_ENDERMAN_HURT, 1, 1.5) };
+			variant.deathSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_EVOKER_PREPARE_ATTACK, 1, 1.2) };
+			variant.movementSpeed = 0.3;
 		}
 		case VOID_GUARDIAN -> {
 			variant.ambientSounds = new SoundEffect[] { new SoundEffect(type.normalVariant, Sound.ENTITY_DROWNED_AMBIENT, .8, .5) };
@@ -449,6 +458,7 @@ public enum CustomEntityType {
 		boolean disabledSpawning = DataUtils.getConfigBoolean("entities.global_settings.disable_natural_spawning");
 		for (CustomEntityType type : values())
 			try {
+				type.normalVariant.overwriteFromPath(type.normalVariant.configPath);
 				setup(type, plugin, disabledSpawning);
 			} catch (Exception e) {
 				UltimateContent.consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cError in reading config data for entity &f"+type.normalVariant.displayName+" &cthe entities section has a syntax error. Please look over the instructions in the config above the entities section to see how to properly set up custom equipment load outs. This entity will use its default settings!"));

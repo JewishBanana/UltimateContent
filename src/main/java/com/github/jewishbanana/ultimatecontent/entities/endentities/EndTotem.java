@@ -8,6 +8,7 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Enderman;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -19,6 +20,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.PhysicsEngine;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
@@ -161,6 +163,14 @@ public class EndTotem extends ComplexEntity<Enderman> {
 	public void onDeath(EntityDeathEvent event) {
 		super.onDeath(event);
 		event.getEntity().getWorld().spawnParticle(VersionUtils.getEnchantParticle(), event.getEntity().getLocation().add(0, 2, 0), 1000, .25, .25, .25, 20);
+		Player killer = event.getEntity().getKiller();
+		if (killer != null)
+			DependencyUtils.awardAchievementProgress(killer.getUniqueId(), "mobs.slayer.void_mobs", 1, -1);
+		// A tamed baby end totem killing an adult end totem earns its owner the "Next Generation" achievement.
+		org.bukkit.event.entity.EntityDamageEvent lastDamage = event.getEntity().getLastDamageCause();
+		if (lastDamage instanceof EntityDamageByEntityEvent byEntity
+				&& UIEntityManager.getEntity(byEntity.getDamager()) instanceof BabyEndTotem baby && baby.getOwner() != null)
+			DependencyUtils.awardAchievementProgress(baby.getOwner(), "master.series.void_master", 1, 6);
 		if (VersionUtils.displaysAllowed && getSectionBoolean("deathRagdoll", false)) {
 			Location loc = event.getEntity().getLocation();
 			int lifeTicks = (int) (getSectionDouble("ragdollSeconds", 7.0) * 20.0);

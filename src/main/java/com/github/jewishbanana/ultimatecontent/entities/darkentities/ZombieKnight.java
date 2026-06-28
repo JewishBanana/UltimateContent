@@ -27,6 +27,8 @@ public class ZombieKnight extends BaseEntity<Zombie> {
 		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(30);
 	}
 	public void spawnHorse() {
+		if (!CustomEntityType.ZOMBIE_KNIGHT.getSectionBoolean("spawnHorse", true))
+			return;
 		Entity entity = getEntity();
 		if (entity == null)
 			return;

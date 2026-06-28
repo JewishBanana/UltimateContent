@@ -7,6 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
+import org.bukkit.entity.Sittable;
 import org.jetbrains.annotations.NotNull;
 
 import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
@@ -38,10 +39,19 @@ public class PathfinderOwnerHurtByEntity extends CustomPathfinder {
 			signal = null;
 			return false;
 		}
+		// A sitting pet only rouses to defend its owner against a nearby threat; distant attacks are ignored so it stays put.
+		if (entity instanceof Sittable sittable && sittable.isSitting()
+				&& (!signal.getWorld().equals(entity.getWorld()) || signal.getLocation().distanceSquared(entity.getLocation()) > 400)) {
+			signal = null;
+			return false;
+		}
 		return true;
 	}
 	@Override
 	public void start() {
+		// Stand up to fight if it was sitting (the threat is nearby — see canStart).
+		if (entity instanceof Sittable sittable && sittable.isSitting())
+			sittable.setSitting(false);
 		entity.setTarget(signal);
 		signal = null;
 	}

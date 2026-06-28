@@ -24,9 +24,6 @@ public class MedKit extends BaseItem {
 	public static void register() {
 		UIItemType.registerItem(REGISTERED_KEY, MedKit.class);
 	}
-	public boolean shouldConsumeItem() {
-		return true;
-	}
 	public Rarity getRarity() {
 		return Rarity.COMMON;
 	}

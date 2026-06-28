@@ -33,6 +33,8 @@ public class SpawnUtils {
 	public static boolean canMonsterSpawn(Location location, double minDistance) {
 		if (location == null)
 			return false;
+		if (!DependencyUtils.canSpawnCustomMobs(location))
+			return false;
 		Block block = location.getBlock();
 		if (block.isLiquid() || block.getLightFromBlocks() != 0 || block.getRelative(BlockFace.DOWN).isPassable())
 			return false;

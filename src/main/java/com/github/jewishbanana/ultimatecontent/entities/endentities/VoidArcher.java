@@ -4,6 +4,8 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -12,6 +14,7 @@ import org.bukkit.util.Vector;
 import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
@@ -29,6 +32,8 @@ public class VoidArcher extends BaseEntity<Skeleton> {
 	}
 	public void onDamaged(EntityDamageEvent event) {
 		Entity entity = event.getEntity();
+		if (event.getFinalDamage() >= ((LivingEntity) event.getEntity()).getHealth())
+			return;
 		Location entityLoc = entity.getLocation();
 		Location loc = Utils.findRandomSpotInRadius(entityLoc, 7, 12, 2, 10);
 		if (loc != null) {
@@ -42,6 +47,9 @@ public class VoidArcher extends BaseEntity<Skeleton> {
 	public void onDeath(EntityDeathEvent event) {
 		super.onDeath(event);
 		event.getEntity().getWorld().spawnParticle(Particle.SOUL, event.getEntity().getLocation().add(0, event.getEntity().getHeight() / 2.0, 0), 15, .3, .3, .3, .03);
+		Player killer = event.getEntity().getKiller();
+		if (killer != null)
+			DependencyUtils.awardAchievementProgress(killer.getUniqueId(), "mobs.slayer.void_mobs", 1, -1);
 	}
 	public void setAttributes(Skeleton entity) {
 		super.setAttributes(entity);

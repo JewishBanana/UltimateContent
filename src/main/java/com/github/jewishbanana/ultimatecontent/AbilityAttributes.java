@@ -14,6 +14,9 @@ import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -39,6 +42,7 @@ import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.UIAbilityType;
 import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
 import com.github.jewishbanana.ultimatecontent.items.BaseItem;
+import com.github.jewishbanana.ultimatecontent.items.MobUsable;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
@@ -94,11 +98,65 @@ public class AbilityAttributes extends Ability {
 	 * @param activatingEntity The activating entity
 	 */
 	public void activate(Entity activatingEntity, GenericItem base) {}
-	
+
 	public void activate(Location loc, GenericItem base) {}
-	
+
+	/**
+	 * Runs periodically while a mob holds an item that has this ability bound to a player-only action (right-click, consume, etc.)
+	 * which a mob cannot perform normally. The interval is this ability's configured cooldown. Default does nothing so unadapted
+	 * abilities are harmless. Override this to do the ability's own gating (target range via {@code mob.getTarget()}, health, fall
+	 * distance, etc.) and then call {@link #mobActivate(Mob, GenericItem)} to fire it.
+	 *
+	 * @param mob The mob holding the item
+	 * @param item The live held item instance for this slot
+	 */
+	public void onMobHoldTick(Mob mob, GenericItem item) {}
+	/**
+	 * Whether a mob holding this ability's item should receive a periodic {@link #onMobHoldTick(Mob, GenericItem)} even when the
+	 * ability is bound only to passive (event) actions. Normally passive abilities are left to UIFramework's automatic dispatch,
+	 * but some need a proxy to maintain a stance (e.g. a saber holding a parry stance for incoming projectiles). Default false.
+	 *
+	 * @return true to always schedule the mob proxy regardless of action passivity
+	 */
+	public boolean alwaysMobProxy() { return false; }
+	/**
+	 * How often (in ticks) the mob proxy runs {@link #onMobHoldTick(Mob, GenericItem)}. Defaults to 20 ticks (1 second). Override
+	 * to a smaller value for reactive abilities that must check frequently to catch a fleeting condition in time (e.g. a safety
+	 * net detecting a fall). The actual activation is paced by the ability's cooldown via {@link #mobActivate(Mob, GenericItem)},
+	 * so polls while on cooldown simply do nothing.
+	 *
+	 * @return the proxy poll interval in ticks
+	 */
+	public int getMobProxyInterval() { return 20; }
+	/**
+	 * Shared mob-side activation that mirrors the player path's cooldown and consume behavior. Respects this ability's cooldown
+	 * via {@link #use(Entity)} (skipping while still on cooldown) and consumes the held item if its config has
+	 * {@code shouldConsume} enabled.
+	 *
+	 * @param mob The mob activating the ability
+	 * @param item The live held item instance for this slot
+	 * @return true if the ability actually fired, false if it was still on cooldown
+	 */
+	protected boolean mobActivate(Mob mob, GenericItem item) {
+		if (!canActivateInRegion(mob))
+			return false;
+		if (!use(mob)) // still on cooldown from a previous activation - use() returns true only when off cooldown
+			return false;
+		activate(mob, item);
+		if (item instanceof BaseItem bi && bi.shouldConsumeItem())
+			MobUsable.consumeFromMob(mob, item);
+		return true;
+	}
+
 	public boolean shouldActivate() {
 		return chance == 1f || random.nextFloat() < chance;
+	}
+	protected boolean canActivateInRegion(Entity activator) {
+		if (DependencyUtils.canActivateAbilities(activator))
+			return true;
+		if (activator instanceof Player player)
+			player.sendMessage(Utils.convertString(DataUtils.getConfigString("language.abilities.regionActivationBlocked", "&cYou cannot activate abilities in this region!")));
+		return false;
 	}
 	public void internalActivation(Entity entity, Event event, GenericItem base, Entity activator) {
 		activate(entity, base);
@@ -148,6 +206,8 @@ public class AbilityAttributes extends Ability {
 	public void interacted(PlayerInteractEvent event, GenericItem base) {
 		if (!shouldActivate())
 			return;
+		if (!canActivateInRegion(event.getPlayer()))
+			return;
 		if (use(event.getPlayer(), cooldownMessages))
 			internalActivation(event.getPlayer(), event, base, event.getPlayer());
 	}
@@ -161,6 +221,8 @@ public class AbilityAttributes extends Ability {
 	 */
 	public void interactedEntity(PlayerInteractEntityEvent event, GenericItem base) {
 		if (!shouldActivate())
+			return;
+		if (!canActivateInRegion(event.getPlayer()))
 			return;
 		if (use(event.getPlayer(), cooldownMessages))
 			switch (getTarget()) {
@@ -183,6 +245,8 @@ public class AbilityAttributes extends Ability {
 	public void hitEntity(EntityDamageByEntityEvent event, GenericItem base) {
 		if (!shouldActivate())
 			return;
+		if (!canActivateInRegion(event.getDamager()))
+			return;
 		if (use(event.getDamager(), cooldownMessages))
 			switch (getTarget()) {
 			case ATTACKER:
@@ -194,6 +258,34 @@ public class AbilityAttributes extends Ability {
 				break;
 			}
 	}
+	@Override
+	public void mobHitEntity(EntityDamageByEntityEvent event, GenericItem base) {
+		// A mob's melee hit stands in for a player's interact-entity action: mirror interactedEntity's targeting so the
+		// ability activates on the entity the mob hit (unless it targets the activator itself). Consumption is routed through
+		// consumeFromMob rather than internalActivation, since the latter mutates a copy of the mob's equipment.
+		if (!shouldActivate())
+			return;
+		Entity damager = event.getDamager();
+		if (!canActivateInRegion(damager))
+			return;
+		if (!use(damager, cooldownMessages))
+			return;
+		Entity target;
+		switch (getTarget()) {
+		case ACTIVATOR:
+			target = damager;
+			break;
+		default:
+			target = event.getEntity();
+			break;
+		}
+		activate(target, base);
+		if (base instanceof BaseItem item) {
+			item.activatedAbility(this, event, damager, target);
+			if (item.shouldConsumeItem() && damager instanceof LivingEntity holder)
+				MobUsable.consumeFromMob(holder, base);
+		}
+	}
 	/**
 	 * Run whenever an EntityDamageByEntityEvent is fired involving the ability.
 	 * <p>
@@ -204,6 +296,8 @@ public class AbilityAttributes extends Ability {
 	 */
 	public void wasHit(EntityDamageByEntityEvent event, GenericItem base) {
 		if (!shouldActivate())
+			return;
+		if (!canActivateInRegion(event.getEntity()))
 			return;
 		if (use(event.getEntity(), cooldownMessages))
 			switch (getTarget()) {
@@ -228,17 +322,22 @@ public class AbilityAttributes extends Ability {
 		if (!shouldActivate())
 			return;
 		if (event.getEntity().getShooter() != null && event.getEntity().getShooter() instanceof Entity) {
-			if (use((Entity) event.getEntity().getShooter(), cooldownMessages))
+			Entity shooter = (Entity) event.getEntity().getShooter();
+			if (!canActivateInRegion(shooter))
+				return;
+			if (use(shooter, cooldownMessages))
 				switch (getTarget()) {
 				case PROJECTILE:
-					internalActivation(event.getEntity(), event, base, (Entity) event.getEntity().getShooter());
+					internalActivation(event.getEntity(), event, base, shooter);
 					break;
 				default:
-					internalActivation((Entity) event.getEntity().getShooter(), event, base, (Entity) event.getEntity().getShooter());
+					internalActivation(shooter, event, base, shooter);
 					break;
 				}
 			return;
 		}
+		if (!canActivateInRegion(event.getEntity()))
+			return;
 		internalActivation(event.getEntity(), event, base, event.getEntity());
 	}
 	/**
@@ -255,25 +354,30 @@ public class AbilityAttributes extends Ability {
 		if (event.getEntity().getShooter() != null && event.getEntity().getShooter() instanceof Entity) {
 			if (getTarget() == Target.HIT_ENTITY && event.getHitEntity() == null)
 				return;
-			if (use((Entity) event.getEntity().getShooter(), cooldownMessages))
+			Entity shooter = (Entity) event.getEntity().getShooter();
+			if (!canActivateInRegion(shooter))
+				return;
+			if (use(shooter, cooldownMessages))
 				switch (getTarget()) {
 				case PROJECTILE:
-					internalActivation(event.getEntity(), event, base, (Entity) event.getEntity().getShooter());
+					internalActivation(event.getEntity(), event, base, shooter);
 					break;
 				case HIT_ENTITY:
-					internalActivation(event.getHitEntity(), event, base, (Entity) event.getEntity().getShooter());
+					internalActivation(event.getHitEntity(), event, base, shooter);
 					break;
 				case SHOOTER:
 				case ATTACKER:
 				case ACTIVATOR:
-					internalActivation((Entity) event.getEntity().getShooter(), event, base, (Entity) event.getEntity().getShooter());
+					internalActivation(shooter, event, base, shooter);
 					break;
 				default:
-					internalActivation(event.getHitEntity() != null ? event.getHitEntity() : event.getEntity(), event, base, (Entity) event.getEntity().getShooter());
+					internalActivation(event.getHitEntity() != null ? event.getHitEntity() : event.getEntity(), event, base, shooter);
 					break;
 				}
 			return;
 		}
+		if (!canActivateInRegion(event.getEntity()))
+			return;
 		internalActivation(event.getHitEntity() != null ? event.getHitEntity() : event.getEntity(), event, base, event.getEntity());
 	}
 	/**
@@ -288,6 +392,8 @@ public class AbilityAttributes extends Ability {
 		if (!shouldActivate())
 			return;
 		if ((getTarget() == Target.SHOOTER || getTarget() == Target.ATTACKER) && !(event.getEntity().getShooter() instanceof Entity))
+			return;
+		if (!canActivateInRegion(event.getHitEntity()))
 			return;
 		if (use(event.getHitEntity(), cooldownMessages))
 			switch (getTarget()) {
@@ -315,6 +421,8 @@ public class AbilityAttributes extends Ability {
 	public void shotBow(EntityShootBowEvent event, GenericItem base) {
 		if (!shouldActivate())
 			return;
+		if (!canActivateInRegion(event.getEntity()))
+			return;
 		if (use(event.getEntity(), cooldownMessages))
 			switch (getTarget()) {
 			case PROJECTILE:
@@ -336,6 +444,8 @@ public class AbilityAttributes extends Ability {
 	public void inventoryClick(InventoryClickEvent event, GenericItem base) {
 		if (!shouldActivate())
 			return;
+		if (!canActivateInRegion(event.getWhoClicked()))
+			return;
 		if (use(event.getWhoClicked(), cooldownMessages))
 			internalActivation(event.getWhoClicked(), event, base, event.getWhoClicked());
 	}
@@ -350,6 +460,8 @@ public class AbilityAttributes extends Ability {
 	public void consumeItem(PlayerItemConsumeEvent event, GenericItem base) {
 		if (!shouldActivate())
 			return;
+		if (!canActivateInRegion(event.getPlayer()))
+			return;
 		if (use(event.getPlayer(), cooldownMessages))
 			internalActivation(event.getPlayer(), event, base, event.getPlayer());
 	}
@@ -363,6 +475,8 @@ public class AbilityAttributes extends Ability {
 	 */
 	public void dropItem(EntityDropItemEvent event, GenericItem base) {
 		if (!shouldActivate())
+			return;
+		if (!canActivateInRegion(event.getEntity()))
 			return;
 		if (use(event.getEntity(), cooldownMessages))
 			switch (getTarget()) {
@@ -385,6 +499,8 @@ public class AbilityAttributes extends Ability {
 	public void pickupItem(EntityPickupItemEvent event, GenericItem base) {
 		if (!shouldActivate())
 			return;
+		if (!canActivateInRegion(event.getEntity()))
+			return;
 		if (use(event.getEntity(), cooldownMessages))
 			switch (getTarget()) {
 			case DROPPED_ITEM:
@@ -406,6 +522,8 @@ public class AbilityAttributes extends Ability {
 	public void entityDeath(EntityDeathEvent event, GenericItem base) {
 		if (!shouldActivate())
 			return;
+		if (!canActivateInRegion(event.getEntity()))
+			return;
 		if (use(event.getEntity(), cooldownMessages))
 			internalActivation(event.getEntity(), event, base, event.getEntity());
 	}
@@ -420,6 +538,8 @@ public class AbilityAttributes extends Ability {
 	public void entityRespawn(PlayerRespawnEvent event, GenericItem base) {
 		if (!shouldActivate())
 			return;
+		if (!canActivateInRegion(event.getPlayer()))
+			return;
 		if (use(event.getPlayer(), cooldownMessages))
 			internalActivation(event.getPlayer(), event, base, event.getPlayer());
 	}
@@ -433,6 +553,8 @@ public class AbilityAttributes extends Ability {
 	 */
 	public void placeBlock(BlockPlaceEvent event, GenericItem base) {
 		if (!shouldActivate())
+			return;
+		if (!canActivateInRegion(event.getPlayer()))
 			return;
 		if (use(event.getPlayer(), cooldownMessages))
 			switch (getTarget()) {
@@ -454,6 +576,8 @@ public class AbilityAttributes extends Ability {
 	 */
 	public void breakBlock(BlockBreakEvent event, GenericItem base) {
 		if (!shouldActivate())
+			return;
+		if (!canActivateInRegion(event.getPlayer()))
 			return;
 		if (use(event.getPlayer(), cooldownMessages))
 			switch (getTarget()) {

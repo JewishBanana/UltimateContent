@@ -27,7 +27,7 @@ public class InfestedSpirit extends ComplexEntity<Vex> {
 	private static final DustOptions particleEffect = new DustOptions(Color.fromRGB(9, 74, 72), 1);
 
 	public InfestedSpirit(Vex entity) {
-		super(entity, CustomEntityType.LOST_SOUL);
+		super(entity, CustomEntityType.INFESTED_SPIRIT);
 		
 		setInvisible(entity);
 		entity.setSilent(true);

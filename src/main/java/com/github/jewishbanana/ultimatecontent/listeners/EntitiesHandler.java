@@ -9,13 +9,19 @@ import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Warden;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityCombustByBlockEvent;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
@@ -23,27 +29,43 @@ import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.world.EntitiesLoadEvent;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import com.github.jewishbanana.uiframework.entities.CustomEntity;
+import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.uiframework.events.CustomEntitySpawnEvent;
 import com.github.jewishbanana.ultimatecontent.UltimateContent;
+import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
+import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.entities.ExplodingEntity;
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Elf;
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Frosty;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.SkeletonKnight;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.ZombieKnight;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidWorm;
+import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedCreeper;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedDevourer;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
+
+import me.gamercoder215.mobchip.EntityBrain;
+import me.gamercoder215.mobchip.ai.EntityAI;
+import me.gamercoder215.mobchip.ai.goal.target.PathfinderNearestAttackableTarget;
+import me.gamercoder215.mobchip.bukkit.BukkitBrain;
 
 public class EntitiesHandler implements Listener {
 	
 	private static final NamespacedKey removeKey;
+	private static final String lastAttackerKey = "uc-last-attacker";
 	private static final Set<UUID> noBurnMobs;
 	private static final Set<UUID> noSuffocateMobs;
 	private static final Set<UUID> invulnerableEntities;
@@ -71,8 +93,43 @@ public class EntitiesHandler implements Listener {
 	
 	public EntitiesHandler(UltimateContent plugin) {
 		plugin.getServer().getWorlds().forEach(world -> world.getEntities().stream().filter(e -> e.getPersistentDataContainer().has(removeKey, PersistentDataType.BYTE)).forEach(e -> e.remove()));
-		
+
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+		startWardenFactionAngerReset(plugin);
+	}
+	/**
+	 * Wardens use their own anger/disturbance system rather than the normal target event, so {@link #onEntityTarget}'s
+	 * cancellation isn't enough to keep them from attacking infested mobs (a creeper blast, vibration, etc. can still anger
+	 * them at the swarm). This timer keeps the infested faction intact by continuously zeroing every nearby Warden's anger
+	 * toward infested mobs. Wardens are rare, so iterating them every two seconds is cheap.
+	 */
+	private void startWardenFactionAngerReset(UltimateContent plugin) {
+		plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+			for (World world : plugin.getServer().getWorlds())
+				for (Warden warden : world.getEntitiesByClass(Warden.class))
+					for (Entity nearby : warden.getNearbyEntities(40, 40, 40))
+						if (isInfested(nearby) && warden.getAnger(nearby) > 0)
+							warden.setAnger(nearby, 0);
+		}, 40L, 40L);
+	}
+	/**
+	 * Custom (non-UC) mobs spawned holding UC items - most notably via the {@code /ui summon ui:debug_mob} testing command -
+	 * should still use their items' abilities. UC's own custom entities drive themselves from {@code BaseEntity.spawn}/
+	 * {@code postLoad}; this only bridges the remaining spawn-equipped vanilla mobs. Equipment is applied right after the spawn
+	 * event so the check is deferred one tick.
+	 */
+	@EventHandler(ignoreCancelled = true)
+	public void onMobSpawnWithItems(CreatureSpawnEvent event) {
+		SpawnReason reason = event.getSpawnReason();
+		if (reason != SpawnReason.CUSTOM && reason != SpawnReason.COMMAND && reason != SpawnReason.SPAWNER_EGG && reason != SpawnReason.DISPENSE_EGG)
+			return;
+		if (!(event.getEntity() instanceof Mob mob))
+			return;
+		JavaPlugin plugin = UltimateContent.getInstance();
+		plugin.getServer().getScheduler().runTask(plugin, () -> {
+			if (mob.isValid() && UIEntityManager.getEntity(mob) == null)
+				BaseEntity.attachMobItemAbilities(mob);
+		});
 	}
 	@EventHandler
 	public void onEntitiesLoad(EntitiesLoadEvent event) {
@@ -99,6 +156,14 @@ public class EntitiesHandler implements Listener {
 	}
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
 	public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
+		// Remember who last hit a mob (resolving projectiles back to their shooter) so the infested-retaliation logic can
+		// tell a "provoked" mob — one a player/entity attacked first — from one that merely wandered onto another target.
+		if (event.getEntity() instanceof Mob hurt) {
+			Entity attacker = event.getDamager();
+			if (attacker instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter)
+				attacker = shooter;
+			hurt.setMetadata(lastAttackerKey, new org.bukkit.metadata.FixedMetadataValue(UltimateContent.getInstance(), attacker.getUniqueId().toString()));
+		}
 		UUID uuid = event.getDamager().getUniqueId();
 		VoidWorm worm = voidWormFangs.remove(uuid);
 		if (worm != null) {
@@ -113,8 +178,32 @@ public class EntitiesHandler implements Listener {
 		if (frosty != null)
 			event.setDamage(frosty.getEntityVariant().damage);
 		ExplodingEntity explodingEntity = explodingEntities.get(uuid);
-		if (explodingEntity != null)
-			event.setDamage(event.getDamage() * explodingEntity.getExplosionDamageMultiplier());
+		if (explodingEntity != null) {
+			double multiplier = explodingEntity.getExplosionDamageMultiplier();
+			// Infested creepers only deal a fraction of their blast damage to fellow infested mobs and the Warden, so
+			// they stop wiping out their own swarm.
+			if (explodingEntity instanceof InfestedCreeper creeper && isInfestedOrWarden(event.getEntity()))
+				multiplier *= creeper.getFriendlyFireMultiplier();
+			event.setDamage(event.getDamage() * multiplier);
+		}
+	}
+	/** True if the entity is the Warden or one of our infested custom mobs (the creeper's "friendly" blast targets). */
+	private static boolean isInfestedOrWarden(Entity entity) {
+		if (entity instanceof Warden)
+			return true;
+		CustomEntity<?> custom = UIEntityManager.getEntity(entity);
+		return custom instanceof BaseEntity<?> base && base.getEntityType().category == CustomEntityType.Category.INFESTED_ENTITIES;
+	}
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onEntityExplode(EntityExplodeEvent event) {
+		// A creeper that explodes is removed without ever firing EntityDeathEvent, so UIFramework's death handler never
+		// unloads its custom entity and the head armor stand is left behind until the chunk unloads. Detect the explosion
+		// of one of our exploding custom entities and unload it now so its stands are cleaned up immediately.
+		if (!explodingEntities.containsKey(event.getEntity().getUniqueId()))
+			return;
+		CustomEntity<? extends Entity> custom = UIEntityManager.removeEntity(event.getEntity().getUniqueId());
+		if (custom != null)
+			custom.unload();
 	}
 	@EventHandler(ignoreCancelled = true)
 	public void onProjectileHit(ProjectileHitEvent event) {
@@ -157,6 +246,83 @@ public class EntitiesHandler implements Listener {
 			casted.spawnHorse();
 		if (event.getEntityClass() instanceof ZombieKnight casted)
 			casted.spawnHorse();
+		// Infested mobs are hostile to everything that isn't infested. Replace their default (player-only) target goals
+		// with a single goal over all LivingEntities (players and other mobs at equal priority) that excludes fellow
+		// infested mobs and the Warden, so they naturally attack anything non-infested.
+		if (event.getEntityClass() instanceof BaseEntity<?> base
+				&& base.getEntityType().category == CustomEntityType.Category.INFESTED_ENTITIES
+				&& base.getEntity() instanceof Mob mob) {
+			EntityBrain brain = BukkitBrain.getBrain(mob);
+			EntityAI targets = brain.getTargetAI();
+			targets.removeIf(p -> p.getPathfinder().getName().equals("PathfinderNearestAttackableTarget"));
+			targets.put(new PathfinderNearestAttackableTarget<>(mob, LivingEntity.class, 10, true, false, EntitiesHandler::isValidInfestedTarget), 2);
+		}
+	}
+	/** A warden never targets (and so never attacks/angers at) infested mobs, and infested mobs never target each other. */
+	@EventHandler(ignoreCancelled = true)
+	public void onEntityTarget(EntityTargetLivingEntityEvent event) {
+		LivingEntity target = event.getTarget();
+		if (target == null)
+			return;
+		if (event.getEntity() instanceof Warden) {
+			if (isInfested(target))
+				event.setCancelled(true);
+			return;
+		}
+		if (isInfested(event.getEntity()) && (target instanceof Warden || isInfested(target)))
+			event.setCancelled(true);
+		// Infested mobs target every non-infested mob, so a swarm will set upon a player's iron golems, wandering zombies,
+		// etc. Make those hostile/neutral victims fight back against the infested attacker instead of standing idle: a victim
+		// with no target locks onto the attacker; a victim already fighting another mob swaps to the attacker only if it is
+		// closer; but a victim provoked by a player/entity that hit it first stays aggro on that attacker.
+		else if (event.getEntity() instanceof Mob infested && isInfested(infested)
+				&& target instanceof Mob victim && !isInfested(victim) && canRetaliate(victim)) {
+			LivingEntity current = victim.getTarget();
+			if (current == null || current.isDead())
+				victim.setTarget(infested);
+			else if (!current.equals(infested) && !wasProvokedBy(victim, current)
+					&& infested.getLocation().distanceSquared(victim.getLocation()) < current.getLocation().distanceSquared(victim.getLocation()))
+				victim.setTarget(infested);
+		}
+	}
+	/** A hostile or neutral mob that can meaningfully fight back (e.g. zombie, iron golem) — not a purely passive animal. */
+	private static boolean canRetaliate(Mob mob) {
+		return mob instanceof org.bukkit.entity.Monster
+				|| mob instanceof org.bukkit.entity.IronGolem
+				|| mob instanceof org.bukkit.entity.Wolf
+				|| mob instanceof org.bukkit.entity.PolarBear
+				|| mob instanceof org.bukkit.entity.Bee
+				|| mob instanceof org.bukkit.entity.Llama
+				|| mob instanceof org.bukkit.entity.Panda
+				|| mob instanceof org.bukkit.entity.Goat
+				|| mob instanceof org.bukkit.entity.Dolphin;
+	}
+	/** True if {@code mob}'s current {@code target} is the same entity that last damaged it (so it is genuinely provoked). */
+	private static boolean wasProvokedBy(Mob mob, LivingEntity target) {
+		for (org.bukkit.metadata.MetadataValue value : mob.getMetadata(lastAttackerKey))
+			if (target.getUniqueId().toString().equals(value.asString()))
+				return true;
+		return false;
+	}
+	/** True if the entity is one of our infested custom mobs. */
+	private static boolean isInfested(Entity entity) {
+		CustomEntity<?> custom = UIEntityManager.getEntity(entity);
+		return custom instanceof BaseEntity<?> base && base.getEntityType().category == CustomEntityType.Category.INFESTED_ENTITIES;
+	}
+	/** Valid prey for an infested mob: anything alive that isn't the Warden or another infested mob. */
+	private static boolean isValidInfestedTarget(LivingEntity entity) {
+		return !(entity instanceof Warden) && !isInfested(entity);
+	}
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	public void onPlayerBreakBlock(BlockBreakEvent event) {
+		// The void worm can't be damaged; a player kills it by breaking its supporting block so it drops into the void. If a
+		// void worm is standing on the block being broken, tag it as spleefed by this player (VoidWorm grants the credit if it
+		// then dies to the void in time without landing again).
+		Block broken = event.getBlock();
+		for (Entity e : broken.getWorld().getNearbyEntities(broken.getLocation().add(0.5, 1.0, 0.5), 0.6, 0.6, 0.6))
+			if (UIEntityManager.getEntity(e) instanceof VoidWorm worm
+					&& e.getLocation().getBlock().getRelative(BlockFace.DOWN).equals(broken))
+				worm.markSpleefed(event.getPlayer().getUniqueId());
 	}
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onPlayerPlaceBlock(BlockPlaceEvent event) {

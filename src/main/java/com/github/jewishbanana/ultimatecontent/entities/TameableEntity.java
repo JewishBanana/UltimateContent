@@ -49,15 +49,18 @@ public interface TameableEntity {
 		goals.put(new PathfinderOwnerHurtEntity(entity, tameable), 1);
 		goals.put(new PathfinderAllyHurtByEntity(entity, tameable), 2);
 		goals.put(new PathfinderOwnerTargetedByEntity(entity, tameable), 3);
-		
+
 		goals = brain.getGoalAI();
 		goals.clear();
 		goals.put(new PathfinderFloat(entity), 1);
 		if (entity instanceof Creature creature)
 			goals.put(new PathfinderMeleeAttack(creature), 4);
-		goals.put(new PathfinderFollowEntity(entity, owner, 2, 12), 5);
+		goals.put(new PathfinderFollowEntity(entity, owner, 2, 18), 5);
 		goals.put(new PathfinderLookAtEntity<Player>(entity, Player.class), 6);
 		goals.put(new PathfinderLookAtEntity<LivingEntity>(entity, LivingEntity.class), 7);
 		goals.put(new PathfinderRandomLook(entity), 8);
+		// Clear any stale target left over from wild-AI or a previous attack phase so the follow goal
+		// can start immediately (MeleeAttack won't run on the owner, but it does block PathfinderFollowEntity).
+		entity.setTarget(null);
 	}
 }

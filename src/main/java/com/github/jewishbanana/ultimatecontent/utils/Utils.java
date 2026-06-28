@@ -391,6 +391,10 @@ public class Utils {
 		error.printStackTrace();
 		UltimateContent.consoleSender.sendMessage(Utils.convertString("&c[UltimateContent]: An error has occurred above this message. Please report the full error to the discord https://discord.gg/MhXFj72VeN"));
 	}
+	public static void sendExceptionLog(Throwable error) {
+		error.printStackTrace();
+		UltimateContent.consoleSender.sendMessage(Utils.convertString("&c[UltimateContent]: An error has occurred above this message. Please report the full error to the discord https://discord.gg/MhXFj72VeN"));
+	}
 	public static void sendConsoleMessage(String message) {
 		UltimateContent.consoleSender.sendMessage(Utils.prefix + convertString(message));
 	}

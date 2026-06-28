@@ -13,6 +13,7 @@ import com.github.jewishbanana.ultimatecontent.abilities.SpawnPlatform;
 import com.github.jewishbanana.ultimatecontent.abilities.StasisZone;
 import com.github.jewishbanana.ultimatecontent.abilities.TeleportRay;
 import com.github.jewishbanana.ultimatecontent.abilities.TidalWave;
+import com.github.jewishbanana.ultimatecontent.abilities.UnstableMagic;
 import com.github.jewishbanana.ultimatecontent.abilities.YetiRoar;
 import com.github.jewishbanana.ultimatecontent.enchants.AncientCurse;
 import com.github.jewishbanana.ultimatecontent.enchants.BunnyHop;
@@ -33,6 +34,7 @@ import com.github.jewishbanana.ultimatecontent.entities.desertentities.AncientSk
 import com.github.jewishbanana.ultimatecontent.entities.easterentities.EasterBunny;
 import com.github.jewishbanana.ultimatecontent.entities.easterentities.KillerChicken;
 import com.github.jewishbanana.ultimatecontent.entities.easterentities.RampagingGoat;
+import com.github.jewishbanana.ultimatecontent.entities.endentities.BabyEndTotem;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.EndTotem;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidArcher;
 import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidGuardian;
@@ -45,6 +47,7 @@ import com.github.jewishbanana.ultimatecontent.entities.infestedentities.Infeste
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedSkeleton;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedSpirit;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedTribesman;
+import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedWorm;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedZombie;
 import com.github.jewishbanana.ultimatecontent.entities.netherentities.FirePhantom;
 import com.github.jewishbanana.ultimatecontent.entities.netherentities.LostSoul;
@@ -67,6 +70,7 @@ import com.github.jewishbanana.ultimatecontent.items.easter.PurpleEgg;
 import com.github.jewishbanana.ultimatecontent.items.easter.RedEgg;
 import com.github.jewishbanana.ultimatecontent.items.materials.AncientBone;
 import com.github.jewishbanana.ultimatecontent.items.materials.AncientCloth;
+import com.github.jewishbanana.ultimatecontent.items.materials.BloodIngot;
 import com.github.jewishbanana.ultimatecontent.items.materials.YetiFur;
 import com.github.jewishbanana.ultimatecontent.items.misc.BlindingTrap;
 import com.github.jewishbanana.ultimatecontent.items.misc.BoosterPack;
@@ -104,6 +108,7 @@ public class UCRegistry {
 		TidalWave.register();
 		YetiRoar.register();
 		DoubleJump.register();
+		UnstableMagic.register();
 	}
 	public static void registerEnchants() {
 		AncientCurse.register();
@@ -115,6 +120,7 @@ public class UCRegistry {
 		AncientBone.register();
 		AncientCloth.register();
 		YetiFur.register();
+		BloodIngot.register();
 		
 		// Weapons
 		GreenLightsaber.register();
@@ -161,6 +167,7 @@ public class UCRegistry {
 	public static void registerEntities() {
 		// End Entities
 		EndTotem.register();
+		BabyEndTotem.register();
 		VoidWorm.register();
 		VoidArcher.register();
 		VoidGuardian.register();
@@ -194,7 +201,7 @@ public class UCRegistry {
 		InfestedTribesman.register();
 		InfestedDevourer.register();
 		InfestedHowler.register();
-//		InfestedWorm.register();
+		InfestedWorm.register();
 		
 		// Nether Entities
 		LostSoul.register();

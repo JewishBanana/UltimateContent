@@ -42,56 +42,67 @@ public class GreenLightsaber extends Weapon {
 	}
 	public boolean interacted(PlayerInteractEvent event) {
 		if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
-			if (particleField.getValue() != 2) {
-				Player player = event.getPlayer();
-				Vector axis = player.getLocation().getDirection().multiply(0.3);
-				Location playerLoc = player.getLocation().add(0,1.3,0);
-				Location front = playerLoc.clone().add(axis);
-				Vector vec = new Vector(axis.getZ(), 0, -axis.getX()).normalize().multiply(1.5);
-				double firstAngle = random.nextDouble()*360;
-				Vector angle = vec.clone().rotateAroundAxis(axis, Math.toRadians(firstAngle+180+(random.nextDouble()*50-25)));
-				vec.rotateAroundAxis(axis, Math.toRadians(firstAngle));
-				Vector finalAngle = Utils.getVectorTowards(front.clone().add(vec), front.clone().add(angle)).multiply(0.15);
-				DustOptions options = new DustOptions(Color.fromARGB(10, 126, 242, 132), 0.6f);
-				new BukkitRunnable() {
-					private int tick;
-					
-					@Override
-					public void run() {
-						for (int i=0; i < 3; i++) {
-							Vector inch = Utils.getVectorTowards(playerLoc, front.clone().add(vec)).multiply(0.3);
-							Location particle = playerLoc.clone().add(inch);
-							for (int j=0; j < 4; j++) {
-								if (particleField.getValue() == 0)
-									front.getWorld().spawnParticle(VersionUtils.getRedstoneDust(), particle, 1, 0, 0, 0, 0.001, options);
-								else
-									front.getWorld().getPlayers().forEach(k -> {
-										if (!k.equals(player))
-											k.spawnParticle(VersionUtils.getRedstoneDust(), particle, 1, 0, 0, 0, 0.001, options);
-									});
-								particle.add(inch);
-							}
-							vec.add(finalAngle);
-						}
-						if (tick++ >= 4)
-							this.cancel();
-					}
-				}.runTaskTimer(plugin, 0, 1);
-			}
-			UUID uuid = event.getPlayer().getUniqueId();
+			Player player = event.getPlayer();
+			if (particleField.getValue() != 2)
+				triggerSlashEffect(player, particleField.getValue() == 0);
+			UUID uuid = player.getUniqueId();
 			if (SaberParry.projectileParry.add(uuid))
-				plugin.getServer().getScheduler().runTaskLater(plugin, () -> SaberParry.projectileParry.remove(uuid), (int) (event.getPlayer().getAttackCooldown() * 10.0));
+				plugin.getServer().getScheduler().runTaskLater(plugin, () -> SaberParry.projectileParry.remove(uuid), (int) (player.getAttackCooldown() * 10.0));
 		}
 		return true;
 	}
 	public boolean hitEntity(EntityDamageByEntityEvent event) {
-		Entity entity = event.getEntity();
-		if (event.getCause() == DamageCause.ENTITY_ATTACK && entity instanceof LivingEntity) {
+		Entity target = event.getEntity();
+		if (event.getCause() == DamageCause.ENTITY_ATTACK && target instanceof LivingEntity) {
 			Entity damager = event.getDamager();
-			SaberParry.parryMap.put(entity.getUniqueId(), damager.getUniqueId());
-			plugin.getServer().getScheduler().runTaskLater(plugin, () -> SaberParry.parryMap.remove(entity.getUniqueId()), damager instanceof Player player ? (int) (player.getAttackCooldown() * 20.0) : 20);
+			if (damager instanceof Player player) {
+				SaberParry.parryMap.put(target.getUniqueId(), damager.getUniqueId());
+				plugin.getServer().getScheduler().runTaskLater(plugin, () -> SaberParry.parryMap.remove(target.getUniqueId()), (int) (player.getAttackCooldown() * 20.0));
+			} else if (damager instanceof LivingEntity mobCaster) {
+				SaberParry.parryMap.put(target.getUniqueId(), damager.getUniqueId());
+				plugin.getServer().getScheduler().runTaskLater(plugin, () -> SaberParry.parryMap.remove(target.getUniqueId()), 20);
+				triggerSlashEffect(mobCaster, true);
+			}
 		}
 		return true;
+	}
+	private void triggerSlashEffect(LivingEntity caster, boolean showToAll) {
+		Vector axis = caster.getLocation().getDirection().multiply(0.3);
+		Location casterLoc = caster.getEyeLocation().subtract(0, 0.3, 0);
+		// A mob's slash looks slightly inside its body, so push the origin forward a bit (players already look fine).
+		if (!(caster instanceof Player))
+			casterLoc.add(caster.getLocation().getDirection().multiply(0.6));
+		Location front = casterLoc.clone().add(axis);
+		Vector vec = new Vector(axis.getZ(), 0, -axis.getX()).normalize().multiply(1.5);
+		double firstAngle = random.nextDouble()*360;
+		Vector angle = vec.clone().rotateAroundAxis(axis, Math.toRadians(firstAngle+180+(random.nextDouble()*50-25)));
+		vec.rotateAroundAxis(axis, Math.toRadians(firstAngle));
+		Vector finalAngle = Utils.getVectorTowards(front.clone().add(vec), front.clone().add(angle)).multiply(0.15);
+		DustOptions options = new DustOptions(Color.fromARGB(10, 126, 242, 132), 0.6f);
+		new BukkitRunnable() {
+			private int tick;
+
+			@Override
+			public void run() {
+				for (int i=0; i < 3; i++) {
+					Vector inch = Utils.getVectorTowards(casterLoc, front.clone().add(vec)).multiply(0.3);
+					Location particle = casterLoc.clone().add(inch);
+					for (int j=0; j < 4; j++) {
+						if (showToAll)
+							front.getWorld().spawnParticle(VersionUtils.getRedstoneDust(), particle, 1, 0, 0, 0, 0.001, options);
+						else
+							front.getWorld().getPlayers().forEach(k -> {
+								if (!k.equals(caster))
+									k.spawnParticle(VersionUtils.getRedstoneDust(), particle, 1, 0, 0, 0, 0.001, options);
+							});
+						particle.add(inch);
+					}
+					vec.add(finalAngle);
+				}
+				if (tick++ >= 4)
+					this.cancel();
+			}
+		}.runTaskTimer(plugin, 0, 1);
 	}
 	public boolean inventoryClick(InventoryClickEvent event) {
 		if (EntityUtils.isPlayerImmune((Player) event.getWhoClicked()))

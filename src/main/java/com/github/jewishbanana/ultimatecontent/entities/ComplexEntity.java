@@ -13,6 +13,7 @@ public abstract class ComplexEntity<T extends Entity> extends BaseEntity<T> {
 	
 	public CreatureStand<? extends Entity>[] stands;
 	public CreatureStand<ArmorStand> headStand;
+	protected boolean standsCleaned;
 
 	public ComplexEntity(T entity, CustomEntityType type, boolean createMoveTask) {
 		super(entity, type);
@@ -20,8 +21,16 @@ public abstract class ComplexEntity<T extends Entity> extends BaseEntity<T> {
 			scheduleTask(new BukkitRunnable() {
 				@Override
 				public void run() {
-					if (!entity.isValid())
+					if (!entity.isValid()) {
+						// If the body actually died/was removed but the framework never ran our unload (e.g. a victim
+						// killed by a creeper explosion, which fires no EntityDeathEvent), clean up the stands here so
+						// they don't linger floating in place. A merely chunk-unloaded body (not dead) is left alone.
+						if (!standsCleaned && entity.isDead()) {
+							standsCleaned = true;
+							unload();
+						}
 						return;
+					}
 					Location loc = entity.getLocation();
 					for (CreatureStand<?> temp : stands) {
 						Entity stand = temp.getEntity(loc);
@@ -33,6 +42,19 @@ public abstract class ComplexEntity<T extends Entity> extends BaseEntity<T> {
 						headStand.getEntity(loc).setHeadPose(new EulerAngle(Math.toRadians(loc.getPitch()), 0, 0));
 				}
 			}.runTaskTimer(plugin, 0, 1));
+		else
+			// Subclasses with their own move task don't get the self-clean above, so add a light death watcher: if the
+			// body dies without the framework running our unload (e.g. a victim of a creeper explosion, which fires no
+			// EntityDeathEvent), clean up the stands so they don't linger floating in place.
+			scheduleTask(new BukkitRunnable() {
+				@Override
+				public void run() {
+					if (!standsCleaned && !entity.isValid() && entity.isDead()) {
+						standsCleaned = true;
+						unload();
+					}
+				}
+			}.runTaskTimer(plugin, 20, 10));
 	}
 	public ComplexEntity(T entity, CustomEntityType type) {
 		this(entity, type, true);

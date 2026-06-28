@@ -23,9 +23,6 @@ public class SafetyNet extends BaseItem {
 	public static void register() {
 		UIItemType.registerItem(REGISTERED_KEY, SafetyNet.class);
 	}
-	public boolean shouldConsumeItem() {
-		return true;
-	}
 	public Rarity getRarity() {
 		return Rarity.COMMON;
 	}

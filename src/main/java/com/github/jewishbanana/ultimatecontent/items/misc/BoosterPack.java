@@ -23,9 +23,6 @@ public class BoosterPack extends BaseItem {
 	public static void register() {
 		UIItemType.registerItem(REGISTERED_KEY, BoosterPack.class);
 	}
-	public boolean shouldConsumeItem() {
-		return true;
-	}
 	public Rarity getRarity() {
 		return Rarity.COMMON;
 	}

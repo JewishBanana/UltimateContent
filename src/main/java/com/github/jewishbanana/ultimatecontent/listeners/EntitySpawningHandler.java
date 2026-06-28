@@ -2,15 +2,15 @@ package com.github.jewishbanana.ultimatecontent.listeners;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Stack;
 import java.util.function.Function;
 import java.util.random.RandomGenerator;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Biome;
-import org.bukkit.entity.Mob;
+import org.bukkit.entity.Monster;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
@@ -27,7 +27,9 @@ import com.github.jewishbanana.ultimatecontent.entities.infestedentities.Infeste
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedSkeleton;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedSpirit;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedTribesman;
+import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedWorm;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedZombie;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.mojang.datafixers.util.Pair;
 
 public class EntitySpawningHandler implements Listener {
@@ -44,7 +46,8 @@ public class EntitySpawningHandler implements Listener {
 				Pair.of(InfestedDevourer.attemptSpawn, UIEntityManager.getEntityType(InfestedDevourer.REGISTERED_KEY).getSpawnRate()),
 				Pair.of(InfestedHowler.attemptSpawn, UIEntityManager.getEntityType(InfestedHowler.REGISTERED_KEY).getSpawnRate()),
 				Pair.of(InfestedSpirit.attemptSpawn, UIEntityManager.getEntityType(InfestedSpirit.REGISTERED_KEY).getSpawnRate()),
-				Pair.of(InfestedTribesman.attemptSpawn, UIEntityManager.getEntityType(InfestedTribesman.REGISTERED_KEY).getSpawnRate())
+				Pair.of(InfestedTribesman.attemptSpawn, UIEntityManager.getEntityType(InfestedTribesman.REGISTERED_KEY).getSpawnRate()),
+				Pair.of(InfestedWorm.attemptSpawn, UIEntityManager.getEntityType(InfestedWorm.REGISTERED_KEY).getSpawnRate())
 				));
 		
 		new BukkitRunnable() {
@@ -53,30 +56,33 @@ public class EntitySpawningHandler implements Listener {
 				Bukkit.getOnlinePlayers().forEach(player -> {
 					Location loc = player.getLocation();
 					if (loc.isWorldLoaded() && loc.getBlock().getBiome() == Biome.DEEP_DARK) {
-						Stack<Pair<Function<Location, BaseEntity<?>>, Double>> stack = new Stack<>();
-						for (int i=0; i < 5; i++)
-							stack.add(entityTypes.get(random.nextInt(entityTypes.size())));
+						List<Pair<Function<Location, BaseEntity<?>>, Double>> list = new ArrayList<>(entityTypes);
+						Collections.shuffle(list);
 						new BukkitRunnable() {
 							@Override
 							public void run() {
-								if (player.getNearbyEntities(40.0, 30.0, 40.0).stream().filter(e -> e instanceof Mob).count() < 20)
-									while (!stack.isEmpty()) {
-										Pair<Function<Location, BaseEntity<?>>, Double> pair = stack.pop();
-										if (random.nextDouble() >= pair.getSecond())
+								if (!DependencyUtils.canSpawnCustomMobs(loc))
+									return;
+								if (player.getNearbyEntities(40.0, 30.0, 40.0).stream().filter(e -> e instanceof Monster).count() < 20) {
+									int spawnCount = 0;
+									for (Pair<Function<Location, BaseEntity<?>>, Double> pair : list) {
+										if (random.nextFloat() >= pair.getSecond())
 											continue;
 										BaseEntity<?> entity = pair.getFirst().apply(loc);
 										if (entity != null) {
 //											if (entity.getCastedEntity() instanceof LivingEntity alive)
 //												alive.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 10000, 0, true, false));
-											break;
+											if (++spawnCount == 3)
+												break;
 										}
 									}
+								}
 							}
 						}.runTask(plugin);
 					}
 				});
 			}
-		}.runTaskTimerAsynchronously(plugin, 0, 200);
+		}.runTaskTimerAsynchronously(plugin, 0, 100);
 		
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
@@ -84,6 +90,7 @@ public class EntitySpawningHandler implements Listener {
 	public void onCustomEntitySpawn(CustomEntitySpawnEvent event) {
 		if (event.getReason() != SpawnReason.NATURAL)
 			return;
-		
+		if (!DependencyUtils.canSpawnCustomMobs(event.getLocation()))
+			event.setCancelled(true);
 	}
 }

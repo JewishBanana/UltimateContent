@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.utils;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -12,6 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Drowned;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
@@ -39,6 +42,11 @@ import com.github.jewishbanana.ultimatecontent.entities.BaseEntity;
 import com.github.jewishbanana.ultimatecontent.entities.EntityVariant.LoadoutEquipmentSlot;
 import com.github.jewishbanana.ultimatecontent.entities.TameableEntity;
 
+import me.gamercoder215.mobchip.EntityBrain;
+import me.gamercoder215.mobchip.ai.goal.PathfinderMeleeAttack;
+import me.gamercoder215.mobchip.ai.goal.target.PathfinderNearestAttackableTarget;
+import me.gamercoder215.mobchip.bukkit.BukkitBrain;
+
 public class EntityUtils {
 	
 	private static final JavaPlugin plugin;
@@ -46,6 +54,7 @@ public class EntityUtils {
 	private static final FixedMetadataValue fallingBlockData;
 	private static final FixedMetadataValue damageData;
 	private static final boolean isVersion192OrAbove;
+	private static final Map<UUID, DrownedGoalOverride> drownedGoalOverrides = new HashMap<>();
 	static {
 		plugin = UltimateContent.getInstance();
 		leatherArmor = Set.of(Material.LEATHER_BOOTS, Material.LEATHER_LEGGINGS, Material.LEATHER_CHESTPLATE, Material.LEATHER_HELMET);
@@ -187,6 +196,50 @@ public class EntityUtils {
 		GameMode mode = player.getGameMode();
 		return mode == GameMode.CREATIVE || mode == GameMode.SPECTATOR;
 	}
+	/**
+	 * Adds or removes the unconditional player targeting used by hurricane drowned. Overrides are reference counted so
+	 * overlapping hurricanes do not restore vanilla behavior until the drowned has left every hurricane rain area.
+	 */
+	public static void manipulateDrownedGoals(Drowned entity, boolean aggressive) {
+		if (entity == null)
+			return;
+		if (!Bukkit.isPrimaryThread()) {
+			Bukkit.getScheduler().runTask(plugin, () -> manipulateDrownedGoals(entity, aggressive));
+			return;
+		}
+		final UUID uuid = entity.getUniqueId();
+		if (aggressive) {
+			if (!entity.isValid() || entity.isDead())
+				return;
+			final EntityEquipment equipment = entity.getEquipment();
+			if (equipment.getItemInMainHand().getType() == Material.TRIDENT
+					|| equipment.getItemInOffHand().getType() == Material.TRIDENT)
+				return;
+			final DrownedGoalOverride existing = drownedGoalOverrides.get(uuid);
+			if (existing != null) {
+				existing.references++;
+				return;
+			}
+			final PathfinderNearestAttackableTarget<Player> targetGoal =
+					new PathfinderNearestAttackableTarget<>(entity, Player.class, 5, true, false);
+			final PathfinderMeleeAttack attackGoal = new PathfinderMeleeAttack(entity, 1.15);
+			final EntityBrain brain = BukkitBrain.getBrain(entity);
+			brain.getTargetAI().put(targetGoal, 1);
+			brain.getTargetAI().put(attackGoal, 2);
+			drownedGoalOverrides.put(uuid, new DrownedGoalOverride(targetGoal, attackGoal));
+			return;
+		}
+		final DrownedGoalOverride override = drownedGoalOverrides.get(uuid);
+		if (override == null || --override.references > 0)
+			return;
+		drownedGoalOverrides.remove(uuid);
+		if (!entity.isValid() || entity.isDead())
+			return;
+		final EntityBrain brain = BukkitBrain.getBrain(entity);
+		brain.getTargetAI().remove(override.targetGoal);
+		brain.getTargetAI().remove(override.attackGoal);
+		entity.setTarget(null);
+	}
 	public static boolean isEntityImmunePlayer(Entity entity) {
 		if (!(entity instanceof Player player))
 			return false;
@@ -249,5 +302,16 @@ public class EntityUtils {
 		if (possibleOwner == null)
 			return false;
 		return isEntityOwner(toCheck, possibleOwner.getUniqueId());
+	}
+
+	private static final class DrownedGoalOverride {
+		private final PathfinderNearestAttackableTarget<Player> targetGoal;
+		private final PathfinderMeleeAttack attackGoal;
+		private int references = 1;
+
+		private DrownedGoalOverride(PathfinderNearestAttackableTarget<Player> targetGoal, PathfinderMeleeAttack attackGoal) {
+			this.targetGoal = targetGoal;
+			this.attackGoal = attackGoal;
+		}
 	}
 }

@@ -13,6 +13,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.inventory.BlockInventoryHolder;
@@ -20,10 +21,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.UIAbilityType;
 import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
+import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidArcher;
 import com.github.jewishbanana.ultimatecontent.utils.BlockUtils;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 
@@ -81,10 +85,12 @@ public class BlackRift extends AbilityAttributes {
 						e.setVelocity(Utils.getVectorTowards(temp, loc).multiply(0.3));
 						final double dist = temp.distanceSquared(loc);
 						if (dist < 2.25) {
-							if (dist < 1 && e instanceof LivingEntity living) {
+							if (e instanceof LivingEntity living) {
+								// Damage living entities (including players) rather than removing them.
+								boolean wasVoidArcher = UIEntityManager.getEntity(living) instanceof VoidArcher;
 								EntityUtils.pureDamageEntity(living, damage, "deaths.unstableRiftSource", DamageCause.VOID, shooter instanceof LivingEntity source ? source : null);
-//							if (DependencyUtils.DDHook != null && e.isDead() && shooter instanceof Player && !EntityUtils.isPlayerImmune((Player) shooter) && ((LivingEntity) e).getPersistentDataContainer().has(com.github.jewishbanana.deadlydisasters.entities.CustomEntityType.VOIDARCHER.nameKey, PersistentDataType.BYTE))
-//								DependencyUtils.awardAchievementProgress(((Player) shooter).getUniqueId(), "master.series.void_master", 1, 3);
+								if (wasVoidArcher && living.isDead() && shooter instanceof Player riftOwner)
+									DependencyUtils.awardAchievementProgress(riftOwner.getUniqueId(), "master.series.void_master", 1, 3);
 							} else if (destroyItems || !(e instanceof Item))
 								e.remove();
 						}

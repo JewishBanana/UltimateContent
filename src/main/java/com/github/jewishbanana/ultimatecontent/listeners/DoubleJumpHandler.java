@@ -36,7 +36,10 @@ import com.github.jewishbanana.ultimatecontent.AbilityAttributes;
 import com.github.jewishbanana.ultimatecontent.UltimateContent;
 import com.github.jewishbanana.ultimatecontent.abilities.DoubleJump;
 import com.github.jewishbanana.ultimatecontent.items.BaseItem;
+import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
+import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.mojang.datafixers.util.Pair;
 
 public class DoubleJumpHandler implements Listener {
@@ -232,6 +235,10 @@ public class DoubleJumpHandler implements Listener {
             	return;
             }
             AbilityAttributes attributes = (AbilityAttributes) ability;
+            if (!DependencyUtils.canActivateAbilities(p)) {
+            	p.sendMessage(Utils.convertString(DataUtils.getConfigString("language.abilities.regionActivationBlocked", "&cYou cannot activate abilities in this region!")));
+            	return;
+            }
             if (!attributes.shouldActivate() || !attributes.use(p, attributes.doesSendCooldownMessages()))
             	return;
             attributes.internalActivation(p, e, base, p);

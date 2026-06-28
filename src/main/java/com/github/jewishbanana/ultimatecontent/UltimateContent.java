@@ -65,9 +65,7 @@ public class UltimateContent extends JavaPlugin {
 	 * - infested worm
 	 * - halloween entities and event
 	 * - blood pact items and weapons
-	 * - hook into dd achievements
 	 * - fix saber throw
-	 * - implement void tear
 	 */
 	
 	public static ConsoleCommandSender consoleSender;
@@ -76,8 +74,11 @@ public class UltimateContent extends JavaPlugin {
 	private static FixedMetadataValue fixedData;
 	private static SpecialEvent specialEvent;
 	
-	private static final String UIFrameworkVersion = "3.1.1";
+	private static final String UIFrameworkVersion = "3.1.4";
 	
+	public void onLoad() {
+		DependencyUtils.registerWorldGuardFlags(this);
+	}
 	public void onEnable() {
 		instance = this;
 		fixedData = new FixedMetadataValue(this, "protected");

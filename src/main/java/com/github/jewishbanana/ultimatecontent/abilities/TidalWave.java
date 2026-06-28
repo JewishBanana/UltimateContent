@@ -16,6 +16,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
@@ -42,6 +43,15 @@ public class TidalWave extends AbilityAttributes {
 	}
 	public void activate(Entity entity, GenericItem base) {
 		activate(entity.getLocation(), entity, base);
+	}
+	@Override
+	public void onMobHoldTick(Mob mob, GenericItem item) {
+		LivingEntity target = mob.getTarget();
+		if (target == null || target.isDead())
+			return;
+		if (mob.getLocation().distanceSquared(target.getLocation()) > range * range)
+			return;
+		mobActivate(mob, item);
 	}
 	public void activate(Location loc, GenericItem base) {
 		activate(loc, null, base);

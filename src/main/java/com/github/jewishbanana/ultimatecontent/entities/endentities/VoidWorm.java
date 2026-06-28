@@ -1,5 +1,6 @@
 package com.github.jewishbanana.ultimatecontent.entities.endentities;
 
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.bukkit.Location;
@@ -13,10 +14,12 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EvokerFangs;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Silverfish;
 import org.bukkit.entity.WitherSkeleton;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -27,6 +30,7 @@ import com.github.jewishbanana.uiframework.entities.UIEntityManager;
 import com.github.jewishbanana.ultimatecontent.entities.ComplexEntity;
 import com.github.jewishbanana.ultimatecontent.entities.CustomEntityType;
 import com.github.jewishbanana.ultimatecontent.listeners.EntitiesHandler;
+import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
 import com.github.jewishbanana.ultimatecontent.utils.EntityUtils;
 import com.github.jewishbanana.ultimatecontent.utils.PhysicsEngine;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
@@ -41,6 +45,12 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 	private WitherSkeleton damageEntity;
 	private Vector[] offsets = new Vector[11];
 	private BukkitTask attackTask;
+	// Spleef tracking: the worm cannot be attacked, so a player "kills" it by breaking the block beneath it and dropping it
+	// into the void. We remember who knocked it loose and when; the credit only stands if it dies to the void before either
+	// the 10s window elapses or it lands on solid ground again.
+	private UUID spleefTracker;
+	private long spleefTime;
+	private boolean spleefLeftGround;
 
 	public VoidWorm(Silverfish entity) {
 		super(entity, CustomEntityType.VOID_WORM, false);
@@ -99,6 +109,36 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 					cooldown--;
 			}
 		}.runTaskTimer(plugin, 0, 20));
+		scheduleTask(new BukkitRunnable() {
+			@Override
+			public void run() {
+				if (spleefTracker == null)
+					return;
+				if (!entity.isValid()) {
+					// Invulnerable entities removed out-of-world never fire EntityDeathEvent; award here instead.
+					if (spleefLeftGround && System.currentTimeMillis() - spleefTime <= 10000) {
+						DependencyUtils.awardAchievementProgress(spleefTracker, "mobs.slayer.void_mobs", 1, -1);
+						DependencyUtils.awardAchievementProgress(spleefTracker, "master.series.void_master", 1, 4);
+					}
+					spleefTracker = null;
+					return;
+				}
+				if (System.currentTimeMillis() - spleefTime > 10000) {
+					spleefTracker = null;
+					return;
+				}
+				if (!entity.isOnGround())
+					spleefLeftGround = true;
+				else if (spleefLeftGround)
+					spleefTracker = null;
+			}
+		}.runTaskTimer(plugin, 1, 1));
+	}
+	/** Flags this worm as knocked loose by a player who broke the block beneath it (see {@link EntitiesHandler} block break). */
+	public void markSpleefed(UUID player) {
+		this.spleefTracker = player;
+		this.spleefTime = System.currentTimeMillis();
+		this.spleefLeftGround = false;
 	}
 	public void hitEntity(EntityDamageByEntityEvent event) {
 		Silverfish entity = (Silverfish) event.getDamager();
@@ -255,6 +295,18 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 	public void onDeath(EntityDeathEvent event) {
 		super.onDeath(event);
 		event.getEntity().getWorld().spawnParticle(Particle.SOUL, event.getEntity().getLocation(), 10, .3, .3, .3, .03);
+		Player killer = event.getEntity().getKiller();
+		if (killer != null)
+			DependencyUtils.awardAchievementProgress(killer.getUniqueId(), "mobs.slayer.void_mobs", 1, -1);
+		// "Burrow A Grave" mastery tier: the worm is unattackable, so the only kill is spleefing its supporting block and
+		// dropping it into the void. Credit the spleefer if it died to the void within the tracking window (see markSpleefed).
+		EntityDamageEvent lastCause = event.getEntity().getLastDamageCause();
+		if (spleefTracker != null && lastCause != null && lastCause.getCause() == EntityDamageEvent.DamageCause.VOID
+				&& System.currentTimeMillis() - spleefTime <= 10000) {
+			DependencyUtils.awardAchievementProgress(spleefTracker, "mobs.slayer.void_mobs", 1, -1);
+			DependencyUtils.awardAchievementProgress(spleefTracker, "master.series.void_master", 1, 4);
+			spleefTracker = null;
+		}
 		if (attackTask != null)
 			attackTask.cancel();
 		int lifeTicks = (int) (getSectionDouble("ragdollSeconds", 7.0) * 20.0);

@@ -20,10 +20,19 @@ import com.github.jewishbanana.ultimatecontent.UltimateContent;
 
 public class DependencyUtils {
 	
-//	public static com.github.jewishbanana.deadlydisasters.Main DDHook;
-	private static boolean isDDPro;
-	
+	// Reflective bridge to DeadlyDisasters PRO's achievements API. UltimateContent never imports or compiles against
+	// DeadlyDisasters (it is an optional dependency that may be absent or the non-PRO build), so the handler and award
+	// methods are resolved lazily via reflection on first use. State: 0 = unchecked, 1 = available, 2 = unavailable.
+	private static byte ddAchievementsState;
+	private static java.lang.reflect.Method ddGetHandlerMethod;
+	private static java.lang.reflect.Method ddAwardProgressMethod;
+	private static java.lang.reflect.Method ddAwardProgressTierMethod;
+	private static java.lang.reflect.Method ddSetTierProgressMethod;
+	private static byte ddSelectorState;
+	private static java.lang.reflect.Method ddGetSecondsMethod;
+
 	private static Predicate<Location> regionCheck;
+	private static boolean worldGuardEnabled;
 	
 	private static boolean affectEntities;
 	private static boolean damageBlocks;
@@ -32,22 +41,33 @@ public class DependencyUtils {
 	private static Set<EntityType> blacklistedEntities;
 	private static Set<Class<? extends CustomEntity<?>>> blacklistedCustomEntities;
 
+	public static void registerWorldGuardFlags(UltimateContent plugin) {
+		if (plugin.getServer().getPluginManager().getPlugin("WorldGuard") == null)
+			return;
+		try {
+			WorldGuardHook.registerFlags();
+			plugin.getLogger().info("Successfully registered UltimateContent WorldGuard flags");
+		} catch (Throwable e) {
+			Utils.sendExceptionLog(e);
+			Utils.sendConsoleMessage("&cFailed to register UltimateContent World Guard flags!");
+		}
+	}
 	public static void init(UltimateContent plugin) {
 		PluginManager pm = plugin.getServer().getPluginManager();
-		if (pm.isPluginEnabled("DeadlyDisasters")) {
-//			DDHook = com.github.jewishbanana.deadlydisasters.Main.getInstance();
-//			isDDPro = DDHook.isPluginPro();
-		}
+		// DeadlyDisasters achievement integration is resolved lazily on first award (see awardAchievementProgress), so it is
+		// unaffected by plugin load order and needs no setup here.
 		Predicate<Location> check = null;
+		worldGuardEnabled = false;
 		try {
-			if (pm.isPluginEnabled("WorldGuard")) {
+			if (pm.getPlugin("WorldGuard") != null) {
 				if (DataUtils.getConfigBoolean("external.region_protection_plugins.world_guard")) {
-					check = (check == null) ? loc -> isWGRegion(loc) : check.and(loc -> isWGRegion(loc));
+					worldGuardEnabled = true;
 					plugin.getLogger().info("Successfully hooked into World Guard");
 				} else
 					plugin.getLogger().info("World Guard was detected, but region protection for this plugin is disabled in the config.yml file. World Guard regions will NOT be protected!");
 			}
-		} catch (Exception e) {
+		} catch (Throwable e) {
+			worldGuardEnabled = false;
 			Utils.sendExceptionLog(e);
 			Utils.sendConsoleMessage("&cAn error has occurred while trying to hook into &eWorld Guard &cregions from this plugin will NOT be protected!");
 		}
@@ -207,19 +227,116 @@ public class DependencyUtils {
 			}
 		}
 	}
+	/**
+	 * Awards DeadlyDisasters achievement progress through a reflective bridge, when DeadlyDisasters PRO (with the
+	 * achievements feature) is installed. Does nothing when DeadlyDisasters is absent or is the non-PRO build, so
+	 * UltimateContent stays fully functional on its own. {@code tier < 0} awards every currently-unlocked tier of the
+	 * series; {@code tier >= 0} targets that specific tier index.
+	 */
 	public static void awardAchievementProgress(UUID uuid, String achievement, int amount, int tier) {
-//		if (isDDPro)
-//			DDHook.achievementsHandler.awardProgress(uuid, achievement, amount, tier);
+		if (ddAchievementsState == 2)
+			return;
+		if (ddAchievementsState == 0 && !resolveDeadlyDisastersAchievements())
+			return;
+		try {
+			Object handler = ddGetHandlerMethod.invoke(null);
+			if (handler == null)
+				return;
+			if (tier < 0)
+				ddAwardProgressMethod.invoke(handler, uuid, achievement, amount);
+			else
+				ddAwardProgressTierMethod.invoke(handler, uuid, achievement, amount, tier);
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+		}
+	}
+	/**
+	 * Seconds until the next disaster is rolled for {@code player} in their current world via DeadlyDisasters' reflective
+	 * bridge, or {@code -1} when DeadlyDisasters is absent, disasters are disabled there, or no timer is running. Used by
+	 * the baby end totem to warn its owner as a disaster approaches.
+	 */
+	public static int getSecondsUntilDisaster(org.bukkit.entity.Player player) {
+		if (ddSelectorState == 2)
+			return -1;
+		if (ddSelectorState == 0 && !resolveDeadlyDisastersSelector())
+			return -1;
+		try {
+			return (int) ddGetSecondsMethod.invoke(null, player);
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+			return -1;
+		}
+	}
+	/**
+	 * Resolves the DeadlyDisasters disaster-timer API by reflection. The PRO build's main class is {@code DeadlyDisasters}
+	 * while the free build's is {@code Main}, so both are tried. Caches the result so it is attempted only once.
+	 */
+	private static boolean resolveDeadlyDisastersSelector() {
+		for (String mainClassName : new String[] { "com.github.jewishbanana.deadlydisasters.DeadlyDisasters", "com.github.jewishbanana.deadlydisasters.Main" })
+			try {
+				Class<?> mainClass = Class.forName(mainClassName);
+				ddGetSecondsMethod = mainClass.getMethod("getSecondsUntilDisaster", org.bukkit.entity.Player.class);
+				ddSelectorState = 1;
+				return true;
+			} catch (ClassNotFoundException | NoSuchMethodException e) {
+				// Try the next candidate class name.
+			}
+		ddSelectorState = 2;
+		return false;
+	}
+	/** Resolves the DeadlyDisasters PRO achievements API by reflection. Caches the result so it is attempted only once. */
+	private static boolean resolveDeadlyDisastersAchievements() {
+		try {
+			Class<?> mainClass = Class.forName("com.github.jewishbanana.deadlydisasters.DeadlyDisasters");
+			Class<?> handlerClass = Class.forName("com.github.jewishbanana.deadlydisasters.achievements.AchievementsHandler");
+			ddGetHandlerMethod = mainClass.getMethod("getAchievementsHandler");
+			ddAwardProgressMethod = handlerClass.getMethod("awardProgress", UUID.class, String.class, int.class);
+			ddAwardProgressTierMethod = handlerClass.getMethod("awardProgress", UUID.class, String.class, int.class, int.class);
+			ddSetTierProgressMethod = handlerClass.getMethod("setTierProgress", UUID.class, String.class, int.class, int.class);
+			ddAchievementsState = 1;
+			return true;
+		} catch (ClassNotFoundException | NoSuchMethodException e) {
+			// DeadlyDisasters is absent or is the non-PRO build without the achievements API; disable the bridge.
+			ddAchievementsState = 2;
+			return false;
+		}
+	}
+	/**
+	 * Sets the progress of a specific achievement tier to an absolute value without triggering the achievement
+	 * announcement. Used to sync intermediate display progress from external trackers. Never modifies a tier that is
+	 * already achieved. Does nothing when DeadlyDisasters is absent or achievements are disabled.
+	 */
+	public static void setAchievementTierProgress(UUID uuid, String achievement, int tierIndex, int value) {
+		if (ddAchievementsState == 2)
+			return;
+		if (ddAchievementsState == 0 && !resolveDeadlyDisastersAchievements())
+			return;
+		try {
+			Object handler = ddGetHandlerMethod.invoke(null);
+			if (handler == null)
+				return;
+			ddSetTierProgressMethod.invoke(handler, uuid, achievement, tierIndex, value);
+		} catch (Exception e) {
+			Utils.sendExceptionLog(e);
+		}
 	}
 	private static boolean isWGRegion(Location location) {
-		com.sk89q.worldedit.util.Location loc = com.sk89q.worldedit.bukkit.BukkitAdapter.adapt(location);
-		com.sk89q.worldguard.protection.regions.RegionContainer container = com.sk89q.worldguard.WorldGuard.getInstance().getPlatform().getRegionContainer();
-		com.sk89q.worldguard.protection.regions.RegionQuery query = container.createQuery();
-		com.sk89q.worldguard.protection.ApplicableRegionSet set = query.getApplicableRegions(loc);
-		return set.size() != 0;
+		return worldGuardEnabled && WorldGuardHook.isRegion(location);
+	}
+	public static boolean canActivateAbilities(Location location) {
+		return !worldGuardEnabled || WorldGuardHook.canActivateAbilities(location);
+	}
+	public static boolean canActivateAbilities(Entity entity) {
+		return entity == null || canActivateAbilities(entity.getLocation());
+	}
+	public static boolean canSpawnCustomMobs(Location location) {
+		return !worldGuardEnabled || WorldGuardHook.canSpawnCustomMobs(location);
+	}
+	private static boolean canDamageAbilityBlocks(Location location) {
+		return !worldGuardEnabled || WorldGuardHook.canDamageAbilityBlocks(location);
 	}
 	public static boolean isLocationProtected(Location loc) {
-		return regionCheck.test(loc);
+		return isWGRegion(loc) || regionCheck.test(loc);
 	}
 	public static boolean isEntityProtected(Entity entity) {
 		CustomEntity<?> custom = UIEntityManager.getEntity(entity);
@@ -228,6 +345,82 @@ public class DependencyUtils {
 		return blacklistedEntities.contains(entity.getType()) || (!affectEntities && isLocationProtected(entity.getLocation()));
 	}
 	public static boolean isBlockProtected(Block block) {
-		return blacklistedMaterials.contains(block.getType()) || (!damageBlocks && isLocationProtected(block.getLocation()));
+		return blacklistedMaterials.contains(block.getType()) || !canDamageAbilityBlocks(block.getLocation()) || (!damageBlocks && regionCheck.test(block.getLocation()));
+	}
+	private static final class WorldGuardHook {
+		private static com.sk89q.worldguard.protection.regions.RegionQuery query;
+		private static com.sk89q.worldguard.protection.flags.StateFlag activateAbilitiesFlag;
+		private static com.sk89q.worldguard.protection.flags.StateFlag abilityBlockDamageFlag;
+		private static com.sk89q.worldguard.protection.flags.StateFlag customMobSpawningFlag;
+
+		private static void registerFlags() {
+			com.sk89q.worldguard.protection.flags.registry.FlagRegistry registry = com.sk89q.worldguard.WorldGuard.getInstance().getFlagRegistry();
+			activateAbilitiesFlag = registerStateFlag(registry, "activate-abilities", true);
+			abilityBlockDamageFlag = registerStateFlag(registry, "ability-block-damage", false);
+			customMobSpawningFlag = registerStateFlag(registry, "custom-mob-spawning", true);
+		}
+		private static com.sk89q.worldguard.protection.flags.StateFlag registerStateFlag(com.sk89q.worldguard.protection.flags.registry.FlagRegistry registry, String name, boolean defaultValue) {
+			com.sk89q.worldguard.protection.flags.Flag<?> existing = registry.get(name);
+			if (existing instanceof com.sk89q.worldguard.protection.flags.StateFlag flag)
+				return flag;
+			if (existing != null) {
+				Utils.sendConsoleMessage("&eWorld Guard flag &d'"+name+"' &ealready exists but is not a state flag. UltimateContent will ignore this flag.");
+				return null;
+			}
+			com.sk89q.worldguard.protection.flags.StateFlag flag = new com.sk89q.worldguard.protection.flags.StateFlag(name, defaultValue);
+			try {
+				registry.register(flag);
+				return flag;
+			} catch (com.sk89q.worldguard.protection.flags.registry.FlagConflictException e) {
+				existing = registry.get(name);
+				return existing instanceof com.sk89q.worldguard.protection.flags.StateFlag stateFlag ? stateFlag : null;
+			}
+		}
+		private static void initQuery() {
+			query = com.sk89q.worldguard.WorldGuard.getInstance().getPlatform().getRegionContainer().createQuery();
+		}
+		private static com.sk89q.worldguard.protection.flags.StateFlag getStateFlag(String name) {
+			if (!Bukkit.getPluginManager().isPluginEnabled("WorldGuard"))
+				return null;
+			com.sk89q.worldguard.protection.flags.Flag<?> flag = com.sk89q.worldguard.WorldGuard.getInstance().getFlagRegistry().get(name);
+			return flag instanceof com.sk89q.worldguard.protection.flags.StateFlag stateFlag ? stateFlag : null;
+		}
+		private static com.sk89q.worldguard.protection.ApplicableRegionSet getRegions(Location location) {
+			if (location == null || location.getWorld() == null || !Bukkit.getPluginManager().isPluginEnabled("WorldGuard"))
+				return null;
+			if (query == null)
+				initQuery();
+			return query.getApplicableRegions(com.sk89q.worldedit.bukkit.BukkitAdapter.adapt(location));
+		}
+		private static com.sk89q.worldguard.protection.flags.StateFlag.State queryState(Location location, com.sk89q.worldguard.protection.flags.StateFlag flag) {
+			if (flag == null)
+				return null;
+			com.sk89q.worldguard.protection.ApplicableRegionSet set = getRegions(location);
+			if (set == null || set.size() == 0)
+				return null;
+			return set.queryState(null, flag);
+		}
+		private static boolean isRegion(Location location) {
+			com.sk89q.worldguard.protection.ApplicableRegionSet set = getRegions(location);
+			return set != null && set.size() != 0;
+		}
+		private static boolean canActivateAbilities(Location location) {
+			if (activateAbilitiesFlag == null)
+				activateAbilitiesFlag = getStateFlag("activate-abilities");
+			return queryState(location, activateAbilitiesFlag) != com.sk89q.worldguard.protection.flags.StateFlag.State.DENY;
+		}
+		private static boolean canSpawnCustomMobs(Location location) {
+			if (customMobSpawningFlag == null)
+				customMobSpawningFlag = getStateFlag("custom-mob-spawning");
+			return queryState(location, customMobSpawningFlag) != com.sk89q.worldguard.protection.flags.StateFlag.State.DENY;
+		}
+		private static boolean canDamageAbilityBlocks(Location location) {
+			if (abilityBlockDamageFlag == null)
+				abilityBlockDamageFlag = getStateFlag("ability-block-damage");
+			com.sk89q.worldguard.protection.ApplicableRegionSet set = getRegions(location);
+			if (set == null || set.size() == 0)
+				return true;
+			return abilityBlockDamageFlag != null && set.queryState(null, abilityBlockDamageFlag) == com.sk89q.worldguard.protection.flags.StateFlag.State.ALLOW;
+		}
 	}
 }

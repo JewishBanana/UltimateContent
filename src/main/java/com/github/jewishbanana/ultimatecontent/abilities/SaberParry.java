@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Mob;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -40,6 +41,8 @@ public class SaberParry extends AbilityAttributes {
 			return;
 		Entity damager = event.getDamager();
 		Entity entity = event.getEntity();
+		if (!canActivateInRegion(entity))
+			return;
 		UUID hit = parryMap.remove(damager.getUniqueId());
 		if (hit != null && entity.getUniqueId().equals(hit) && shouldActivate()) {
 			event.setCancelled(true);
@@ -50,7 +53,19 @@ public class SaberParry extends AbilityAttributes {
 				loc.getWorld().spawnParticle(Particle.END_ROD, loc.add(0, entity.getHeight() / 1.385, 0).add(vec), (int) Math.ceil(5.0 * particleMultiplier), 0, 0, 0, 0.1);
 		}
 	}
+	@Override
+	public boolean alwaysMobProxy() {
+		return true;
+	}
+	@Override
+	public void onMobHoldTick(Mob mob, GenericItem item) {
+		// A mob can't left-click to enter a parry stance, so while it holds the saber keep it ready to deflect
+		// incoming projectiles. The actual deflection is still chance-gated in hitByProjectile.
+		projectileParry.add(mob.getUniqueId());
+	}
 	public void hitByProjectile(ProjectileHitEvent event, GenericItem base) {
+		if (!canActivateInRegion(event.getHitEntity()))
+			return;
 		if (projectileParry.remove(event.getHitEntity().getUniqueId()) && shouldActivate()) {
 			event.setCancelled(true);
 			Entity entity = event.getEntity();

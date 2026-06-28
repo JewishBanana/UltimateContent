@@ -24,6 +24,7 @@ public class InfestedCreeper extends ComplexEntity<Creeper> implements Exploding
 	public static final String REGISTERED_KEY = "uc:infested_creeper";
 	
 	private double damageMultiplier;
+	private double friendlyFireMultiplier;
 	private UUID uuid;
 
 	public InfestedCreeper(Creeper entity) {
@@ -51,9 +52,14 @@ public class InfestedCreeper extends ComplexEntity<Creeper> implements Exploding
 		super.setAttributes(entity);
 		entity.getAttribute(VersionUtils.getFollowRangeAttribute()).setBaseValue(40);
 		this.damageMultiplier = getSectionDouble("damageMultiplier", 1.0);
+		this.friendlyFireMultiplier = getSectionDouble("friendlyDamageMultiplier", 0.25);
 	}
 	public double getExplosionDamageMultiplier() {
 		return damageMultiplier;
+	}
+	/** Fraction of blast damage this creeper deals to fellow infested mobs and the Warden (default 25%). */
+	public double getFriendlyFireMultiplier() {
+		return friendlyFireMultiplier;
 	}
 	public static void register() {
 		UIEntityManager type = UIEntityManager.registerEntity(InfestedCreeper.REGISTERED_KEY, InfestedCreeper.class);

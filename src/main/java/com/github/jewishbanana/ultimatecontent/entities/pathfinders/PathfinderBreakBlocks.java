@@ -67,9 +67,20 @@ public class PathfinderBreakBlocks extends CustomPathfinder {
 	}
 	@Override
 	public boolean canStart() {
+		return selectNearestTarget();
+	}
+	/**
+	 * Locks {@link #current}/{@link #goal} onto the NEAREST queued block within range (pruning banned/other-world blocks),
+	 * rather than the first one in the list. Selecting first-in-list froze entities: when a closer/newly-placed block was
+	 * added, the entity would walk up to it but the pathfinder stayed cached on the original (often unreachable) block at
+	 * the head of the list, so it never broke the block it was standing next to. Returns false if no in-range block exists.
+	 */
+	private boolean selectNearestTarget() {
 		if (blocks.isEmpty())
 			return false;
 		Location entityLoc = entity.getLocation();
+		Block nearest = null;
+		double best = maxDistanceSquared;
 		Iterator<Block> it = blocks.iterator();
 		while (it.hasNext()) {
 			Block temp = it.next();
@@ -77,13 +88,19 @@ public class PathfinderBreakBlocks extends CustomPathfinder {
 				it.remove();
 				continue;
 			}
-			if (!Utils.isLocationsWithinDistance(entityLoc, temp.getLocation(), maxDistanceSquared))
+			if (!temp.getWorld().equals(entityLoc.getWorld()))
 				continue;
-			current = temp;
-			goal = temp.getLocation().add(.5, .5, .5);
-			return true;
+			double distSq = entityLoc.distanceSquared(temp.getLocation().add(.5, .5, .5));
+			if (distSq <= best) {
+				best = distSq;
+				nearest = temp;
+			}
 		}
-		return false;
+		if (nearest == null)
+			return false;
+		current = nearest;
+		goal = nearest.getLocation().add(.5, .5, .5);
+		return true;
 	}
 	@Override
 	public void start() {
@@ -95,6 +112,11 @@ public class PathfinderBreakBlocks extends CustomPathfinder {
 	public void tick() {
 		ticks--;
 		if (breaking)
+			return;
+		// Re-lock onto whichever queued block is nearest right now, so a entity that has walked up to a closer/newly
+		// placed block breaks THAT block instead of staying cached on a now-distant or unreachable target it can never
+		// path within break range of (which left it frozen next to the new block).
+		if (!selectNearestTarget())
 			return;
 		if (Utils.isLocationsWithinDistance(entity.getLocation(), goal, distanceToBreakSquared)) {
 			final Location startPos = entity.getLocation();

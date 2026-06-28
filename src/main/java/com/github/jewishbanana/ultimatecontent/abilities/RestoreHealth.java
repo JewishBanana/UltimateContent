@@ -7,6 +7,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 
 import com.github.jewishbanana.uiframework.items.GenericItem;
 import com.github.jewishbanana.uiframework.items.UIAbilityType;
@@ -29,6 +30,17 @@ public class RestoreHealth extends AbilityAttributes {
 		playSound(entityLoc, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1f, .5f);
 		if (entity instanceof LivingEntity alive)
 			alive.setHealth(Math.min(alive.getHealth() + healAmount, alive.getAttribute(VersionUtils.getMaxHealthAttribute()).getValue()));
+	}
+	@Override
+	public int getMobProxyInterval() {
+		return 5; // check fairly often so it heals promptly after dropping below half health
+	}
+	@Override
+	public void onMobHoldTick(Mob mob, GenericItem item) {
+		double max = mob.getAttribute(VersionUtils.getMaxHealthAttribute()).getValue();
+		if (mob.getHealth() >= max * 0.5)
+			return;
+		mobActivate(mob, item);
 	}
 	public static void register() {
 		UIAbilityType.registerAbility(REGISTERED_KEY, RestoreHealth.class);
