@@ -26,7 +26,7 @@ public class YetiFur extends CraftingMaterial {
 	public static void register() {
 		UIItemType type = UIItemType.registerItem(REGISTERED_KEY, YetiFur.class);
 		
-		type.registerRecipe(createAnvilIncrementEnchantRecipe(type, YetisBlessing.REGISTERED_KEY, "yeti_fur_anvil", new RecipeChoice.MaterialChoice(YetisBlessing.applicableTypes),
+		type.registerUsageRecipe(createAnvilIncrementEnchantRecipe(type, YetisBlessing.REGISTERED_KEY, "yeti_fur_anvil", new RecipeChoice.MaterialChoice(YetisBlessing.applicableTypes),
 				base -> base.getEnchantLevel(YetisBlessing.REGISTERED_KEY) * 5));
 	}
 	public Rarity getRarity() {

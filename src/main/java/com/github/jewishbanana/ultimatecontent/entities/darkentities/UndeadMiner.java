@@ -409,6 +409,10 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 	public void unload() {
 		super.unload();
 		if (!placed.isEmpty() && getSectionBoolean("removePlacedBlocks", true)) {
+			if (!plugin.isEnabled()) {
+				clearPlacedBlocks(placed, placingMaterial);
+				return;
+			}
 			miners.add(this);
 			new BukkitRunnable() {
 				private BlockData data = placingMaterial.createBlockData();
@@ -422,7 +426,7 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 						return;
 					}
 					Block block = placed.remove(0);
-						com.github.jewishbanana.ultimatecontent.entities.pathfinders.PathfinderBuildStaircase.stairBlocks.remove(block);
+					PathfinderBuildStaircase.stairBlocks.remove(block);
 					if (block.getType() == placingMaterial) {
 						block.setType(Material.AIR);
 						Location temp = BlockUtils.getCenterOfBlock(block);
@@ -434,6 +438,14 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 			// a slow crumble); ordinary miner debris cleans up on the usual short timer.
 			}.runTaskTimer(plugin, breachMiner ? 2400 : 400, breachMiner ? 60 : 40);
 		}
+	}
+	private static void clearPlacedBlocks(Collection<Block> blocks, Material placingMaterial) {
+		blocks.forEach(block -> {
+			PathfinderBuildStaircase.stairBlocks.remove(block);
+			if (block.getType() == placingMaterial)
+				block.setType(Material.AIR);
+		});
+		blocks.clear();
 	}
 	public void setAttributes(Zombie entity) {
 		if (entity.isAdult())
@@ -459,10 +471,8 @@ public class UndeadMiner extends BaseEntity<Zombie> {
 	public static void clearPlacedBlocks() {
 		miners.forEach(temp -> {
 			if (!temp.placed.isEmpty())
-				temp.placed.forEach(block -> {
-					if (block.getType() == temp.placingMaterial)
-						block.setType(Material.AIR);
-				});
+				clearPlacedBlocks(temp.placed, temp.placingMaterial);
 		});
+		miners.clear();
 	}
 }

@@ -38,7 +38,7 @@ public class StasisZone extends AbilityAttributes {
 	public void activate(Location loc, GenericItem base) {
 		World world = loc.getWorld();
 		Map<UUID, Location> entities = new HashMap<>();
-		DustOptions options = new DustOptions(Color.fromARGB(10, 247, 247, 25), 0.6f);
+		DustOptions options = new DustOptions(Color.fromRGB(247, 247, 25), 0.6f);
 		final double particleOff = range / 10.0;
 		final int particleCount = (int) Math.ceil(10.0 * particleMultiplier);
 		if (VersionUtils.displaysAllowed) {

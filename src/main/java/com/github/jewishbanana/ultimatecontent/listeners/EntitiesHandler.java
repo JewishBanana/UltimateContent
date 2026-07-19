@@ -17,7 +17,6 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Projectile;
-import org.bukkit.entity.Warden;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -56,6 +55,7 @@ import com.github.jewishbanana.ultimatecontent.entities.endentities.VoidWorm;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedCreeper;
 import com.github.jewishbanana.ultimatecontent.entities.infestedentities.InfestedDevourer;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
+import com.github.jewishbanana.ultimatecontent.utils.VersionUtils;
 
 import me.gamercoder215.mobchip.EntityBrain;
 import me.gamercoder215.mobchip.ai.EntityAI;
@@ -104,12 +104,17 @@ public class EntitiesHandler implements Listener {
 	 * toward infested mobs. Wardens are rare, so iterating them every two seconds is cheap.
 	 */
 	private void startWardenFactionAngerReset(UltimateContent plugin) {
+		if (!VersionUtils.isMCVersionOrAbove("1.19"))
+			return;
 		plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
 			for (World world : plugin.getServer().getWorlds())
-				for (Warden warden : world.getEntitiesByClass(Warden.class))
+				for (Entity warden : world.getEntities()) {
+					if (!isWarden(warden))
+						continue;
 					for (Entity nearby : warden.getNearbyEntities(40, 40, 40))
-						if (isInfested(nearby) && warden.getAnger(nearby) > 0)
-							warden.setAnger(nearby, 0);
+						if (isInfested(nearby) && getWardenAnger(warden, nearby) > 0)
+							setWardenAnger(warden, nearby, 0);
+				}
 		}, 40L, 40L);
 	}
 	/**
@@ -189,7 +194,7 @@ public class EntitiesHandler implements Listener {
 	}
 	/** True if the entity is the Warden or one of our infested custom mobs (the creeper's "friendly" blast targets). */
 	private static boolean isInfestedOrWarden(Entity entity) {
-		if (entity instanceof Warden)
+		if (isWarden(entity))
 			return true;
 		CustomEntity<?> custom = UIEntityManager.getEntity(entity);
 		return custom instanceof BaseEntity<?> base && base.getEntityType().category == CustomEntityType.Category.INFESTED_ENTITIES;
@@ -264,12 +269,12 @@ public class EntitiesHandler implements Listener {
 		LivingEntity target = event.getTarget();
 		if (target == null)
 			return;
-		if (event.getEntity() instanceof Warden) {
+		if (isWarden(event.getEntity())) {
 			if (isInfested(target))
 				event.setCancelled(true);
 			return;
 		}
-		if (isInfested(event.getEntity()) && (target instanceof Warden || isInfested(target)))
+		if (isInfested(event.getEntity()) && (isWarden(target) || isInfested(target)))
 			event.setCancelled(true);
 		// Infested mobs target every non-infested mob, so a swarm will set upon a player's iron golems, wandering zombies,
 		// etc. Make those hostile/neutral victims fight back against the infested attacker instead of standing idle: a victim
@@ -311,7 +316,24 @@ public class EntitiesHandler implements Listener {
 	}
 	/** Valid prey for an infested mob: anything alive that isn't the Warden or another infested mob. */
 	private static boolean isValidInfestedTarget(LivingEntity entity) {
-		return !(entity instanceof Warden) && !isInfested(entity);
+		return !isWarden(entity) && !isInfested(entity);
+	}
+	private static boolean isWarden(Entity entity) {
+		return entity != null && "WARDEN".equals(entity.getType().name());
+	}
+	private static int getWardenAnger(Entity warden, Entity target) {
+		try {
+			return (int) warden.getClass().getMethod("getAnger", Entity.class).invoke(warden, target);
+		} catch (ReflectiveOperationException ignored) {
+			return 0;
+		}
+	}
+	private static void setWardenAnger(Entity warden, Entity target, int anger) {
+		try {
+			warden.getClass().getMethod("setAnger", Entity.class, int.class).invoke(warden, target, anger);
+		} catch (ReflectiveOperationException ignored) {
+			// Warden API is unavailable before 1.19; callers are version/type guarded.
+		}
 	}
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onPlayerBreakBlock(BlockBreakEvent event) {

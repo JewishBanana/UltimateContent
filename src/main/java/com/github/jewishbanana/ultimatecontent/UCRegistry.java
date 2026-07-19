@@ -23,6 +23,8 @@ import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Frosty
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Grinch;
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Santa;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.DarkMage;
+import com.github.jewishbanana.ultimatecontent.entities.darkentities.PlagueBat;
+import com.github.jewishbanana.ultimatecontent.entities.darkentities.PlagueRat;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.PrimedCreeper;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.ShadowLeech;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.SkeletonKnight;
@@ -181,6 +183,8 @@ public class UCRegistry {
 		ZombieKnight.register();
 		SwampBeast.register();
 		UndeadMiner.register();
+		PlagueRat.register();
+		PlagueBat.register();
 		
 		// Desert Entities
 		AncientMummy.register();

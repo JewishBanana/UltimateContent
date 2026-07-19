@@ -56,7 +56,7 @@ public class TeleportRay extends AbilityAttributes {
 				playSound(entity.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, .8f);
 				playSound(to, Sound.ENTITY_ENDERMAN_TELEPORT, 1f, .8f);
 				vec.normalize();
-				DustOptions options = new DustOptions(Color.fromARGB(50, 0, 0, 255), 0.5f);
+				DustOptions options = new DustOptions(Color.fromRGB(0, 0, 255), 0.5f);
 				for (Location temp : pLocs) {
 					Vector tempVec = new Vector(vec.getZ(), vec.getY(), -vec.getX()).multiply(0.5);
 					for (int j=0; j < 6; j++) {
@@ -71,7 +71,7 @@ public class TeleportRay extends AbilityAttributes {
 			}
 		}
 		vec.normalize();
-		DustOptions options = new DustOptions(Color.fromARGB(50, 255, 0, 0), 0.5f);
+		DustOptions options = new DustOptions(Color.fromRGB(255, 0, 0), 0.5f);
 		for (Location temp : pLocs) {
 			Vector tempVec = new Vector(vec.getZ(), vec.getY(), -vec.getX()).multiply(0.5);
 			for (int j=0; j < 6; j++) {

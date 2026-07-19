@@ -1047,9 +1047,13 @@ public class InfestedWorm extends ComplexEntity<ArmorStand> {
 		outFace[0] = faces.get(i);
 		return hosts.get(i);
 	}
-	private static final Set<Material> SCULK_BLOCKS = EnumSet.of(Material.SCULK, Material.SCULK_CATALYST, Material.SCULK_SENSOR, Material.SCULK_SHRIEKER);
+	private static final Set<Material> SCULK_BLOCKS = IS_VERSION_19_OR_ABOVE
+			? EnumSet.of(Material.SCULK, Material.SCULK_CATALYST, Material.SCULK_SENSOR, Material.SCULK_SHRIEKER)
+			: Set.of();
 	/** Natural deep-dark spawn: find a buried block (preferring sculk) a fair distance from players that has an emergence face. */
 	private static Block findNaturalHost(Location area) {
+		if (!IS_VERSION_19_OR_ABOVE)
+			return null;
 		final World world = area.getWorld();
 		Block fallback = null;
 		for (int i = 0; i < 26; i++) {

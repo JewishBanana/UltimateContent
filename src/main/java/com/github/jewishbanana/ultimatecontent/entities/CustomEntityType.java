@@ -29,6 +29,8 @@ import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Frosty
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Grinch;
 import com.github.jewishbanana.ultimatecontent.entities.christmasentities.Santa;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.DarkMage;
+import com.github.jewishbanana.ultimatecontent.entities.darkentities.PlagueBat;
+import com.github.jewishbanana.ultimatecontent.entities.darkentities.PlagueRat;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.PrimedCreeper;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.ShadowLeech;
 import com.github.jewishbanana.ultimatecontent.entities.darkentities.SkeletonKnight;
@@ -85,6 +87,8 @@ public enum CustomEntityType {
 	ZOMBIE_KNIGHT(ZombieKnight.REGISTERED_KEY, Category.DARK_ENTITIES),
 	SWAMP_BEAST(SwampBeast.REGISTERED_KEY, Category.DARK_ENTITIES),
 	UNDEAD_MINER(UndeadMiner.REGISTERED_KEY, Category.DARK_ENTITIES),
+	PLAGUE_RAT(PlagueRat.REGISTERED_KEY, Category.DARK_ENTITIES),
+	PLAGUE_BAT(PlagueBat.REGISTERED_KEY, Category.DARK_ENTITIES),
 	
 	CURSED_DIVER(CursedDiver.REGISTERED_KEY, Category.WATER_ENTITIES),
 	
@@ -245,6 +249,39 @@ public enum CustomEntityType {
 		case SWAMP_BEAST -> {
 			variant.defaultLoadout.addEquipmentSlotDefaults(LoadoutEquipmentSlot.HEAD, CustomHead.SWAMP_BEAST.getHead());
 			variant.movementSpeed = 0.2;
+		}
+		case PLAGUE_RAT -> {
+			variant.ambientSounds = new SoundEffect[] {
+					new SoundEffect(type.normalVariant, Sound.ENTITY_FOX_SCREECH, 0.32,
+							() -> (float) random.nextDouble(1.5, 2.0))
+			};
+			variant.ambientSoundFrequency = 4;
+			variant.hurtSounds = new SoundEffect[] {
+					new SoundEffect(type.normalVariant, Sound.ENTITY_RABBIT_HURT, 0.45, 0.55),
+					new SoundEffect(type.normalVariant, Sound.ENTITY_ENDERMITE_HURT, 0.35, 0.55)
+			};
+			variant.deathSounds = new SoundEffect[] {
+					new SoundEffect(type.normalVariant, Sound.ENTITY_RABBIT_DEATH, 0.5, 0.55),
+					new SoundEffect(type.normalVariant, Sound.ENTITY_SILVERFISH_DEATH, 0.35, 0.45)
+			};
+			variant.health = 6.0;
+			variant.damage = 1.0;
+			variant.movementSpeed = 0.28;
+		}
+		case PLAGUE_BAT -> {
+			variant.ambientSounds = new SoundEffect[] {
+					new SoundEffect(type.normalVariant, Sound.ENTITY_BAT_AMBIENT, 0.35, 0.65)
+			};
+			variant.ambientSoundFrequency = 3;
+			variant.hurtSounds = new SoundEffect[] {
+					new SoundEffect(type.normalVariant, Sound.ENTITY_BAT_HURT, 0.5, 0.65)
+			};
+			variant.deathSounds = new SoundEffect[] {
+					new SoundEffect(type.normalVariant, Sound.ENTITY_BAT_DEATH, 0.55, 0.6)
+			};
+			variant.health = 5.0;
+			variant.damage = 1.0;
+			variant.movementSpeed = 0.3;
 		}
 		case KILLER_CHICKEN -> {
 			variant.knockback = 1.0;

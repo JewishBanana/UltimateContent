@@ -1,5 +1,6 @@
 package com.github.jewishbanana.ultimatecontent.enchants;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -11,7 +12,12 @@ import com.github.jewishbanana.ultimatecontent.CustomEnchant;
 public class AncientCurse extends CustomEnchant {
 	
 	public static final String REGISTERED_KEY = "uc:ancient_curse";
-	public static final List<Material> applicableTypes = Arrays.asList(Material.WOODEN_SWORD, Material.STONE_SWORD, Material.IRON_SWORD, Material.GOLDEN_SWORD, Material.DIAMOND_SWORD, Material.NETHERITE_SWORD);
+	public static final List<Material> applicableTypes = new ArrayList<>(Arrays.asList(Material.WOODEN_SWORD, Material.STONE_SWORD, Material.IRON_SWORD, Material.GOLDEN_SWORD, Material.DIAMOND_SWORD, Material.NETHERITE_SWORD));
+	static {
+		Material copperSword = Material.getMaterial("COPPER_SWORD");
+		if (copperSword != null)
+			applicableTypes.add(1, copperSword);
+	}
 	
 	public AncientCurse() {
 		this.setMaxLevel(3);

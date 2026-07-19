@@ -78,7 +78,7 @@ public class GreenLightsaber extends Weapon {
 		Vector angle = vec.clone().rotateAroundAxis(axis, Math.toRadians(firstAngle+180+(random.nextDouble()*50-25)));
 		vec.rotateAroundAxis(axis, Math.toRadians(firstAngle));
 		Vector finalAngle = Utils.getVectorTowards(front.clone().add(vec), front.clone().add(angle)).multiply(0.15);
-		DustOptions options = new DustOptions(Color.fromARGB(10, 126, 242, 132), 0.6f);
+		DustOptions options = new DustOptions(Color.fromRGB(126, 242, 132), 0.6f);
 		new BukkitRunnable() {
 			private int tick;
 

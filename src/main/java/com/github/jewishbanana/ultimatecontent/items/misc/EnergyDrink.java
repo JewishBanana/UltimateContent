@@ -50,7 +50,7 @@ public class EnergyDrink extends BaseItem implements MobUsable {
 	public ItemBuilder createItem() {
 		return CustomItemBuilder.create(getType(), Material.POTION).accessMeta(e -> {
 			PotionMeta meta = (PotionMeta) e;
-			meta.setColor(Color.fromARGB(150, 37, 242, 34));
+			meta.setColor(Color.fromRGB(37, 242, 34));
 			meta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 600, 1, true, false), true);
 			meta.addCustomEffect(new PotionEffect(VersionUtils.getJumpBoost(), 600, 1, true, false), true);
 			meta.addCustomEffect(new PotionEffect(PotionEffectType.ABSORPTION, 600, 4, true, false), true);

@@ -995,6 +995,26 @@ entities:
             - gold_ore | 5.0 | 0-2
             spawning_worlds:
             - OVERWORLD
+        plague_rat:
+            # Plague rats are spawned by DeadlyDisasters black plague outbreaks and do not spawn naturally from UltimateContent.
+            spawnRate: 0.0
+            health: 6.0
+            damage: 1.0
+            movementSpeed: 0.28
+            name: "&8Plague Rat"
+            volume: 0.45
+            drops:
+            - rotten_flesh | 10.0
+        plague_bat:
+            # Plague bats are spawned by DeadlyDisasters black plague outbreaks and do not spawn naturally from UltimateContent.
+            spawnRate: 0.0
+            health: 5.0
+            damage: 1.0
+            movementSpeed: 0.3
+            name: "&8Plague Bat"
+            volume: 0.4
+            drops:
+            - rotten_flesh | 8.0
     desert_entities:
         ancient_mummy:
             spawnRate: 1.5

@@ -53,6 +53,7 @@ import com.github.jewishbanana.ultimatecontent.utils.ConfigUpdater;
 import com.github.jewishbanana.ultimatecontent.utils.CustomHead;
 import com.github.jewishbanana.ultimatecontent.utils.DataUtils;
 import com.github.jewishbanana.ultimatecontent.utils.DependencyUtils;
+import com.github.jewishbanana.ultimatecontent.utils.Metrics;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.mojang.datafixers.util.Pair;
 
@@ -118,6 +119,7 @@ public class UltimateContent extends JavaPlugin {
 		specialEvent = SpecialEvent.checkForEvent(this);
 		if (specialEvent != null)
 			specialEvent.reload();
+		new Metrics(this, 32714);
 	}
 	public void onDisable() {
 		if (specialEvent != null)
