@@ -11,8 +11,9 @@
 		<mainClass>com.github.jewishbanana.ultimatecontent.UltimateContent</mainClass>
 		<!-- fb4f6683f6a802ee8c2e8debfc151fb70b3790b6, includes the Paper 26.2 adapter fixes. -->
 		<mobchip.version>fb4f668</mobchip.version>
+		<uiframework.groupId>com.github.jewishbanana</uiframework.groupId>
 		<uiframework.artifactId>uiframework</uiframework.artifactId>
-		<uiframework.version>3.2.0</uiframework.version>
+		<uiframework.version>3.2.1</uiframework.version>
 		<custom.output.directory>${project.build.directory}</custom.output.directory>
 	</properties>
 	
@@ -210,7 +211,7 @@
 		</dependency>
 		
 		<dependency>
-	    	<groupId>com.github.jewishbanana</groupId>
+			<groupId>${uiframework.groupId}</groupId>
 			<artifactId>${uiframework.artifactId}</artifactId>
 			<version>${uiframework.version}</version>
 	    	<scope>provided</scope>
@@ -324,6 +325,7 @@
 			<id>jitpack</id>
 			<properties>
 				<!-- JitPack uses the GitHub repository name, not Maven's local artifactId. -->
+				<uiframework.groupId>com.github.JewishBanana</uiframework.groupId>
 				<uiframework.artifactId>UIFramework</uiframework.artifactId>
 			</properties>
 		</profile>
