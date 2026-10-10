@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.entities.darkentities;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
@@ -32,7 +34,7 @@ public class ZombieKnight extends BaseEntity<Zombie> {
 		Entity entity = getEntity();
 		if (entity == null)
 			return;
-		entity.getWorld().spawn(entity.getLocation(), ZombieHorse.class, temp -> {
+		EntitySpawnCompatibility.spawn(entity.getLocation(), ZombieHorse.class, temp -> {
 			temp.setTamed(true);
 			temp.addPassenger(entity);
 			temp.getAttribute(VersionUtils.getMovementSpeedAttribute()).setBaseValue(0.425);

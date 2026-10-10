@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.entities.easterentities;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -233,7 +235,7 @@ public class EasterBunny extends BossEntity<Rabbit> {
 								}
 								Location loc = entity.getLocation();
 								projectiles.add(Pair.of(
-										world.spawn(loc, Slime.class, false, temp -> {
+										EntitySpawnCompatibility.spawn(loc, Slime.class, false, temp -> {
 											temp.setSize(0);
 											temp.setSilent(true);
 											temp.getAttribute(VersionUtils.getMaxHealthAttribute()).setBaseValue(100.0);
@@ -242,7 +244,7 @@ public class EasterBunny extends BossEntity<Rabbit> {
 											setInvisible(temp);
 											temp.setVelocity(new Vector(0, 1, 0));
 											EntitiesHandler.attachRemoveKey(temp);
-										}), world.spawn(loc, ArmorStand.class, false, temp -> {
+										}), EntitySpawnCompatibility.spawn(loc, ArmorStand.class, false, temp -> {
 											ComplexEntity.initStand(temp);
 											temp.getEquipment().setItemInMainHand(new ItemStack(Material.CARROT));
 											temp.setRightArmPose(new EulerAngle(Math.toRadians(270), 0, 0));

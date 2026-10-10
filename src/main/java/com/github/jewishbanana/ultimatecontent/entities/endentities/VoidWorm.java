@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.entities.endentities;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -177,7 +179,7 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 					start.getWorld().spawnParticle(VersionUtils.getBlockDust(), start, 5, .4, .4, .4, 0.1, bd);
 					if (fangs != null)
 						fangs.remove();
-					fangs = start.getWorld().spawn(loc.clone().add(offsets[0]), EvokerFangs.class, (e) -> e.setSilent(true));
+					fangs = EntitySpawnCompatibility.spawn(loc.clone().add(offsets[0]), EvokerFangs.class, (e) -> e.setSilent(true));
 					loc.add(velocity);
 					if (index != 10 && (index == 0 || distanceSinceSpawn >= bodyGapDistance))
 						do {
@@ -185,7 +187,7 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 							getCreatureStandEntity(index, start.clone().subtract(random.nextDouble(-0.2, 0.2), 2, random.nextDouble(-0.2, 0.2)));
 							index++;
 							if (index == 5)
-								damageEntity = start.getWorld().spawn(start, WitherSkeleton.class, false, (e) -> {
+								damageEntity = EntitySpawnCompatibility.spawn(start, WitherSkeleton.class, false, (e) -> {
 									setInvisible(e);
 									e.setSilent(true);
 									e.setAI(false);
@@ -234,7 +236,7 @@ public class VoidWorm extends ComplexEntity<Silverfish> {
 				start.getWorld().spawnParticle(VersionUtils.getBlockDust(), start, 5, .4, .4, .4, 0.1, bd);
 				if (fangs != null)
 					fangs.remove();
-				fangs = start.getWorld().spawn(loc.clone().add(offsets[0]), EvokerFangs.class, (e) -> e.setSilent(true));
+				fangs = EntitySpawnCompatibility.spawn(loc.clone().add(offsets[0]), EvokerFangs.class, (e) -> e.setSilent(true));
 				loc.add(velocity);
 				if (loc.getY() < start.getY()) {
 					this.cancel();

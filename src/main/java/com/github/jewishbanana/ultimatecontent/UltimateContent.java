@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
@@ -57,6 +58,9 @@ import com.github.jewishbanana.ultimatecontent.utils.Metrics;
 import com.github.jewishbanana.ultimatecontent.utils.Utils;
 import com.mojang.datafixers.util.Pair;
 
+import me.gamercoder215.mobchip.abstraction.ChipUtilFactory;
+import me.gamercoder215.mobchip.bukkit.BukkitBrain;
+
 public class UltimateContent extends JavaPlugin {
 	
 	/**
@@ -74,6 +78,7 @@ public class UltimateContent extends JavaPlugin {
 	private static JavaPlugin instance;
 	private static FixedMetadataValue fixedData;
 	private static SpecialEvent specialEvent;
+	private boolean mobChipReady;
 	
 	private static final String UIFrameworkVersion = "3.1.4";
 	
@@ -88,6 +93,19 @@ public class UltimateContent extends JavaPlugin {
 		if (!UIFramework.isVersionOrAbove(UIFrameworkVersion)) {
 			consoleSender.sendMessage(Utils.convertString(Utils.prefix+"&cERROR Cannot start plugin because UIFramework is out of date! Please update to at least &a"+UIFrameworkVersion+" &c(Current version installed is &b"+(getServer().getPluginManager().getPlugin("UIFramework").getDescription().getVersion())+"&c). https://www.spigotmc.org/resources/uiframework.110768/"));
 			this.setEnabled(false);
+			return;
+		}
+		// Resolve the server adapter before registering any custom mobs. A failed
+		// static initializer poisons BukkitBrain for this class loader's lifetime;
+		// retrying it on every natural spawn only floods the console.
+		try {
+			BukkitBrain.getBrain(null);
+			getLogger().info("MobChip adapter: " + ChipUtilFactory.getChipUtil().getClass().getSimpleName());
+			mobChipReady = true;
+		} catch (RuntimeException | LinkageError error) {
+			getLogger().log(Level.SEVERE, "Cannot initialize MobChip for " + Bukkit.getBukkitVersion()
+					+ ". UltimateContent will not register custom entities. Update UltimateContent and fully restart the server; /reload cannot repair this failure.", error);
+			getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
 		UIFramework.registerReloadRunnable(this, () -> reload());
@@ -122,6 +140,12 @@ public class UltimateContent extends JavaPlugin {
 		new Metrics(this, 32714);
 	}
 	public void onDisable() {
+		if (!mobChipReady) {
+			// Early dependency failure: do not initialize entity/item cleanup classes.
+			instance = null;
+			fixedData = null;
+			return;
+		}
 		if (specialEvent != null)
 			specialEvent.saveData();
 		BossSpawnItem.unloadBossBlocks();
@@ -132,6 +156,8 @@ public class UltimateContent extends JavaPlugin {
 		
 		instance = null;
 		fixedData = null;
+		mobChipReady = false;
+		specialEvent = null;
 	}
 	private void init() {
 		reload();

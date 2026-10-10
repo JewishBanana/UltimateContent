@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.abilities;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +49,7 @@ public class SaberThrow extends AbilityAttributes {
 	public void activate(Entity entity, GenericItem base) {
 		SaberThrow instance = UIAbilityType.createAbilityInstance(this.getClass());
 		list.add(instance);
-		instance.stand = entity.getWorld().spawn(entity.getLocation().add(0, 100, 0), ArmorStand.class, temp -> {
+		instance.stand = EntitySpawnCompatibility.spawn(entity.getLocation().add(0, 100, 0), ArmorStand.class, temp -> {
 			ComplexEntity.initStand(temp);
 			temp.getEquipment().setItemInMainHand(base.getItem());
 			temp.setRightArmPose(new EulerAngle(0, 0, 0));

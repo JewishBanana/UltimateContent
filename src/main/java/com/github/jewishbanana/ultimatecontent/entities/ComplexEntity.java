@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.entities;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import java.util.function.Consumer;
 
 import org.bukkit.Location;
@@ -118,7 +120,7 @@ public abstract class ComplexEntity<T extends Entity> extends BaseEntity<T> {
 		public K getEntity(Location location) {
 			if (stand != null && stand.isValid())
 				return stand;
-			stand = location.getWorld().spawn(location, entityClass, false, creator);
+			stand = EntitySpawnCompatibility.spawn(location, entityClass, false, creator);
 			return stand;
 		}
 		public K getEntityOrNull() {

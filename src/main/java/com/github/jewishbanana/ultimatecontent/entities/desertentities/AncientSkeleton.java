@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.entities.desertentities;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -87,7 +89,7 @@ public class AncientSkeleton extends BaseEntity<Skeleton> {
 						if (loc == null)
 							continue;
 						loc.setDirection(Utils.getVectorTowards(loc, targetLoc));
-						minions[i] = entity.getWorld().spawn(loc.subtract(0, 2, 0), Skeleton.class, temp -> {
+						minions[i] = EntitySpawnCompatibility.spawn(loc.subtract(0, 2, 0), Skeleton.class, temp -> {
 							temp.setAI(false);
 							temp.setGravity(false);
 							temp.getEquipment().setItemInMainHand(new ItemStack(Material.AIR), true);

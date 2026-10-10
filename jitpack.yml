@@ -1,0 +1,6 @@
+# The compiler must read the current server API (Java 25); UC itself targets Java 17.
+before_install:
+  - sdk install java 25.0.3-tem
+  - sdk use java 25.0.3-tem
+install:
+  - mvn -B -U -Pjitpack -Dcustom.output.directory=target clean install

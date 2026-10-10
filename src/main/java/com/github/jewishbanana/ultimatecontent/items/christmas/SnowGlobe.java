@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.items.christmas;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import java.util.function.Consumer;
 
 import org.bukkit.Location;
@@ -92,10 +94,10 @@ public class SnowGlobe extends BossSpawnItem {
 			temp.setColor(Color.BROWN);
 			EntitiesHandler.attachRemoveKey(temp);
 		};
-		entities[2] = spawn.getWorld().spawn(spawn.clone().add(vec.clone().multiply(2).add(angle)), Horse.class, consumer);
-		entities[3] = spawn.getWorld().spawn(spawn.clone().add(vec.clone().multiply(2).add(angle.clone().multiply(-1))), Horse.class, consumer);
-		entities[4] = spawn.getWorld().spawn(spawn.clone().add(vec.clone().multiply(7).add(angle)), Horse.class, consumer);
-		entities[5] = spawn.getWorld().spawn(spawn.clone().add(vec.clone().multiply(7).add(angle.clone().multiply(-1))), Horse.class, consumer);
+		entities[2] = EntitySpawnCompatibility.spawn(spawn.clone().add(vec.clone().multiply(2).add(angle)), Horse.class, consumer);
+		entities[3] = EntitySpawnCompatibility.spawn(spawn.clone().add(vec.clone().multiply(2).add(angle.clone().multiply(-1))), Horse.class, consumer);
+		entities[4] = EntitySpawnCompatibility.spawn(spawn.clone().add(vec.clone().multiply(7).add(angle)), Horse.class, consumer);
+		entities[5] = EntitySpawnCompatibility.spawn(spawn.clone().add(vec.clone().multiply(7).add(angle.clone().multiply(-1))), Horse.class, consumer);
 		for (Entity entity : entities) {
 			entity.setGravity(false);
 			if (entity instanceof LivingEntity alive)

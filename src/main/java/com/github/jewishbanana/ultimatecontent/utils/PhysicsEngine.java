@@ -27,7 +27,7 @@ public class PhysicsEngine {
 	}
 
 	public static void dropBlockWithPhysics(Location spawnLocation, ItemStack item, float scale, Vector velocity, double gravity, int lifeTicks, int shrinkTicks) {
-        ItemDisplay blockDisplay = spawnLocation.getWorld().spawn(spawnLocation, ItemDisplay.class, entity -> {
+        ItemDisplay blockDisplay = EntitySpawnCompatibility.spawn(spawnLocation, ItemDisplay.class, entity -> {
             entity.setItemStack(item);
             Transformation trans = entity.getTransformation();
             trans.getScale().mul(scale);

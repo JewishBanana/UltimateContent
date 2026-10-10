@@ -1,0 +1,5 @@
+name: MobChipSmoke
+version: 1
+main: com.github.jewishbanana.ultimatecontent.integration.MobChipSmokePlugin
+api-version: 1.17
+depend: [UltimateContent, UIFramework]

@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.items.easter;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -73,7 +75,7 @@ public class EasterBasket extends BossSpawnItem {
 	public void spawnBoss(Location location) {
 		Block block = location.getBlock();
 		addToBossBlocks(block);
-		ArmorStand target = spawnLoc.getWorld().spawn(spawnLoc, ArmorStand.class, temp -> {
+		ArmorStand target = EntitySpawnCompatibility.spawn(spawnLoc, ArmorStand.class, temp -> {
 			ComplexEntity.initStand(temp);
 			temp.setSmall(true);
 			EntitiesHandler.attachRemoveKey(temp);

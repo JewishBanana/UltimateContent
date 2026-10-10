@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.entities.christmasentities;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -93,7 +95,7 @@ public class Santa extends BossEntity<Zombie> {
 	public void spawnPresent(Location location, int type, Vector direction, Entity source, LivingEntity target) {
 		World world = location.getWorld();
 		Location spawnLoc = location.clone().add(0, 100, 0);
-		ArmorStand stand = world.spawn(spawnLoc, ArmorStand.class, temp -> {
+		ArmorStand stand = EntitySpawnCompatibility.spawn(spawnLoc, ArmorStand.class, temp -> {
 			ComplexEntity.initStand(temp);
 		});
 		BlockData trail;
@@ -120,7 +122,7 @@ public class Santa extends BossEntity<Zombie> {
 			trail = Material.RED_WOOL.createBlockData();
 			break;
 		}
-		Slime slime = world.spawn(spawnLoc, Slime.class, temp -> {
+		Slime slime = EntitySpawnCompatibility.spawn(spawnLoc, Slime.class, temp -> {
 			temp.setSize(0);
 			temp.setSilent(true);
 			temp.getAttribute(VersionUtils.getMaxHealthAttribute()).setBaseValue(100.0);

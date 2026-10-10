@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.entities.christmasentities;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import java.util.Collection;
 
 import org.bukkit.Location;
@@ -76,13 +78,13 @@ public class Grinch extends BaseEntity<Zombie> {
 					BlockData snowData = Material.SNOW.createBlockData();
 					Particle blockCrack = VersionUtils.getBlockCrack();
 					Particle blockDust = VersionUtils.getBlockDust();
-					ArmorStand stand = world.spawn(spawnLoc, ArmorStand.class, temp -> {
+					ArmorStand stand = EntitySpawnCompatibility.spawn(spawnLoc, ArmorStand.class, temp -> {
 						ComplexEntity.initStand(temp);
 						temp.getEquipment().setItemInMainHand(weapon);
 						temp.setRightArmPose(new EulerAngle(0, 0, 0));
 						EntitiesHandler.attachRemoveKey(temp);
 					});
-					Slime slime = world.spawn(spawnLoc, Slime.class, temp -> {
+					Slime slime = EntitySpawnCompatibility.spawn(spawnLoc, Slime.class, temp -> {
 						temp.setSize(0);
 						temp.setSilent(true);
 						temp.getAttribute(VersionUtils.getMaxHealthAttribute()).setBaseValue(100.0);

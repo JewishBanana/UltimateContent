@@ -1,5 +1,7 @@
 package com.github.jewishbanana.ultimatecontent.abilities;
 
+import com.github.jewishbanana.ultimatecontent.utils.EntitySpawnCompatibility;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -47,13 +49,13 @@ public class StasisZone extends AbilityAttributes {
 			ItemMeta meta = item.getItemMeta();
 			meta.setCustomModelData(6000);
 			item.setItemMeta(meta);
-			displays[0] = world.spawn(loc, ItemDisplay.class, dis -> {
+			displays[0] = EntitySpawnCompatibility.spawn(loc, ItemDisplay.class, dis -> {
 				dis.setItemStack(item);
 				Transformation tran = dis.getTransformation();
 				tran.getTranslation().set(-.5, -.5, -.5);
 				dis.setTransformation(tran);
 			});
-			displays[1] = world.spawn(loc, ItemDisplay.class, dis -> {
+			displays[1] = EntitySpawnCompatibility.spawn(loc, ItemDisplay.class, dis -> {
 				dis.setItemStack(item);
 				dis.setRotation(45, 45);
 				Transformation tran = dis.getTransformation();
