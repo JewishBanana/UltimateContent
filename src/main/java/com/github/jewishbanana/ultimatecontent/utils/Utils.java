@@ -307,6 +307,16 @@ public class Utils {
 	public static boolean isLocationsWithinDistance(Location loc1, Location loc2, float distanceSquared) {
 		return loc1 != null && loc2 != null && loc1.getWorld().equals(loc2.getWorld()) && loc1.distanceSquared(loc2) <= distanceSquared;
 	}
+	public static boolean hasNearbyPlayer(Location loc, double maxDistance) {
+		if (loc == null || loc.getWorld() == null) return false;
+		double maxDistSq = maxDistance * maxDistance;
+		for (Player p : loc.getWorld().getPlayers()) {
+			if (p.getLocation().distanceSquared(loc) <= maxDistSq) {
+				return true;
+			}
+		}
+		return false;
+	}
 	public static enum AreaClearing {
 		
 		CUBE_3X3_FROM_CENTER(block -> {

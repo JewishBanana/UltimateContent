@@ -131,8 +131,10 @@ public class BabyEndTotem extends ComplexEntity<Wolf> implements TameableEntity 
 
 			@Override
 			public void run() {
-				if (!entity.isValid())
+				if (!entity.isValid() || entity.isDead()) {
+					cancel();
 					return;
+				}
 				// If the wolf acquired a target while sitting, stand it up so it can actually move to fight.
 				if (sitting && entity.getTarget() != null && !entity.getTarget().isDead())
 					setSitting(false);
@@ -147,6 +149,8 @@ public class BabyEndTotem extends ComplexEntity<Wolf> implements TameableEntity 
 					updateWarning();
 				}
 				Location loc = entity.getLocation();
+				if (!Utils.hasNearbyPlayer(loc, 32.0))
+					return;
 				loc.getWorld().spawnParticle(Particle.REVERSE_PORTAL, loc.clone().add(0, 0.4, 0), 3, .15, .25, .15, 0.01);
 				double[] base = sitting ? SIT_Y : STAND_Y;
 				// Head: tilt the portal frame with the wolf's pitch (no yaw spin), like the adult.
