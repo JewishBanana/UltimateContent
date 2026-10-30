@@ -77,9 +77,13 @@ public class EndTotem extends ComplexEntity<Enderman> {
 		scheduleTask(new BukkitRunnable() {
 			@Override
 			public void run() {
-				if (!entity.isValid())
+				if (!entity.isValid() || entity.isDead()) {
+					cancel();
 					return;
+				}
 				Location loc = entity.getLocation();
+				if (!Utils.hasNearbyPlayer(loc, 32.0))
+					return;
 				loc.getWorld().spawnParticle(Particle.REVERSE_PORTAL, loc.clone().add(0, 1, 0), 7, .5, .75, .5, 0.01);
 				headStand.getEntity(loc).setHeadPose(new EulerAngle(Math.toRadians(loc.getPitch()), 0, 0));
 				if (hitAnimation) {

@@ -124,6 +124,7 @@ public class UltimateContent extends JavaPlugin {
 		DependencyUtils.init(this);
 		CustomHead.init(this);
 		
+		UCRegistry.cleanRegistries();
 		BaseItem.createCustomCategories();
 		UCRegistry.registerAbilities();
 		UCRegistry.registerEnchants();
@@ -152,6 +153,7 @@ public class UltimateContent extends JavaPlugin {
 		SantaHatHandler.removeEntities();
 		BaseEntity.cleanAllEntities();
 		
+		UCRegistry.cleanRegistries();
 		DataUtils.saveDataFile();
 		
 		instance = null;

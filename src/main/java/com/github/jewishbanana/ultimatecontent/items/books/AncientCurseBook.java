@@ -36,14 +36,20 @@ public class AncientCurseBook extends EnchantBook {
 		book.refreshItemLore();
 		AnvilChoice choice = new AnvilChoice(new RecipeChoice.MaterialChoice(AncientCurse.applicableTypes),
 				new RecipeChoice.ExactChoice(book.getItem()));
-		type.registerUsedRecipe(new AnvilRecipe(new NamespacedKey(UltimateContent.getInstance(), "ancient_curse_anvil_preview"), choice, inventory -> {
+		AnvilRecipe anvilRecipe = new AnvilRecipe(new NamespacedKey(UltimateContent.getInstance(), "ancient_curse_anvil_preview"), choice, inventory -> {
 			ItemStack result = inventory.getFirstSlot().clone();
 			GenericItem base = GenericItem.createItemBaseNoID(result);
 			if (!enchant.addEnchant(base, 1, true, false))
 				return new AnvilResult(new ItemStack(Material.AIR));
 			base.refreshItemLore();
 			return new AnvilResult(base.getItem(), enchant.getAnvilCost(result, inventory.getSecondSlot(), 1));
-		}));
+		});
+		try {
+			java.lang.reflect.Method m = type.getClass().getMethod("registerUsedRecipe", AnvilRecipe.class);
+			m.invoke(type, anvilRecipe);
+		} catch (Throwable t) {
+			type.registerRecipe(anvilRecipe);
+		}
 	}
 	public String getDisplayName() {
 		return displayHex+"Ancient Curse Book";

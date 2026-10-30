@@ -109,7 +109,11 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 	public void spawn(Entity entity) {
 		if (entity instanceof LivingEntity alive) {
 			if (alive instanceof Mob mob) {
-				setAIGoals((T) mob);
+				try {
+					setAIGoals((T) mob);
+				} catch (Throwable t) {
+					// Fallback for newer MC versions where MobChip NMS goals are unsupported
+				}
 				EntityEquipment equipment = alive.getEquipment();
 				equipment.setItemInMainHandDropChance(0);
 				equipment.setItemInOffHandDropChance(0);
@@ -210,7 +214,9 @@ public abstract class BaseEntity<T extends Entity> extends CustomEntity<T> {
 			return;
 		if (uuid == null) {
 			entity.getPersistentDataContainer().remove(tameOwner);
-			setAIGoals(getCastedEntity());
+			try {
+				setAIGoals(getCastedEntity());
+			} catch (Throwable ignored) {}
 			this.owner = null;
 			return;
 		}

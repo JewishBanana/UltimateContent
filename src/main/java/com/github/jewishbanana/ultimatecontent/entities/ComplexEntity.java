@@ -31,9 +31,14 @@ public abstract class ComplexEntity<T extends Entity> extends BaseEntity<T> {
 							standsCleaned = true;
 							unload();
 						}
+						if (entity.isDead()) {
+							cancel();
+						}
 						return;
 					}
 					Location loc = entity.getLocation();
+					if (!com.github.jewishbanana.ultimatecontent.utils.Utils.hasNearbyPlayer(loc, 32.0))
+						return;
 					for (CreatureStand<?> temp : stands) {
 						Entity stand = temp.getEntity(loc);
 						stand.teleport(loc.add(temp.offset));
