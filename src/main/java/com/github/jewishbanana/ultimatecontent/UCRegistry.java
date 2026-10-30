@@ -95,133 +95,182 @@ import com.github.jewishbanana.ultimatecontent.items.weapons.VoidsEdge;
 
 public class UCRegistry {
 
+	public static void cleanRegistries() {
+		try {
+			java.lang.reflect.Field abilityRegistry = com.github.jewishbanana.uiframework.items.UIAbilityType.class.getDeclaredField("registry");
+			abilityRegistry.setAccessible(true);
+			((java.util.Map<?, ?>) abilityRegistry.get(null)).keySet().removeIf(k -> k instanceof String && ((String) k).startsWith("uc:"));
+		} catch (Throwable ignored) {}
+
+		try {
+			java.util.Map<String, com.github.jewishbanana.uiframework.items.UIEnchantment> reg = com.github.jewishbanana.uiframework.items.UIEnchantment.getRegistry();
+			java.lang.reflect.Field idListField = com.github.jewishbanana.uiframework.items.UIEnchantment.class.getDeclaredField("registeredIdList");
+			idListField.setAccessible(true);
+			java.util.Set<?> idList = (java.util.Set<?>) idListField.get(null);
+			java.util.Iterator<java.util.Map.Entry<String, com.github.jewishbanana.uiframework.items.UIEnchantment>> it = reg.entrySet().iterator();
+			while (it.hasNext()) {
+				java.util.Map.Entry<String, com.github.jewishbanana.uiframework.items.UIEnchantment> entry = it.next();
+				if (entry.getKey() != null && entry.getKey().startsWith("uc:")) {
+					if (entry.getValue() != null) {
+						idList.remove(entry.getValue().getId());
+					}
+					it.remove();
+				}
+			}
+		} catch (Throwable ignored) {}
+
+		try {
+			com.github.jewishbanana.uiframework.items.UIItemType.getRegistry().keySet().removeIf(k -> k != null && k.startsWith("uc:"));
+		} catch (Throwable ignored) {}
+
+		try {
+			com.github.jewishbanana.uiframework.entities.UIEntityManager.getRegistry().keySet().removeIf(k -> k != null && k.startsWith("uc:"));
+		} catch (Throwable ignored) {}
+
+		try {
+			java.lang.reflect.Field catPlacements = com.github.jewishbanana.uiframework.items.ItemCategory.class.getDeclaredField("placements");
+			catPlacements.setAccessible(true);
+			java.util.List<?> list = (java.util.List<?>) catPlacements.get(null);
+			java.lang.reflect.Field idField = com.github.jewishbanana.uiframework.items.ItemCategory.class.getDeclaredField("identifier");
+			idField.setAccessible(true);
+			list.removeIf(item -> {
+				try {
+					String id = (String) idField.get(item);
+					return id != null && id.startsWith("uc:");
+				} catch (Throwable t) {
+					return false;
+				}
+			});
+		} catch (Throwable ignored) {}
+	}
+
 	public static void registerAbilities() {
-		SaberParry.register();
-		SaberThrow.register();
-		StasisZone.register();
-		JumpBoost.register();
-		SpawnPlatform.register();
-		RestoreHealth.register();
-		PropulsionBlast.register();
-		TeleportRay.register();
-		Blinding.register();
-		CursedWinds.register();
-		BlackRift.register();
-		TidalWave.register();
-		YetiRoar.register();
-		DoubleJump.register();
-		UnstableMagic.register();
+		try { SaberParry.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { SaberThrow.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { StasisZone.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { JumpBoost.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { SpawnPlatform.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { RestoreHealth.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { PropulsionBlast.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { TeleportRay.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { Blinding.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { CursedWinds.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { BlackRift.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { TidalWave.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { YetiRoar.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { DoubleJump.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { UnstableMagic.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 	}
 	public static void registerEnchants() {
-		AncientCurse.register();
-		YetisBlessing.register();
-		BunnyHop.register();
+		try { AncientCurse.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { YetisBlessing.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { BunnyHop.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 	}
 	public static void registerItems() {
 		// Crafting Materials
-		AncientBone.register();
-		AncientCloth.register();
-		YetiFur.register();
-		BloodIngot.register();
+		try { AncientBone.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { AncientCloth.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { YetiFur.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { BloodIngot.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Weapons
-		GreenLightsaber.register();
-		StasisGun.register();
-		AncientBlade.register();
-		VoidsEdge.register();
-		AbyssalShield.register();
-		CallOfTheVoid.register();
-		DarkMageWand.register();
-		TritonsFang.register();
-		SoulRipper.register();
+		try { GreenLightsaber.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { StasisGun.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { AncientBlade.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { VoidsEdge.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { AbyssalShield.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { CallOfTheVoid.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { DarkMageWand.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { TritonsFang.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { SoulRipper.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Enchant Books
-		AncientCurseBook.register();
+		try { AncientCurseBook.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Miscellaneous
-		BoosterPack.register();
-		SafetyNet.register();
-		HeartCrystal.register();
-		MedKit.register();
-		EnergyDrink.register();
-		PropulsionCannon.register();
-		MatterSwap.register();
-		BlindingTrap.register();
-		VoidTear.register();
+		try { BoosterPack.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { SafetyNet.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { HeartCrystal.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { MedKit.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { EnergyDrink.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { PropulsionCannon.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { MatterSwap.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { BlindingTrap.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { VoidTear.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Easter
-		GreenEgg.register();
-		BlueEgg.register();
-		RedEgg.register();
-		OrangeEgg.register();
-		PurpleEgg.register();
-		GoldenEgg.register();
-		EasterBasket.register();
+		try { GreenEgg.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { BlueEgg.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { RedEgg.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { OrangeEgg.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { PurpleEgg.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { GoldenEgg.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { EasterBasket.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Christmas
-		CandyCane.register();
-		CursedCandyCane.register();
-		Ornament.register();
-		BrokenSnowGlobe.register();
-		SantaHat.register();
-		SnowGlobe.register();
+		try { CandyCane.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { CursedCandyCane.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { Ornament.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { BrokenSnowGlobe.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { SantaHat.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { SnowGlobe.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 	}
 	public static void registerEntities() {
 		// End Entities
-		EndTotem.register();
-		BabyEndTotem.register();
-		VoidWorm.register();
-		VoidArcher.register();
-		VoidGuardian.register();
-		VoidStalker.register();
+		try { EndTotem.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { BabyEndTotem.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { VoidWorm.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { VoidArcher.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { VoidGuardian.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { VoidStalker.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Dark Entities
-		PrimedCreeper.register();
-		DarkMage.register();
-		ShadowLeech.register();
-		SkeletonKnight.register();
-		ZombieKnight.register();
-		SwampBeast.register();
-		UndeadMiner.register();
-		PlagueRat.register();
-		PlagueBat.register();
+		try { PrimedCreeper.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { DarkMage.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { ShadowLeech.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { SkeletonKnight.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { ZombieKnight.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { SwampBeast.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { UndeadMiner.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { PlagueRat.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { PlagueBat.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Desert Entities
-		AncientMummy.register();
-		AncientSkeleton.register();
+		try { AncientMummy.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { AncientSkeleton.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Water Entities
-		CursedDiver.register();
+		try { CursedDiver.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Snow Entities
-		Yeti.register();
+		try { Yeti.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Infested Entities
-		InfestedZombie.register();
-		InfestedSkeleton.register();
-		InfestedCreeper.register();
-		InfestedEnderman.register();
-		InfestedSpirit.register();
-		InfestedTribesman.register();
-		InfestedDevourer.register();
-		InfestedHowler.register();
-		InfestedWorm.register();
+		try { InfestedZombie.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { InfestedSkeleton.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { InfestedCreeper.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { InfestedEnderman.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { InfestedSpirit.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { InfestedTribesman.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { InfestedDevourer.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { InfestedHowler.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { InfestedWorm.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Nether Entities
-		LostSoul.register();
-		SoulReaper.register();
-		FirePhantom.register();
+		try { LostSoul.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { SoulReaper.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { FirePhantom.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Christmas Entities
-		Elf.register();
-		Frosty.register();
-		Grinch.register();
-		Santa.register();
+		try { Elf.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { Frosty.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { Grinch.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { Santa.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Easter Entities
-		KillerChicken.register();
-		RampagingGoat.register();
-		EasterBunny.register();
+		try { KillerChicken.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { RampagingGoat.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
+		try { EasterBunny.register(); } catch (Throwable t) { org.bukkit.Bukkit.getConsoleSender().sendMessage("[UltimateContent] Registration notice: " + t.getMessage()); }
 		
 		// Halloween Entities
 //		Scarecrow.register();

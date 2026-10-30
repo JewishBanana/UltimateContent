@@ -108,17 +108,28 @@ public class BaseItem extends GenericItem {
 		EASTER_ITEMS("uc:easter_items", "&aEaster Items"),
 		CHRISTMAS_ITEMS("uc:christmas_items", "&cChristmas Items");
 		
+		private final String identifier;
 		private ItemCategory category;
 		
 		private CustomItemCategories(String identifier, String displayName) {
+			this.identifier = identifier;
 			this.category = new ItemCategory(identifier, Utils.convertString(displayName));
 		}
 		public ItemCategory getItemCategory() {
-			return category;
+			ItemCategory existing = ItemCategory.getCategory(this.identifier);
+			return existing != null ? existing : category;
 		}
 	}
 	public static void createCustomCategories() {
-		ItemCategory.addItemCategoryAfter(CustomItemCategories.EASTER_ITEMS.getItemCategory(), DefaultCategory.MISCELLANEOUS);
-		ItemCategory.addItemCategoryAfter(CustomItemCategories.CHRISTMAS_ITEMS.getItemCategory(), CustomItemCategories.EASTER_ITEMS.getItemCategory());
+		try {
+			if (ItemCategory.getCategory("uc:easter_items") == null) {
+				ItemCategory.addItemCategoryAfter(CustomItemCategories.EASTER_ITEMS.getItemCategory(), DefaultCategory.MISCELLANEOUS);
+			}
+		} catch (Exception ignored) {}
+		try {
+			if (ItemCategory.getCategory("uc:christmas_items") == null) {
+				ItemCategory.addItemCategoryAfter(CustomItemCategories.CHRISTMAS_ITEMS.getItemCategory(), CustomItemCategories.EASTER_ITEMS.getItemCategory());
+			}
+		} catch (Exception ignored) {}
 	}
 }
